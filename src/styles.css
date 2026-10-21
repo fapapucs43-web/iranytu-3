@@ -5341,3 +5341,75 @@ button {
     transition: none;
   }
 }
+
+/* --------------------- Programs and seek-help (phase 2) ------------------ */
+
+.program-progress {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0.2rem 0 0.6rem;
+}
+
+.program-dot {
+  flex: 1 1 0;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+}
+
+.program-dot-done {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.program-dot-current {
+  border-color: var(--brand);
+}
+
+.program-week-title {
+  margin: 0.2rem 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.program-practice,
+.program-prompt {
+  margin: 0.55rem 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--line);
+}
+
+.program-practice {
+  background: var(--app-surface-2);
+}
+
+.program-prompt {
+  background: var(--app-soft-surface);
+}
+
+.seek-help-question {
+  margin: 0.7rem 0;
+}
+
+.seek-help-result {
+  margin: 0.8rem 0;
+  padding: 0.75rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--line);
+  background: var(--app-surface-2);
+}
+
+.seek-help-result h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+}
+
+.seek-help-result p {
+  margin: 0.35rem 0;
+}
+
+.seek-help-urgent {
+  border-color: var(--danger);
+  background: var(--app-soft-surface);
+}

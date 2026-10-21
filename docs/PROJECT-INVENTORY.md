@@ -20,26 +20,26 @@ claims has two possible anchors and no way to tell which one went stale.
 
 ```json
 {
-    "srcTsFiles": 172,
-    "srcTsLines": 46108,
+    "srcTsFiles": 176,
+    "srcTsLines": 46827,
     "srcCssFiles": 1,
-    "srcCssLines": 5343,
-    "libFiles": 89,
-    "libLines": 28342,
-    "componentFiles": 67,
-    "componentLines": 12702,
+    "srcCssLines": 5415,
+    "libFiles": 91,
+    "libLines": 28815,
+    "componentFiles": 69,
+    "componentLines": 12940,
     "viewFiles": 6,
-    "viewLines": 2816,
+    "viewLines": 2824,
     "stateFiles": 5,
     "stateLines": 1272,
-    "testFiles": 124,
-    "testLines": 49115,
+    "testFiles": 126,
+    "testLines": 49417,
     "scriptFiles": 6,
     "publicFontWoff2": 24,
     "publicFontLicences": 10,
     "publicPdfFontFiles": 3,
     "publicIconFiles": 3,
-    "storageKeys": 40,
+    "storageKeys": 41,
     "fontFamilies": 12,
     "fontFiles": 24,
     "iconSets": 3,
@@ -109,7 +109,7 @@ fresh under the policy of the deploy that stored it.
 - A swap the page asked for reloads at once; a deploy that arrives quietly keeps its deferral: `src/lib/pwa.ts:394` — `if (skipRequested) {`
 - The banner that says the page is not the deploy, and offers the same six steps: `src/components/StaleWorkerNotice.tsx:37` — `export function StaleWorkerBanner({`
 - Mounted in the shell, above the content: `src/App.tsx:356` — `<StaleWorkerNotice />`
-- Both marker names are in the wipe, because the older button wrote the older key: `src/lib/storageKeys.ts:124` — `"belso-iranytu-force-reset",`
+- Both marker names are in the wipe, because the older button wrote the older key: `src/lib/storageKeys.ts:126` — `"belso-iranytu-force-reset",`
 - The devtools route that always works, written for the reader: `docs/stuck-service-worker.md:1` — `# Beragadt service worker — a végső útmutató`
 
 - The workflow needs history to work at all: `.github/workflows/ci.yml:55` — `fetch-depth: 0`
@@ -141,7 +141,7 @@ fresh under the policy of the deploy that stored it.
 | View | File | What it is |
 | --- | --- | --- |
 | Ma | `src/views/TodayView.tsx:52` — `export default function TodayView() {` | the entry form: mood, trackers, activities, goals, the week's reflection |
-| Felfedezés | `src/views/ToolsView.tsx:170` — `export default function ToolsView() {` | the tools the day does not need, in four drawers — see `docs/tools-tab.md` |
+| Felfedezés | `src/views/ToolsView.tsx:178` — `export default function ToolsView() {` | the tools the day does not need, in four drawers — see `docs/tools-tab.md` |
 | Egészség | `src/views/HealthView.tsx:163` — `export default function HealthView() {` | the body's records: food, workouts, vitals, habits and the check-ins, in three sections |
 | Napló | `src/views/JournalView.tsx:25` — `export default function JournalView({ onGoToday }` | calendar, real streak, search, entry edit and delete |
 | Elemzés | `src/views/InsightsView.tsx:58` — `export default function InsightsView({ onGoToday }` | correlations, lag analysis, exports, monthly/yearly stats, achievements, pattern insights |
@@ -349,7 +349,7 @@ fresh under the policy of the deploy that stored it.
 | `Collapsible` | `src/components/ui/ui.tsx:304` — `export function Collapsible({` | session-local, closed by default |
 | `CollapsibleCard` | `src/components/ui/ui.tsx:392` — `export function CollapsibleCard({` | collapsible, and it REMEMBERS |
 | `Segmented` | `src/components/ui/ui.tsx:499` — `export function Segmented<T extends string>({` | the radio-as-buttons control |
-| `TextInput` | `src/components/ui/ui.tsx:529` — `export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {` | the one text field |
+| `TextInput` | `src/components/ui/ui.tsx:536` — `export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {` | the one text field |
 
 ### The four collapsible generations
 
@@ -737,7 +737,7 @@ a font problem that shows up there, not an i18n problem.
 
 ## 10. The test suite
 
-**124 files, 49 115 lines, 3 704 tests.** `bun test` — no test framework in the
+**126 files, 49 417 lines, 3 727 tests.** `bun test` — no test framework in the
 dependency block; the runner is bun's own. This table is the second half of the
 document's proof: its file count, its total and the five group sums are all
 recomputed from the rows below, so a file that lands without a row, a row whose
@@ -814,7 +814,7 @@ a fourth ground.
 | `tests/phase4.test.ts` | 7 | onboarding state and reminder scheduling |
 | `tests/stuck-worker.test.ts` | 17 | the stuck service worker: the detector (a controller url without this build's hash, conservative about every unknown), the escape address (`resetUrl` + taking the stamp back out), the `SKIP_WAITING` message on both sides, the immediate reload for a swap the page asked for, the banner's markup and its solid amber rail, and the reader's devtools guide |
 
-**`tests/lib/` — one file per library module** — 48 files, 921 tests
+**`tests/lib/` — one file per library module** — 50 files, 944 tests
 
 | File | Tests | Pins |
 | --- | --- | --- |
@@ -836,6 +836,8 @@ a fourth ground.
 | `tests/lib/diets.test.ts` | 13 | the twelve diet ids in the order the picker shows them (the audit's gluten-free, lactose-free and pescatarian between high-protein and "other"), the one sentence a chosen diet may say about itself — a real professional to ask, no diagnosis, and no note on "other" — the narrowing guard accepting exactly the registry, and one stored choice: it survives a reload, clearing removes the key rather than storing a sentinel, an unknown id is refused, a subscriber hears every change, and a foreign blob loads as no choice at all |
 | `tests/lib/collapsible-audit.test.ts` | 13 | the Phase 5 state audit: the 27 remembering mounts and their 33 ids read out of the tree with no duplicate and no missing summary, the frozen id vocabulary, the six session-local drawers pinned as a set, collapse state's one key and its place in the backup's exclusions, the production reset against the test seam, and the rule that every non-test `reset` export in `src/lib` is called by the wipe — from the delete-all chain or from `RESET_FUNCTIONS` in the key registry |
 | `tests/lib/companion.test.ts` | 12 | the forgiving companion: the five shapes and five colours as total registries, XP and level derived rather than remembered, the streak's three cases (same day, exactly yesterday, any longer gap), and the one rule the module exists for — a gap dims the avatar and resets nothing else, with the state surviving a reload, a corrupt blob repaired, and the wipe clearing the key |
+| `tests/lib/programs.test.ts` | 13 | the six-week program's state machine: a fresh install has none, a start writes only its own key, each press finishes exactly one week, a gap between weeks changes nothing, the last week finishes the program and finishing again is a no-op, restarting cannot lose the reader's place, and a stored gap or junk in the completed list is repaired rather than rendered |
+| `tests/lib/seek-help.test.ts` | 10 | the non-diagnostic guide: three questions, an answer about self-harm reaching the urgent branch across every duration/impact combination, the two conservative thresholds, every branch carrying a title, a body and a next step, no condition named or cure promised in any of the twelve results, and no phone number written into the tree |
 | `tests/lib/weekly-menus.test.ts` | 12 | the composed week: the eleven named diets get seven days and `other` gets none, every item is a registry row in that diet's pool, no meal repeats a food, the same diet composes the same week, no diet prints one day seven times, every exclusion names a real food, and a day's total is the sum of its own rows |
 | `tests/lib/fitness.test.ts` | 47 | that adopting a template COPIES it, that the caps hold, that the log is a record a later plan edit cannot change, that progression is computed by name — including the repeated-weight rule that becomes 2.5 kg and its bodyweight twin, one more rep or five more seconds — that the dose string says whether a number is reps or seconds, that the chart series is the progression as points, and, from Phase 3's third commit, that the twelve templates each carry one of the six movement types and that a rest day keeps its exercises while dropping out of the rotation |
 | `tests/lib/backup.test.ts` | 24 | that the orchestration refuses rather than answers, and a restore is a merge |

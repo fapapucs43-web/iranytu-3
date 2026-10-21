@@ -64,6 +64,7 @@ import { resetSeenLessons } from "./micro-lessons";
 import { resetReminderMessage } from "./notifications";
 import { resetWeeklyAnswers, resetWeeklySkips } from "./weeklyReflection";
 import { resetCompanion } from "./companion";
+import { resetPrograms } from "./programs";
 
 /** Every app key begins with this, which is also the bundle's app marker. */
 export const APP_KEY_PREFIX = "belso-iranytu";
@@ -100,6 +101,7 @@ export const WIPE_KEYS = [
   "belso-iranytu-weekly-answers",
   "belso-iranytu-onboarding",
   "belso-iranytu-companion",
+  "belso-iranytu-program",
   // Device state: what this device has shown, chosen or been told not to show.
   "belso-iranytu:cardStates",
   "belso-iranytu-background",
@@ -176,6 +178,7 @@ export const RESET_FUNCTIONS = [
   resetWeeklySkips,
   resetReminderMessage,
   resetCompanion,
+  resetPrograms,
 ] as const;
 
 /**

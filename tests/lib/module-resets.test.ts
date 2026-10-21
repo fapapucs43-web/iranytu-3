@@ -326,6 +326,7 @@ describe("RESET_FUNCTIONS is every module that owns a stored record", () => {
       "resetWeeklySkips",
       "resetReminderMessage",
       "resetCompanion",
+      "resetPrograms",
     ]);
     // The list is what `wipeAppStorage` runs, so an entry that is not a function
     // would be a hole the wipe cannot see.

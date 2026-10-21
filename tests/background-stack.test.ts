@@ -626,6 +626,14 @@ describe("the nested menus fade with the card they sit in", () => {
     ".companion-avatar": "--app-surface-2",
     ".companion-xp": "--app-surface-2",
     ".companion-type-btn": "--app-surface-2",
+    // Phase 2's two therapy cards: the week's practice and prompt panels, the
+    // seek-help result panel, and its urgent variant. All four are grounds
+    // inside a card, so all four fade; the urgent border is `--danger`, an
+    // accent, and stays.
+    ".program-practice": "--app-surface-2",
+    ".program-prompt": "--app-soft-surface",
+    ".seek-help-result": "--app-surface-2",
+    ".seek-help-urgent": "--app-soft-surface",
   };
 
   /**
@@ -660,6 +668,11 @@ describe("the nested menus fade with the card they sit in", () => {
     ".iconset-badge": "var(--surface-2)",
     ".badge-cell": "var(--surface-2)",
     ".progress-track": "var(--bg-soft)",
+    // The program's six dots are a progress bar in pieces: a faded track would
+    // stop showing how far along the six weeks are, which is the only thing
+    // they say.
+    ".program-dot": "var(--bg-soft)",
+    ".program-dot-done": "var(--brand)",
     ".slider::-webkit-slider-runnable-track": "var(--bg-soft)",
     ".slider::-moz-range-track": "var(--bg-soft)",
     ".corr-matrix thead th": "var(--surface-2)",
