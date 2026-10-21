@@ -627,7 +627,12 @@ describe("every content icon follows the chosen set", () => {
     // module directly (they are chrome, exactly like the toolbox header), and
     // the two transparency cards kept their two sites when they moved file.
     // 55 − 1 = 54.
-    expect(sites.length).toBe(54);
+    //
+    // The mega batch added four: the companion card and its Settings picker
+    // (`Sprout`), the six-week program (`Compass`) and the seek-help guide
+    // (`ShieldAlert`) — all four names already in the registry, all four
+    // content rather than chrome. 54 + 4 = 58.
+    expect(sites.length).toBe(58);
     for (const name of sites) {
       expect(
         isChromeIcon(name),

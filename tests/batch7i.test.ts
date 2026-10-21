@@ -49,7 +49,7 @@
  */
 import { describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { readFileSync, readdirSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -259,15 +259,27 @@ type ProbeResult = {
 };
 
 function probe(offline: boolean): ProbeResult {
-  const proc = Bun.spawnSync(["bun", "-e", PROBE], {
-    cwd: ROOT,
-    env: { ...process.env, PROBE_ROOT: ROOT, PROBE_OFFLINE: offline ? "1" : "0" },
-  });
-  const out = proc.stdout.toString();
-  if (proc.exitCode !== 0) {
-    throw new Error(`the PDF probe failed: ${proc.stderr.toString().slice(0, 600)}`);
+  // A temp file under ROOT, not `-e`: on Windows `bun` is a `.cmd` shim and
+  // Bun refuses to hand it this many cmd.exe metacharacters. The directory is
+  // under ROOT so the probe's `import("jspdf")` still resolves through the
+  // repository's node_modules, and it is named for `.gitignore` and removed in
+  // a `finally` so a failed probe leaves nothing behind.
+  const dir = mkdtempSync(join(ROOT, ".tmp-pdf-"));
+  try {
+    const file = join(dir, "probe.mjs");
+    writeFileSync(file, PROBE, "utf8");
+    const proc = Bun.spawnSync(["bun", file], {
+      cwd: ROOT,
+      env: { ...process.env, PROBE_ROOT: ROOT, PROBE_OFFLINE: offline ? "1" : "0" },
+    });
+    const out = proc.stdout.toString();
+    if (proc.exitCode !== 0) {
+      throw new Error(`the PDF probe failed: ${proc.stderr.toString().slice(0, 600)}`);
+    }
+    return JSON.parse(out) as ProbeResult;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
-  return JSON.parse(out) as ProbeResult;
 }
 
 /**

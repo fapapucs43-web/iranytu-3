@@ -36,7 +36,7 @@
  *      `bun scripts/extract-raw-strings.mjs --md`   (rewrites the sweep list)
  */
 import { readdirSync, statSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, sep } from "node:path";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
@@ -74,7 +74,12 @@ function walkDir(dir, out = []) {
   for (const entry of readdirSync(dir)) {
     const p = join(dir, entry);
     if (statSync(p).isDirectory()) walkDir(p, out);
-    else if (p.endsWith(".tsx") || p.endsWith(".ts")) out.push(p);
+    // POSIX separators in the RESULT, whatever `join` produced. Every table
+    // this walk feeds is keyed on `src/lib/x.ts`, and a Windows `src\lib\x.ts`
+    // classified nothing: the families map missed every file and the generator
+    // threw on the first run. Node and Bun both resolve a forward-slash
+    // relative path on Windows, so the reading half needs no change.
+    else if (p.endsWith(".tsx") || p.endsWith(".ts")) out.push(p.split(sep).join("/"));
   }
   return out;
 }
@@ -289,6 +294,16 @@ const TS_FAMILIES = [
       // module owns for the same reason the tips beside it are — a translator
       // has to read it against what the diet IS, not against a screen's width.
       "src/lib/diets.ts",
+      // The mega batch's three: the companion's five shape names and hints, the
+      // six-week program's weekly prose, and the seek-help guide's four
+      // outcomes. Each is read by the reader but OWED by its module — the
+      // program's week and the guide's branch only make sense next to the rule
+      // they belong to, and the companion's labels are the five shapes the
+      // state machine validates against. Translating a hint without its shape
+      // would be a translated label on an untranslated promise.
+      "src/lib/companion.ts",
+      "src/lib/programs.ts",
+      "src/lib/seekHelp.ts",
     ],
   },
   {
@@ -452,6 +467,18 @@ const ROUNDS = [
   // makes it a `.tsx` file the walk FINDS and therefore one that must have an
   // owning round. One file, one shape, well under the ceiling.
   { n: 19, files: ["src/views/HealthView.tsx"] },
+  // Rounds 20–23: the mega batch's four new components. Each is a `.tsx` file
+  // the walk finds and therefore one an owning round must name; each gets its
+  // OWN round rather than sharing one, because the ceiling is per round and a
+  // card's labels, summaries and body sentences already come close to it on
+  // their own. They are queued rather than swept for the reason round 19 is:
+  // the cards shipped as literal Hungarian so that bringing them up could not
+  // fail on a missing catalogue key, and moving them into the catalogue is a
+  // mechanical pass of its own.
+  { n: 20, files: ["src/components/CompanionCard.tsx"] },
+  { n: 21, files: ["src/components/CompanionSettingsCard.tsx"] },
+  { n: 22, files: ["src/components/ProgramCard.tsx"] },
+  { n: 23, files: ["src/components/SeekHelpCard.tsx"] },
 ];
 
 /**

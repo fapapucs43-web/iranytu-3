@@ -21,19 +21,19 @@ claims has two possible anchors and no way to tell which one went stale.
 ```json
 {
     "srcTsFiles": 176,
-    "srcTsLines": 46827,
+    "srcTsLines": 46832,
     "srcCssFiles": 1,
     "srcCssLines": 5415,
     "libFiles": 91,
     "libLines": 28815,
     "componentFiles": 69,
-    "componentLines": 12940,
+    "componentLines": 12945,
     "viewFiles": 6,
     "viewLines": 2824,
     "stateFiles": 5,
     "stateLines": 1272,
     "testFiles": 126,
-    "testLines": 49425,
+    "testLines": 49455,
     "scriptFiles": 6,
     "publicFontWoff2": 24,
     "publicFontLicences": 10,
@@ -737,7 +737,7 @@ a font problem that shows up there, not an i18n problem.
 
 ## 10. The test suite
 
-**126 files, 49 425 lines, 3 727 tests.** `bun test` — no test framework in the
+**126 files, 49 455 lines, 3 727 tests.** `bun test` — no test framework in the
 dependency block; the runner is bun's own. This table is the second half of the
 document's proof: its file count, its total and the five group sums are all
 recomputed from the rows below, so a file that lands without a row, a row whose

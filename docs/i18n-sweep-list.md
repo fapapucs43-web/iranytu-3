@@ -23,10 +23,10 @@ is also outside it. That is the shape of the rule, not an oversight in it.
 
 | | count |
 | --- | --- |
-| raw literals still to sweep | **6** |
-| files holding them | **1** |
+| raw literals still to sweep | **27** |
+| files holding them | **5** |
 | `t()` call sites this walk saw | 286 |
-| rounds | 19 (15 measurable, 1 with work left) |
+| rounds | 23 (19 measurable, 5 with work left) |
 
 ## The rounds
 
@@ -40,6 +40,10 @@ not an error — it is the end state the sweep is for, and it is listed under **
 | round | files | literals | largest file |
 | --- | --- | --- | --- |
 | 19 | `views/HealthView.tsx` | 6 | `views/HealthView.tsx` (6) |
+| 20 | `components/CompanionCard.tsx` | 5 | `components/CompanionCard.tsx` (5) |
+| 21 | `components/CompanionSettingsCard.tsx` | 6 | `components/CompanionSettingsCard.tsx` (6) |
+| 22 | `components/ProgramCard.tsx` | 6 | `components/ProgramCard.tsx` (6) |
+| 23 | `components/SeekHelpCard.tsx` | 4 | `components/SeekHelpCard.tsx` (4) |
 
 **Already swept:** round 1, round 2, round 3, round 4, round 5, round 6, round 7, round 8, round 9, round 10, round 11, round 12, round 13, round 14.
 
@@ -74,6 +78,7 @@ syntax — so this table is a record of what was decided, over numbers that were
 | `lib/assessments.ts` | 40 | 0 | `content — prose the module owns` |
 | `lib/backupWordlist.ts` | 615 | 0 | `data — not copy at all` |
 | `lib/breathing.ts` | 21 | 0 | `registry — the module owns its copy` |
+| `lib/companion.ts` | 13 | 0 | `content — prose the module owns` |
 | `lib/contextOptions.ts` | 13 | 0 | `registry — the module owns its copy` |
 | `lib/csv.ts` | 6 | 0 | `ids — Hungarian on purpose` |
 | `lib/customTheme.ts` | 16 | 0 | `registry — the module owns its copy` |
@@ -92,7 +97,9 @@ syntax — so this table is a record of what was decided, over numbers that were
 | `lib/nutrition.ts` | 70 | 0 | `content — prose the module owns` |
 | `lib/nutritionTips.ts` | 5 | 0 | `content — prose the module owns` |
 | `lib/patternInsights.ts` | 9 | 0 | `content — prose the module owns` |
+| `lib/programs.ts` | 28 | 0 | `content — prose the module owns` |
 | `lib/quadrant.ts` | 8 | 0 | `registry — the module owns its copy` |
+| `lib/seekHelp.ts` | 19 | 0 | `content — prose the module owns` |
 | `lib/sportTips.ts` | 9 | 0 | `content — prose the module owns` |
 | `lib/statsAgg.ts` | 8 | 0 | `registry — the module owns its copy` |
 | `lib/store.ts` | 9 | 0 | `registry — the module owns its copy` |
@@ -100,7 +107,7 @@ syntax — so this table is a record of what was decided, over numbers that were
 | `lib/trackers.ts` | 43 | 0 | `registry — the module owns its copy` |
 | `lib/weeklyReflection.ts` | 92 | 0 | `content — prose the module owns` |
 
-Total: 1491 literals across 29 modules.
+Total: 1551 literals across 32 modules.
 
 The third column is a number that must be **0**, and the generator refuses to write this
 document if it is not: a catalogue key is an identifier, never prose, so a Hungarian letter
@@ -130,7 +137,52 @@ string came out of: `jsx-text` is a label, and the rest are the attribute it was
  144  summary        "Vittek, szokások és kérdőívek"
 ```
 
+### src/components/CompanionCard.tsx — round 20, 5
+
+```
+  5 lines
+  46  title          "Kísérő"
+  68  aria-label     "Haladás a következő szintig"
+  76  jsx-text       "XP · még"
+  76  jsx-text       "XP a következő szintig"
+  84  jsx-text       "Naplózásért, légzésért és meditációért nő. A kihagyott napok nem törlik el — csak elszenderedik."
+```
+
+### src/components/CompanionSettingsCard.tsx — round 21, 6
+
+```
+  6 lines
+  34  title          "Kísérő"
+  39  jsx-text       "Válassz egy kísérőt. Nem kell gondozni, és nem lehet elveszíteni: a kihagyott napok csak elszenderítik."
+  46  aria-label     "Kísérő típusa"
+  72  jsx-text       "Kísérő színe"
+  73  aria-label     "Kísérő színe"
+  95  jsx-text       "A kísérő a saját naplójában él, nem kerül a mentésbe, és a „Minden adat törlése” vele együtt törli."
+```
+
+### src/components/ProgramCard.tsx — round 22, 6
+
+```
+  6 lines
+  78  jsx-text       ". Heti egy téma, egy kis gyakorlat és egy kérdés, amire naplózhatsz. Nincs határidő: akkor haladsz, amikor van kedved."
+  82  jsx-text       "Elindítom"
+  89  jsx-text       "Újra kezdem"
+ 105  jsx-text       ". hét ·"
+ 111  jsx-text       "Kérdés a hétre:"
+ 117  jsx-text       ". hétnél tartasz. Ha kimarad egy hét, az nem baj — a program ott folytatódik, ahol abbahagytad."
+```
+
+### src/components/SeekHelpCard.tsx — round 23, 4
+
+```
+  4 lines
+  61  title          "Mikor kérj segítséget?"
+  66  jsx-text       "Ez nem teszt és nem diagnózis. Három kérdés segít eldönteni, hogy most elég-e figyelned magadra, vagy érdemes valakivel beszélned."
+  89  jsx-text       "Következő lépés:"
+ 105  jsx-text       "Újra kezdem"
+```
+
 ---
 
-Summed: 6 literals across
-1 files, in 1 rounds.
+Summed: 27 literals across
+5 files, in 5 rounds.

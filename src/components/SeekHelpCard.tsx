@@ -50,11 +50,16 @@ export default function SeekHelpCard() {
     setAnswers((prev) => ({ ...prev, [key]: value }));
   }
 
+  // `Users`, not `ShieldAlert`: the shield is one of the app's CHROME names (a
+  // warning marker), and `ContentIcon` draws content glyphs from the chosen
+  // set — naming a chrome icon there is the route the call-site audit refuses,
+  // because no set can switch a picture that is not one of its own. `Users` is
+  // in the registry (👥) and says what the card is about: talking to somebody.
   return (
     <CollapsibleCard
       id="tools-seek-help"
       title="Mikor kérj segítséget?"
-      icon={<ContentIcon name="ShieldAlert" />}
+      icon={<ContentIcon name="Users" />}
       summary={result ? result.title : "Három kérdés, egy következő lépés"}
     >
       <p className="muted-note">
