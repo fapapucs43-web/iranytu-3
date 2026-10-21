@@ -304,6 +304,10 @@ const TS_FAMILIES = [
       "src/lib/companion.ts",
       "src/lib/programs.ts",
       "src/lib/seekHelp.ts",
+      // Phase 3's sleep log: the five quality labels live beside the validator
+      // that accepts exactly 1–5, which is why they cannot be translated away
+      // from it.
+      "src/lib/sleepLog.ts",
     ],
   },
   {
@@ -479,6 +483,10 @@ const ROUNDS = [
   { n: 21, files: ["src/components/CompanionSettingsCard.tsx"] },
   { n: 22, files: ["src/components/ProgramCard.tsx"] },
   { n: 23, files: ["src/components/SeekHelpCard.tsx"] },
+  // Phase 3's two card, queued on the same terms: literal Hungarian until the
+  // mechanical catalogue pass, one round each so the diff stays reviewable.
+  { n: 24, files: ["src/components/SleepLogCard.tsx"] },
+  { n: 25, files: ["src/components/SleepMoodCard.tsx"] },
 ];
 
 /**

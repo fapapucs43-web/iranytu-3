@@ -30,6 +30,15 @@ export type HealthImportResult = {
   hr: HealthSample[];
   /** SpO2 samples in %. */
   spo2: HealthSample[];
+  /**
+   * Heart-rate variability samples in ms (Apple's SDNN).
+   *
+   * A separate series rather than a second `hr` reading: bpm and SDNN are not
+   * the same measurement and averaging them together would produce a number
+   * that means nothing. Google Fit's export carries no HRV, so its parser
+   * leaves this empty — honestly, rather than inventing it.
+   */
+  hrv: HealthSample[];
   /** Steps, summed per day. */
   steps: HealthDaySummary;
   /** Sleep minutes per day (in-bed-awake excluded). */

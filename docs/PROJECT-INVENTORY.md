@@ -20,26 +20,26 @@ claims has two possible anchors and no way to tell which one went stale.
 
 ```json
 {
-    "srcTsFiles": 176,
-    "srcTsLines": 46832,
+    "srcTsFiles": 179,
+    "srcTsLines": 47415,
     "srcCssFiles": 1,
-    "srcCssLines": 5415,
-    "libFiles": 91,
-    "libLines": 28815,
-    "componentFiles": 69,
-    "componentLines": 12945,
+    "srcCssLines": 5480,
+    "libFiles": 92,
+    "libLines": 29158,
+    "componentFiles": 71,
+    "componentLines": 13177,
     "viewFiles": 6,
-    "viewLines": 2824,
+    "viewLines": 2832,
     "stateFiles": 5,
     "stateLines": 1272,
-    "testFiles": 126,
-    "testLines": 49455,
+    "testFiles": 128,
+    "testLines": 49777,
     "scriptFiles": 6,
     "publicFontWoff2": 24,
     "publicFontLicences": 10,
     "publicPdfFontFiles": 3,
     "publicIconFiles": 3,
-    "storageKeys": 41,
+    "storageKeys": 42,
     "fontFamilies": 12,
     "fontFiles": 24,
     "iconSets": 3,
@@ -109,7 +109,7 @@ fresh under the policy of the deploy that stored it.
 - A swap the page asked for reloads at once; a deploy that arrives quietly keeps its deferral: `src/lib/pwa.ts:394` — `if (skipRequested) {`
 - The banner that says the page is not the deploy, and offers the same six steps: `src/components/StaleWorkerNotice.tsx:37` — `export function StaleWorkerBanner({`
 - Mounted in the shell, above the content: `src/App.tsx:356` — `<StaleWorkerNotice />`
-- Both marker names are in the wipe, because the older button wrote the older key: `src/lib/storageKeys.ts:126` — `"belso-iranytu-force-reset",`
+- Both marker names are in the wipe, because the older button wrote the older key: `src/lib/storageKeys.ts:128` — `"belso-iranytu-force-reset",`
 - The devtools route that always works, written for the reader: `docs/stuck-service-worker.md:1` — `# Beragadt service worker — a végső útmutató`
 
 - The workflow needs history to work at all: `.github/workflows/ci.yml:55` — `fetch-depth: 0`
@@ -142,9 +142,9 @@ fresh under the policy of the deploy that stored it.
 | --- | --- | --- |
 | Ma | `src/views/TodayView.tsx:52` — `export default function TodayView() {` | the entry form: mood, trackers, activities, goals, the week's reflection |
 | Felfedezés | `src/views/ToolsView.tsx:178` — `export default function ToolsView() {` | the tools the day does not need, in four drawers — see `docs/tools-tab.md` |
-| Egészség | `src/views/HealthView.tsx:163` — `export default function HealthView() {` | the body's records: food, workouts, vitals, habits and the check-ins, in three sections |
+| Egészség | `src/views/HealthView.tsx:167` — `export default function HealthView() {` | the body's records: food, workouts, vitals, habits and the check-ins, in three sections |
 | Napló | `src/views/JournalView.tsx:25` — `export default function JournalView({ onGoToday }` | calendar, real streak, search, entry edit and delete |
-| Elemzés | `src/views/InsightsView.tsx:58` — `export default function InsightsView({ onGoToday }` | correlations, lag analysis, exports, monthly/yearly stats, achievements, pattern insights |
+| Elemzés | `src/views/InsightsView.tsx:59` — `export default function InsightsView({ onGoToday }` | correlations, lag analysis, exports, monthly/yearly stats, achievements, pattern insights |
 | Beállítások | `src/views/SettingsView.tsx:232` — `export default function SettingsView({` | every preference, the data section, and the two integrations |
 
 - `src/components/CorrelationGrid.tsx:20` — `export default function CorrelationGrid() {`
@@ -153,7 +153,7 @@ fresh under the policy of the deploy that stored it.
 - `src/components/MonthlyYearlyStats.tsx:29` — `export default function MonthlyYearlyStats() {`
 - `src/components/AchievementsCard.tsx:25` — `export default function AchievementsCard() {`
 
-- The last of the five, in the view's own JSX: `src/views/InsightsView.tsx:307` — `<CorrelationGrid />`
+- The last of the five, in the view's own JSX: `src/views/InsightsView.tsx:311` — `<CorrelationGrid />`
 
 ## 5. State and persistence
 
@@ -737,7 +737,7 @@ a font problem that shows up there, not an i18n problem.
 
 ## 10. The test suite
 
-**126 files, 49 455 lines, 3 727 tests.** `bun test` — no test framework in the
+**128 files, 49 777 lines, 3 750 tests.** `bun test` — no test framework in the
 dependency block; the runner is bun's own. This table is the second half of the
 document's proof: its file count, its total and the five group sums are all
 recomputed from the rows below, so a file that lands without a row, a row whose
@@ -814,7 +814,7 @@ a fourth ground.
 | `tests/phase4.test.ts` | 7 | onboarding state and reminder scheduling |
 | `tests/stuck-worker.test.ts` | 17 | the stuck service worker: the detector (a controller url without this build's hash, conservative about every unknown), the escape address (`resetUrl` + taking the stamp back out), the `SKIP_WAITING` message on both sides, the immediate reload for a swap the page asked for, the banner's markup and its solid amber rail, and the reader's devtools guide |
 
-**`tests/lib/` — one file per library module** — 50 files, 944 tests
+**`tests/lib/` — one file per library module** — 52 files, 967 tests
 
 | File | Tests | Pins |
 | --- | --- | --- |
@@ -838,6 +838,8 @@ a fourth ground.
 | `tests/lib/companion.test.ts` | 12 | the forgiving companion: the five shapes and five colours as total registries, XP and level derived rather than remembered, the streak's three cases (same day, exactly yesterday, any longer gap), and the one rule the module exists for — a gap dims the avatar and resets nothing else, with the state surviving a reload, a corrupt blob repaired, and the wipe clearing the key |
 | `tests/lib/programs.test.ts` | 13 | the six-week program's state machine: a fresh install has none, a start writes only its own key, each press finishes exactly one week, a gap between weeks changes nothing, the last week finishes the program and finishing again is a no-op, restarting cannot lose the reader's place, and a stored gap or junk in the completed list is repaired rather than rendered |
 | `tests/lib/seek-help.test.ts` | 10 | the non-diagnostic guide: three questions, an answer about self-harm reaching the urgent branch across every duration/impact combination, the two conservative thresholds, every branch carrying a title, a body and a next step, no condition named or cure promised in any of the twelve results, and no phone number written into the tree |
+| `tests/lib/sleep-log.test.ts` | 15 | the sleep log: a night that crosses midnight is one duration, equal times are ambiguous rather than zero, junk times are refused, one record per day newest-first with a re-save replacing, a corrupt blob loads as a usable list, deletion is exact, subscribers hear a save and the reset clears the key — plus the correlation's floor, its band averages, a coefficient of 1 on a perfect relationship, no divide-by-zero on a flat mood column, and a sentence that never claims cause |
+| `tests/lib/health-hrv.test.ts` | 8 | the wearable half of phase 3: SDNN parsed into its own series and never into bpm, a zero and a sub-millisecond reading dropped, the merge writing `smartwatch-hrv` only behind the reader's own toggle, an HRV preview row that counts the days it could fill, the id staying out of the tracker registry, and a neutral grid column that appears only once a sample exists |
 | `tests/lib/weekly-menus.test.ts` | 12 | the composed week: the eleven named diets get seven days and `other` gets none, every item is a registry row in that diet's pool, no meal repeats a food, the same diet composes the same week, no diet prints one day seven times, every exclusion names a real food, and a day's total is the sum of its own rows |
 | `tests/lib/fitness.test.ts` | 47 | that adopting a template COPIES it, that the caps hold, that the log is a record a later plan edit cannot change, that progression is computed by name — including the repeated-weight rule that becomes 2.5 kg and its bodyweight twin, one more rep or five more seconds — that the dose string says whether a number is reps or seconds, that the chart series is the progression as points, and, from Phase 3's third commit, that the twelve templates each carry one of the six movement types and that a rest day keeps its exercises while dropping out of the rotation |
 | `tests/lib/backup.test.ts` | 24 | that the orchestration refuses rather than answers, and a restore is a merge |

@@ -31,6 +31,7 @@
  *
  * WHAT IS EXTRACTED, AND WHERE IT LANDS (the caller maps further):
  *   heart rate   HKQuantityTypeIdentifierHeartRate          → bpm samples
+ *   HRV (SDNN)   HKQuantityTypeIdentifierHeartRateVariabilitySDNN → ms samples
  *   SpO2         HKQuantityTypeIdentifierOxygenSaturation   → % samples
  *   steps        HKQuantityTypeIdentifierStepCount          → summed per day
  *   sleep        HKCategoryTypeIdentifierSleepAnalysis      → stage durations
@@ -49,6 +50,7 @@ import type {
 } from "./types";
 
 const HR_TYPE = "HKQuantityTypeIdentifierHeartRate";
+const HRV_TYPE = "HKQuantityTypeIdentifierHeartRateVariabilitySDNN";
 const SPO2_TYPE = "HKQuantityTypeIdentifierOxygenSaturation";
 const STEP_TYPE = "HKQuantityTypeIdentifierStepCount";
 const SLEEP_TYPE = "HKCategoryTypeIdentifierSleepAnalysis";
@@ -128,6 +130,7 @@ export function appleWorkoutKind(activityType: string): HealthWorkout["kind"] {
  */
 export class HealthAccumulator {
   readonly hr: HealthSample[] = [];
+  readonly hrv: HealthSample[] = [];
   readonly spo2: HealthSample[] = [];
   readonly steps: HealthSample[] = [];
   readonly sleep: { day: string; minutes: number; stage: SleepStage }[] = [];
@@ -143,6 +146,14 @@ export class HealthAccumulator {
     if (type === HR_TYPE && value) {
       const n = Number(value);
       if (Number.isFinite(n) && n > 0) this.hr.push({ day, value: n });
+    } else if (type === HRV_TYPE && value) {
+      const n = Number(value);
+      // SDNN in milliseconds. The window is a sanity range, not physiology: a
+      // watch writes 0 for a failed reading, and a hand-edited or re-exported
+      // file can carry seconds instead of milliseconds (0.05). Anything under
+      // one millisecond is not a reading, and accepting it would drag the
+      // day's average to a number no watch ever measured.
+      if (Number.isFinite(n) && n >= 1 && n <= 500) this.hrv.push({ day, value: n });
     } else if (type === SPO2_TYPE && value) {
       const n = Number(value);
       // Apple writes 0.97 ("count %") or 97 ("%") — normalize both to %.
@@ -235,6 +246,7 @@ function summarize(acc: HealthAccumulator, error?: string): HealthImportResult {
     source: "apple",
     recordsSeen: acc.recordsSeen,
     hr: acc.hr,
+    hrv: acc.hrv,
     spo2: acc.spo2,
     steps: sumStepsPerDay(acc.steps),
     sleep: sumSleepPerDay(acc.sleep),

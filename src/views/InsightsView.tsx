@@ -30,6 +30,7 @@ import MonthlyYearlyStats from "../components/MonthlyYearlyStats";
 import AchievementsCard from "../components/AchievementsCard";
 import { GlyphIcon } from "../state/IconSetContext";
 import CorrelationGrid from "../components/CorrelationGrid";
+import SleepMoodCard from "../components/SleepMoodCard";
 import QuadrantInsightCards from "../components/QuadrantInsightCards";
 import PatternInsightsCard from "../components/PatternInsightsCard";
 import { BarChart, Lightbulb, Link } from "../lib/icons";
@@ -272,6 +273,9 @@ export default function InsightsView({ onGoToday }: { onGoToday?: () => void }) 
               </ul>
             )}
           </CollapsibleCard>
+          {/* Phase 3's sleep log, beside the activity correlations: same days,
+              same sample floor, same "együtt járás" wording. */}
+          <SleepMoodCard />
       </>
     ) },
     { id: "lag" as InsightsSectionId, label: t("settings.sections.lag"), render: () => (

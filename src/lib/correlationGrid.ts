@@ -149,9 +149,29 @@ export function buildCorrelationGrid(input: GridInput): CorrelationGridResult {
     higherIsBetter: t.outcome!.higherIsBetter,
   }));
 
+  /**
+   * The watch series the health import writes WITHOUT a registry row.
+   *
+   * `smartwatch-hr` and `smartwatch-hrv` are values on `trackerValues`, not
+   * trackers: registering them would put a new field on every reader's daily
+   * form and a new row in Settings as a side effect of reading a watch file.
+   * They still belong in the grid once they exist, which is what this list is
+   * — gated on a real sample the same way the registry columns are, so a
+   * reader who never imported a watch sees no new column.
+   *
+   * `higherIsBetter: null` on both. A low resting pulse or a high HRV is
+   * usually read as good, but "usually" is not something this table gets to
+   * assert about a person, so it reports direction and no judgement.
+   */
+  const watchOutcomes: OutcomeDef[] = [
+    { id: "tracker:smartwatch-hr", label: "Pulzus", icon: "💙", higherIsBetter: null },
+    { id: "tracker:smartwatch-hrv", label: "HRV", icon: "🩺", higherIsBetter: null },
+  ];
+
   const outcomes: OutcomeDef[] = [
     ...BUILT_IN_OUTCOMES,
     ...trackerOutcomes.filter((o) => entries.some((e) => outcomeValue(e, o.id) !== null)),
+    ...watchOutcomes.filter((o) => entries.some((e) => outcomeValue(e, o.id) !== null)),
     ...input.customNumericTrackers.map((t) => ({
       id: `custom:${t.id}` as OutcomeId,
       label: t.label,

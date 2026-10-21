@@ -164,6 +164,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       "health-general",
       "health-import",
       "health-nutrition",
+      "health-sleep-log",
       "health-training",
       "insights-achievements",
       "insights-activity-correlation",
@@ -174,6 +175,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       "insights-patterns",
       "insights-quadrant-sleep",
       "insights-report-export",
+      "insights-sleep-mood",
       "insights-trend",
       "insights-week",
       "insights-year",
@@ -306,6 +308,8 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       ["src/components/ReminderCard.tsx", 1],
       ["src/components/ReportExport.tsx", 1],
       ["src/components/SeekHelpCard.tsx", 1],
+      ["src/components/SleepLogCard.tsx", 1],
+      ["src/components/SleepMoodCard.tsx", 1],
       // Two mounts, not one: the frame itself, plus the dynamic
       // `tracker-${head.id}` the groups expand to.
       ["src/components/TrackerInputs.tsx", 2],
@@ -526,6 +530,7 @@ describe("Minden adat törlése really means every record", () => {
       "resetReminderMessage",
       "resetSeenBadges",
       "resetSeenLessons",
+      "resetSleepLog",
       "resetWeeklyAnswers",
       "resetWeeklySkips",
     ]);

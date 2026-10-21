@@ -23,10 +23,10 @@ is also outside it. That is the shape of the rule, not an oversight in it.
 
 | | count |
 | --- | --- |
-| raw literals still to sweep | **27** |
-| files holding them | **5** |
+| raw literals still to sweep | **40** |
+| files holding them | **7** |
 | `t()` call sites this walk saw | 286 |
-| rounds | 23 (19 measurable, 5 with work left) |
+| rounds | 25 (21 measurable, 7 with work left) |
 
 ## The rounds
 
@@ -44,6 +44,8 @@ not an error — it is the end state the sweep is for, and it is listed under **
 | 21 | `components/CompanionSettingsCard.tsx` | 6 | `components/CompanionSettingsCard.tsx` (6) |
 | 22 | `components/ProgramCard.tsx` | 6 | `components/ProgramCard.tsx` (6) |
 | 23 | `components/SeekHelpCard.tsx` | 4 | `components/SeekHelpCard.tsx` (4) |
+| 24 | `components/SleepLogCard.tsx` | 10 | `components/SleepLogCard.tsx` (10) |
+| 25 | `components/SleepMoodCard.tsx` | 3 | `components/SleepMoodCard.tsx` (3) |
 
 **Already swept:** round 1, round 2, round 3, round 4, round 5, round 6, round 7, round 8, round 9, round 10, round 11, round 12, round 13, round 14.
 
@@ -100,6 +102,7 @@ syntax — so this table is a record of what was decided, over numbers that were
 | `lib/programs.ts` | 28 | 0 | `content — prose the module owns` |
 | `lib/quadrant.ts` | 8 | 0 | `registry — the module owns its copy` |
 | `lib/seekHelp.ts` | 19 | 0 | `content — prose the module owns` |
+| `lib/sleepLog.ts` | 7 | 0 | `content — prose the module owns` |
 | `lib/sportTips.ts` | 9 | 0 | `content — prose the module owns` |
 | `lib/statsAgg.ts` | 8 | 0 | `registry — the module owns its copy` |
 | `lib/store.ts` | 9 | 0 | `registry — the module owns its copy` |
@@ -107,7 +110,7 @@ syntax — so this table is a record of what was decided, over numbers that were
 | `lib/trackers.ts` | 43 | 0 | `registry — the module owns its copy` |
 | `lib/weeklyReflection.ts` | 92 | 0 | `content — prose the module owns` |
 
-Total: 1551 literals across 32 modules.
+Total: 1558 literals across 33 modules.
 
 The third column is a number that must be **0**, and the generator refuses to write this
 document if it is not: a catalogue key is an identifier, never prose, so a Hungarian letter
@@ -129,12 +132,12 @@ string came out of: `jsx-text` is a label, and the rest are the attribute it was
 
 ```
   6 lines
-  78  title          "Táplálkozás"
-  80  summary        "Ételek, italok és tápanyagok"
- 113  title          "Edzés"
- 115  summary        "Mozgás, programok és teljesítmény"
- 142  title          "Egyéb"
- 144  summary        "Vittek, szokások és kérdőívek"
+  79  title          "Táplálkozás"
+  81  summary        "Ételek, italok és tápanyagok"
+ 114  title          "Edzés"
+ 116  summary        "Mozgás, programok és teljesítmény"
+ 143  title          "Egyéb"
+ 145  summary        "Vittek, szokások és kérdőívek"
 ```
 
 ### src/components/CompanionCard.tsx — round 20, 5
@@ -182,7 +185,32 @@ string came out of: `jsx-text` is a label, and the rest are the attribute it was
  105  jsx-text       "Újra kezdem"
 ```
 
+### src/components/SleepLogCard.tsx — round 24, 10
+
+```
+ 10 lines
+  55  title          "Alvásnapló"
+  60  jsx-text       "Nem az órák száma a lényeg, hanem hogy mikor aludtál és hogyan érezted magad utána. A napló az ébredés napjára kerül."
+  65  jsx-text       "Ébredés napja"
+  78  jsx-text       "Lefekvés"
+  88  jsx-text       "Ébredés"
+ 100  jsx-text       "Milyen volt az alvás?"
+ 101  aria-label     "Alvásminőség"
+ 117  jsx-text       "Mentés"
+ 122  jsx-text       "Korábbi éjszakák"
+ 138  jsx-text       "Törlés"
+```
+
+### src/components/SleepMoodCard.tsx — round 25, 3
+
+```
+  3 lines
+  42  title          "Alvásminőség × hangulat"
+  48  jsx-text       "Vezess alvásnaplót az Egészség fülön, és itt megjelenik, hogy a jobb éjszakák után jobb-e a hangulatod."
+  66  jsx-text       "Az átlagok 0–100-as hangulatpontok. Az együtt járás nem bizonyíték arra, hogy az alvás okozza a hangulatot — vagy fordítva."
+```
+
 ---
 
-Summed: 27 literals across
-5 files, in 5 rounds.
+Summed: 40 literals across
+7 files, in 7 rounds.

@@ -630,9 +630,13 @@ describe("every content icon follows the chosen set", () => {
     //
     // The mega batch added four: the companion card and its Settings picker
     // (`Sprout`), the six-week program (`Compass`) and the seek-help guide
-    // (`ShieldAlert`) — all four names already in the registry, all four
-    // content rather than chrome. 54 + 4 = 58.
-    expect(sites.length).toBe(58);
+    // (`Users`) — all four names already in the registry, all four content
+    // rather than chrome. 54 + 4 = 58.
+    //
+    // Phase 3 added two more: the sleep log and the sleep × mood card, both
+    // `Bed` (the registry's 😴, which is the sleep tracker's own glyph) rather
+    // than the chrome `Moon` this batch first reached for. 58 + 2 = 60.
+    expect(sites.length).toBe(60);
     for (const name of sites) {
       expect(
         isChromeIcon(name),

@@ -632,6 +632,9 @@ describe("the nested menus fade with the card they sit in", () => {
     // accent, and stays.
     ".program-practice": "--app-surface-2",
     ".program-prompt": "--app-soft-surface",
+    // Phase 3's sleep log: the quality picker and each logged night's row.
+    ".sleep-quality-btn": "--app-surface-2",
+    ".sleep-log-row": "--app-surface-2",
     ".seek-help-result": "--app-surface-2",
     ".seek-help-urgent": "--app-soft-surface",
   };
