@@ -733,17 +733,17 @@ describe("Batch 13, commit 3 — the strong cards (twenty since this batch)", ()
     // appear in a comment. The count is the array above (fifteen rows since
     // this batch converted the two data/voice drawers) plus the Batch 11
     // feature cards that already lived here.
-    // Twenty-five: the fifteen Settings rows plus the Batch 11 feature cards
+    // Twenty-six: the sixteen Settings rows plus the Batch 11 feature cards
     // that already lived here (Batch 15 added the allergen list, Phase 2 the
     // language switcher), plus the eight cards Phase 2b made collapsible on
     // this page (backup, pin, reminder, update, install, custom theme, custom
     // trackers, med times) and the custom-ACTIVITY manager the 2026-10
     // completion converted beside its twin, the tracker manager. The two
     // transparency cards left for the toolbox and are covered by the ToolsView
-    // assertion below. The last two of the twenty-five are the data/voice
+    // assertion below. The last two of the twenty-six are the data/voice
     // drawers fix/card-state-and-full-audit converted from the session-local
     // `Collapsible` — with the meds module off, as here.
-    expect((html.match(/collapsible-card-head/g) ?? []).length).toBe(25);
+    expect((html.match(/collapsible-card-head/g) ?? []).length).toBe(26);
     for (const [id, title, summary] of SETTINGS_CARDS) {
       expect(html, id).toContain(`aria-controls="card-body-${id}"`);
       expect(isCollapsed(html, id), `${id} must be collapsed by default`).toBe(true);

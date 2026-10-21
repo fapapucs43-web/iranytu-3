@@ -617,6 +617,15 @@ describe("the nested menus fade with the card they sit in", () => {
     // The meal log's suggestion popup: it hangs over the card it belongs to, and
     // a list that stayed solid would be the one opaque rectangle on a picture.
     ".autocomplete-list": "--app-surface",
+    // Phase 1's companion: the card's own ground, the avatar disc and XP track
+    // inside it, and the type picker in Settings. Each is a panel on top of the
+    // sheet, so each fades with it; the avatar's ring and the XP fill are
+    // `--companion-color`, an accent rather than a ground, and stay solid for
+    // the same reason the slider thumb does.
+    ".companion-card": "--app-soft-surface",
+    ".companion-avatar": "--app-surface-2",
+    ".companion-xp": "--app-surface-2",
+    ".companion-type-btn": "--app-surface-2",
   };
 
   /**

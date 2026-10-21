@@ -184,6 +184,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       "settings-allergies",
       "settings-background",
       "settings-backup",
+      "settings-companion",
       "settings-custom-activities",
       "settings-custom-theme",
       "settings-custom-trackers",
@@ -208,6 +209,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       "settings-voice",
       "today-activities",
       "today-balance",
+      "today-companion",
       "today-daily-goals",
       "today-lesson",
       "today-mood",
@@ -271,6 +273,8 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       ["src/components/BackupSettingsCard.tsx", 1],
       ["src/components/BreathingExercise.tsx", 1],
       ["src/components/CbtForm.tsx", 1],
+      ["src/components/CompanionCard.tsx", 1],
+      ["src/components/CompanionSettingsCard.tsx", 1],
       ["src/components/CorrelationGrid.tsx", 1],
       ["src/components/CustomActivityManager.tsx", 1],
       ["src/components/CustomThemeEditor.tsx", 1],
@@ -332,7 +336,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
     // session-local `Collapsible`s (settings-data, settings-voice), whose
     // whole point of joining the vocabulary is that their state now
     // survives a reload.
-    expect(MOUNTS.filter((m) => m.raw.startsWith("settings-")).length).toBe(26);
+    expect(MOUNTS.filter((m) => m.raw.startsWith("settings-")).length).toBe(27);
   });
 
   test("only the cards that promise to remember use the remembering primitive", () => {
@@ -509,6 +513,7 @@ describe("Minden adat törlése really means every record", () => {
       "clearAssessments",
       "resetCardStates",
       "resetCbtRecords",
+      "resetCompanion",
       "resetCustomActivities",
       "resetCustomTrackers",
       "resetGratitude",

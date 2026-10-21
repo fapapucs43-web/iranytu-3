@@ -276,14 +276,14 @@ describe("every card on the Settings page can be collapsed", () => {
     // Expects: heads == card-heads == aria-controls targets — after Phase 2
     //   of this batch no session-local `Collapsible` head remains on this
     //   page, so every toggle both announces its state and stores it.
-    //   Twenty-six with the meds module on: the twenty-four from before plus
-    //   the two converted data/voice drawers.
+    //   Twenty-seven with the meds module on: the twenty-six from before plus
+    //   the Phase 1 companion card.
     // Actual: same.
     const html = renderSettings();
     const heads = html.match(/<button[^>]*class="collapsible-head[^"]*"[^>]*>/g) ?? [];
     const cardHeads = html.match(/collapsible-card-head/g) ?? [];
     const targets = html.match(/aria-controls="card-body-/g) ?? [];
-    expect(heads.length).toBe(26);
+    expect(heads.length).toBe(27);
     expect(cardHeads, "every head on this page is a remembering head").toHaveLength(heads.length);
     expect(targets, "every remembering head points at its own body").toHaveLength(heads.length);
     for (const head of heads) expect(head).toContain("aria-expanded=");

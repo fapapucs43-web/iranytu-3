@@ -45,6 +45,8 @@ import {
   type Meditation,
 } from "../lib/meditations";
 import { startEngine, stepEngine } from "../lib/breathing";
+import { todayISO } from "../lib/dates";
+import { recordCompanionActivity } from "../lib/companion";
 import { t } from "../lib/i18n";
 
 export default function MeditationPicker() {
@@ -53,6 +55,7 @@ export default function MeditationPicker() {
   const [finished, setFinished] = useState(false);
   const [state, setState] = useState(() => startEngine(meditationPattern(MEDITATIONS[0]!)));
   const timer = useRef<number | null>(null);
+  const awarded = useRef(false);
 
   const current = MEDITATIONS.find((m) => m.id === selected) ?? MEDITATIONS[0]!;
   const pattern = useMemo(() => meditationPattern(current), [current]);
@@ -83,6 +86,12 @@ export default function MeditationPicker() {
     setFinished(true);
   }, [running, state]);
 
+  useEffect(() => {
+    if (!finished || awarded.current) return;
+    awarded.current = true;
+    recordCompanionActivity("meditation", todayISO());
+  }, [finished]);
+
   /**
    * Choosing another practice restarts the count. Carrying elapsed time across
    * would open a session in the middle of a practice nobody started there.
@@ -92,12 +101,14 @@ export default function MeditationPicker() {
     setState(startEngine(meditationPattern(m)));
     setRunning(false);
     setFinished(false);
+    awarded.current = false;
   }
 
   function restart() {
     setState(startEngine(pattern));
     setFinished(false);
     setRunning(true);
+    awarded.current = false;
   }
 
   return (

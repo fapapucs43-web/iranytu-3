@@ -25,6 +25,8 @@ import RecordingFlow, { type RecordingResult } from "../components/RecordingFlow
 import { loadCustomEmotions, saveCustomEmotions } from "../lib/store";
 import { QUADRANT_COLORS, QUADRANT_LABELS } from "../lib/quadrant";
 import MicroLessonCard from "../components/MicroLessonCard";
+import CompanionCard from "../components/CompanionCard";
+import { recordCompanionActivity } from "../lib/companion";
 import { Scale, Target } from "../lib/icons";
 import ContentIcon from "../components/ContentIcon";
 import { GlyphIcon } from "../state/IconSetContext";
@@ -90,6 +92,7 @@ export default function TodayView() {
       source: "manual",
     });
     setFlowOpen(false);
+    recordCompanionActivity("journal", today);
     setSaved(true);
     notify(t("today.saved"));
     window.setTimeout(() => setSaved(false), 2400);
@@ -194,6 +197,7 @@ export default function TodayView() {
       trackerValues,
       source: "manual",
     });
+    recordCompanionActivity("journal", today);
     setSaved(true);
     notify(t("today.saved"));
     window.setTimeout(() => setSaved(false), 2400);
@@ -305,6 +309,11 @@ export default function TodayView() {
               </button>
             )}
           </CollapsibleCard>
+
+          {/* Phase 1 — the companion sits directly under the mood card: the
+              one place a reader already is when they have just recorded a day. */}
+          <CompanionCard />
+
           {flowOpen && (
             <RecordingFlow
               customEmotions={customEmotions}

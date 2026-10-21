@@ -58,6 +58,7 @@ import { InstallCard } from "../components/InstallPrompt";
 import AppUpdateCard from "../components/AppUpdateCard";
 import FontPicker from "../components/FontPicker";
 import IconSetPicker from "../components/IconSetPicker";
+import CompanionSettingsCard from "../components/CompanionSettingsCard";
 import { GlyphIcon } from "../state/IconSetContext";
 import AssessmentConsent from "../components/AssessmentConsent";
 import WeatherApiCard from "../components/WeatherApiCard";
@@ -455,6 +456,8 @@ export default function SettingsView({
           >
             <IconSetPicker />
           </CollapsibleCard>
+
+          <CompanionSettingsCard />
 
           <CollapsibleCard
             id="settings-theme"

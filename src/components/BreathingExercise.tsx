@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { CollapsibleCard, Segmented } from "./ui/ui";
 import { Settings, Wind } from "../lib/icons";
 import { PREFERS_REDUCED_MOTION, matchesMediaQuery } from "../lib/media";
+import { todayISO } from "../lib/dates";
+import { recordCompanionActivity } from "../lib/companion";
 import { t } from "../lib/i18n";
 import {
   BREATH_PATTERNS,
@@ -56,6 +58,9 @@ export default function BreathingExercise() {
   const [cHold, setCHold] = useState(4);
   const [cOut, setCOut] = useState(4);
   const timer = useRef<number | null>(null);
+  // One award per mounted session. Pausing and resuming is the same practice,
+  // and starting a fresh session would be rewarded on the next mount anyway.
+  const awarded = useRef(false);
 
   /** The pattern actually in force — quick mode pins it. */
   const active = quick ? QUICK_PATTERN : pattern;
@@ -69,6 +74,13 @@ export default function BreathingExercise() {
       if (timer.current) window.clearInterval(timer.current);
     };
   }, [running, active]);
+
+  useEffect(() => {
+    if (state.cycles > 0 && !awarded.current) {
+      awarded.current = true;
+      recordCompanionActivity("breathing", todayISO());
+    }
+  }, [state.cycles]);
 
   function select(p: BreathPattern) {
     setPattern(p);
