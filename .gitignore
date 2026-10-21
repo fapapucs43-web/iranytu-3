@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# The deploy scratch directory `freebuff-deploy` stages its upload into — a
+# byte-identical copy of `dist/`, 52 files, recreated on every deploy. It is
+# platform-managed state rather than a build product of this tree, so it is
+# ignored on its own name instead of being folded into `dist/`, which would hide
+# a real change to the build output behind an unrelated tool.
+isolate/
+
+# Font vendoring cache (scripts/subset-ui-fonts.ts). The pinned upstreams are
+# re-fetchable and verified by SHA-256 on every run, so committing them would
+# be committing a second copy of the same binaries under a name that lies about
+# what they are.
+.fontcache/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Editor/OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# BOTH lockfiles are tracked on purpose, and this line used to be here.
+#
+# `bun.lock` was ignored as a "local dev only" artefact, which is how the
+# production build came to fail three times with `vite: command not found`:
+# hosting ran `bun install --frozen-lockfile` against a source tree where
+# `bun.lock` was not present at all, so there was nothing to freeze against,
+# the install step died quietly, and the build then searched for a binary
+# nobody had installed.
+#
+# The convention now:
+#   LOCAL DEV   bun        — bun.lock            (`bun test`, `bun run dev`)
+#   HOSTING     npm        — package-lock.json   (`npm ci`, `npm run build`)
+#
+# The two lockfiles resolve identically — all ten direct dependencies agree,
+# verified — so the bundle produced by either is byte-identical. Both are
+# tracked so that neither surface can silently drift away from the other.
+# See docs/PROJECT-INVENTORY.md, "Two lockfiles, one tree".

@@ -1,0 +1,70 @@
+{
+  "name": "Belső Iránytű — hangulat- és közérzet-napló",
+  "short_name": "Belső Iránytű",
+  "description": "Offline, adatvédett hangulatnapló minden generációnak — az adatok a saját készülékedön maradnak.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f1e8",
+  "theme_color": "#0d5c4d",
+  "lang": "hu",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mai hangulat",
+      "short_name": "Hangulat",
+      "description": "A mai hangulat rögzítése a Ma fülön",
+      "url": "/?quick=mood",
+      "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Új bejegyzés",
+      "short_name": "Bejegyzés",
+      "description": "Új naplóbejegyzés indítása",
+      "url": "/?quick=entry",
+      "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Légzésgyakorlat",
+      "short_name": "Légzés",
+      "description": "A vezetett légzésgyakorlat megnyitása",
+      "url": "/?quick=breath",
+      "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Meditáció",
+      "short_name": "Meditáció",
+      "description": "A meditációs választó megnyitása",
+      "url": "/?quick=meditate",
+      "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    }
+  ]
+}

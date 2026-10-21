@@ -1,0 +1,5184 @@
+/* ============================================================
+   Belső Iránytű — design system v2
+   Multi-generational: calm high-contrast theme, large targets,
+   generous spacing, no tech jargon.
+   ============================================================ */
+
+/* Vendored Lucide icons (Batch 5). Size is `1em` by default so icons
+   inherit --font-scale like text does; this rule only fixes the baseline
+   and the flex/grid contexts where an inline SVG would otherwise add
+   a few pixels of descender gap under the line. */
+.icon {
+  display: inline-block;
+  vertical-align: -0.125em;
+  flex: none;
+  stroke: currentColor;
+}
+
+:root {
+  --bg: #f4f1e8;
+  /* The page backdrop, defaulted like every other property
+     `applyThemeTokens` writes: the flat ground, until the active preset says
+     otherwise. `body` reads it with `var(--app-page, var(--bg))`, so this
+     declaration and that fallback say the same thing for the first frame. */
+  --app-page: var(--bg);
+  /* The FLAT page ground, resolved HERE so no later `--bg` override on a
+     subtree can reach it: the picture layer below needs the theme's own
+     background even when `.app.contrast-high` has swapped `--bg` inside the
+     app, and a custom property substitutes its `var()`s on the element that
+     declares it — which is this one. */
+  --app-page-flat: var(--bg);
+  --bg-soft: #ece7da;
+  --surface: #fffdf7;
+  --surface-2: #f7f4ec;
+  /*
+   * THE CARD SURFACE, AS A SEPARATE TOKEN.
+   *
+   * `--surface` stays exactly what it was, and `--app-surface` is what `.card`
+   * and `.dialog` paint. The two are identical at the default transparency of 0,
+   * which is what makes this additive: a reader with no picture, and a reader
+   * who has never opened this control, are looking at the same colours they were
+   * looking at yesterday.
+   *
+   * WHY A SEPARATE TOKEN AND NOT A `color-mix()` INLINE ON `.card`. Because the
+   * value depends on `--app-card-transparency`, and that number is written ONCE,
+   * by `App.tsx`, on `.app` — one write, every card. This pair is the fallback
+   * for a browser without `color-mix()`: the plain surface, exactly what `.card`
+   * painted before this control existed.
+   *
+   * THE MIX IS DELIBERATELY NOT DECLARED HERE. A custom property substitutes its
+   * `var()`s where it is DECLARED, and the substituted value is what inherits,
+   * so a mix at `:root` would read this default of 0, bake in "opaque", and hand
+   * that down to every card — the slider would move and nothing would fade. It
+   * lives on `.app`, the element carrying the reader's number, in the `@supports`
+   * block below; that block is where the reasoning is written out.
+   *
+   * The `@supports` is load-bearing rather than decorative. `color-mix()` is
+   * still recent enough that a browser without it would drop the declaration at
+   * computed-value time and leave `.card` with NO background at all — text
+   * straight on the picture. Declaring the plain surface first and overriding it
+   * only where the mix is supported means an old browser gets the app it already
+   * had rather than an unreadable one.
+   */
+  --app-card-transparency: 0;
+  --app-surface: var(--surface);
+  --app-surface-2: var(--surface-2);
+  /*
+   * THE HOVER FILL, as three more tokens for the same reason the surface pair
+   * above is two tokens: `App.tsx` writes ONE number on `.app`, and a custom
+   * property resolves its `var()`s where it is DECLARED — so a mix declared at
+   * `:root` would read this default of 0, bake in "opaque", and hand every row
+   * back its solid fill the moment the reader faded their cards.
+   *
+   * The values HERE are the fallbacks a browser without `color-mix()` gets, and
+   * they are exactly what those rules painted before this change — so an old
+   * browser, and a reader with no picture, both see what they saw yesterday.
+   */
+  --app-hover-fill: var(--surface-2);
+  --app-accent-hover-fill: var(--brand-soft);
+  --app-danger-hover-fill: var(--danger-soft);
+  /* The nested tints, for the same reason and on the same terms. */
+  --app-soft-surface: var(--bg-soft);
+  --app-accent-soft: var(--brand-soft);
+  /* The hover's SECOND signal, and the one that survives a 100% fade. */
+  --app-hover-ring: var(--line);
+  --ink: #24312d;
+  --ink-soft: #5b6660;
+  --line: #dcd6c6;
+  /* The CONTROL border, 60% toward --ink. `--line` above is a hairline meant
+     to stay quiet, and at 1.2:1 it cannot identify a control a reader has to
+     find and click. Kept beside `--line` rather than down with the other
+     derived defaults because it is derived from `--line` and `--ink`. */
+  --control-line: #6e736a;
+  --brand: #0d5c4d;
+  --brand-strong: #08453a;
+  --brand-soft: #e3efeb;
+  --accent: #d97706;
+  --danger: #b3424f;
+  --danger-soft: #f6e7e3;
+  --ok: #2f7d52;
+  --radius: 18px;
+  --radius-sm: 12px;
+  /* Batch 11, commit 3 — one shadow, both themes. The spec is two layers: a
+     tight 1px contact line that gives a card its edge, and a wide, very faint
+     12px field that lifts it off the page. Replacing the old single 24px
+     blur, which read as a smudge at 17px body size; the lift token below is
+     kept for the one pressed/hover surface that scales it, and the
+     high-contrast block below keeps its own heavier shadow. */
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.06), 0 10px 32px rgba(0, 0, 0, 0.10);
+  --font-scale: 1;
+  /* Typeface (Batch 5, P10b). The declared value is the pre-Batch-5 stack,
+     verbatim: an app that never picks a web font renders exactly as it did
+     before. lib/fonts writes --app-font on <html> when a family is selected. */
+  --app-font: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  /* The face for the user's OWN words (Batch 8). Defaults to the UI stack, so
+     "handwriting off" is not a special case anywhere: the note styles just
+     name this property and get the selected sans until a script family is
+     deliberately chosen. Written by lib/fonts-runtime, never by hand. */
+  --hand-font: var(--app-font);
+}
+
+/* Accessibility modes (toggled in Settings) */
+.app.text-large {
+  --font-scale: 1.15;
+}
+.app.text-xlarge {
+  --font-scale: 1.32;
+}
+.app.contrast-high {
+  --bg: #ffffff;
+  --bg-soft: #f0ede4;
+  --surface: #ffffff;
+  --surface-2: #ffffff;
+  --ink: #101815;
+  --ink-soft: #33403a;
+  --line: #6b7a72;
+  /* This class re-declares the palette, so it has to re-declare the border
+     derived from it. Without this line a reader on the dark theme who turns
+     high contrast ON keeps the dark theme's light border on a white card,
+     which measures 2.43 — a failure this change would have introduced. */
+  --control-line: #343f3a;
+  --brand: #063f33;
+  --brand-soft: #d5e8e1;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.10), 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Readable foregrounds over filled tokens (set by applyThemeTokens). */
+body {
+  --on-brand: #ffffff;
+  --on-danger: #ffffff;
+  --on-ok: #ffffff;
+  --on-accent: #16211d;
+  /*
+   * Default for the background-image scrim's RGB triple, beside the four
+   * `--on-*` defaults it belongs with: both are written by `applyThemeTokens`
+   * from the resolved palette, and both need a value here for the frame before
+   * that runs. Written as three components rather than a colour because the
+   * stylesheet composes it with the reader's own alpha, which is a separate
+   * owner and changes on its own.
+   */
+  --app-bg-scrim-rgb: 0, 0, 0;
+  /*
+   * The three ring aliases, defaulted here for the same reason the `--on-*`
+   * above are: `applyThemeTokens` has not run yet on the first frame, and the
+   * balance ring and the mood curve would paint from an undefined property —
+   * which resolves to nothing, so the ring would be invisible rather than
+   * wrong. These are the LIGHT palette's values, matching the defaults the rest
+   * of this block uses; a theme switch overwrites all three.
+   *
+   * They are declared HERE and read at `.ring-value-*` / `.chart-series-*`
+   * below. `tests/full-system.test.ts` checks for exactly this — a property
+   * `applyThemeTokens` writes must also have a default in the stylesheet —
+   * and the ring trio were exempt from it by name until commit 10 wired them
+   * up and deleted the exemption.
+   */
+  --ring-ok: #0d5c4d;
+  --ring-warn: #d97706;
+  --ring-bad: #b3424f;
+}
+
+.btn-primary {
+  color: var(--on-brand);
+}
+
+.btn-danger {
+  color: var(--on-danger);
+}
+
+.pill-selected {
+  color: var(--on-brand);
+}
+
+.nav-btn-active {
+  color: var(--on-brand);
+}
+
+/* Theme picker swatches */
+/* ---------------------- Typeface picker (P10b) --------------------- */
+
+.font-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+/*
+ * The font picker, grouped by kind.
+ *
+ * The complaint was that four neutral sans faces look alike, so the list is cut
+ * into bands. Each band is separated by more space than the gap between its own
+ * cards, which is the whole visual argument: the cards inside a band are
+ * variations on one idea, and the bands are different ideas.
+ */
+.font-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.font-category {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.font-category-title {
+  margin: 0;
+  font-size: calc(0.95rem * var(--font-scale));
+  letter-spacing: 0.02em;
+  color: var(--app-dynamic-brand-strong);
+}
+
+.font-category-note {
+  margin: 0 0 2px;
+  font-size: calc(0.82rem * var(--font-scale));
+  max-width: 62ch;
+}
+
+.font-option {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 14px;
+  border: 3px solid var(--control-line);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-2);
+  cursor: pointer;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+
+.font-option:hover {
+  border-color: var(--brand);
+}
+
+.font-option:active {
+  transform: scale(0.99);
+}
+
+.font-option-active {
+  border-color: var(--brand);
+  background: var(--app-accent-soft);
+}
+
+/* Each sample opts out of the app-wide face so every row can show a different
+   family at the same time. It scales with --font-scale like all body text. */
+.font-sample {
+  font-size: calc(1.05rem * var(--font-scale));
+  /* Specimen rows: deliberately tight (1.35) so a family's own rhythm is
+     visible at a glance — these are previews, not reading text. */
+  line-height: 1.35;
+  color: var(--app-ink);
+}
+
+.font-sample-bold {
+  font-weight: 700;
+  font-size: calc(0.95rem * var(--font-scale));
+  color: var(--app-ink-soft);
+}
+
+.font-option-foot {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.font-option-label {
+  font-weight: 700;
+  font-size: calc(0.95rem * var(--font-scale));
+}
+
+.font-option-size {
+  font-size: calc(0.8rem * var(--font-scale));
+  color: var(--app-ink-soft);
+}
+
+.font-option-hint {
+  font-size: calc(0.8rem * var(--font-scale));
+  color: var(--app-ink-soft);
+  /* Small caption text needs proportionally MORE leading to stay legible. */
+  line-height: 1.45;
+}
+
+.font-note {
+  margin-top: 12px;
+}
+
+/* The "Ajánlott" marker on Inter. Deliberately NOT an "Alapértelmezett"
+   (default) badge: the default is the system stack, which costs nothing and
+   stays invisible until the user picks something. Calling a webfont the
+   default would be a claim the storage layer does not make. */
+.font-option-badge {
+  font-size: calc(0.7rem * var(--font-scale));
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--app-dynamic-brand);
+  border: 1px solid var(--brand);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+/* The handwriting control (Batch 8). A separate group below the grid with a
+   rule above it, so the two questions — "which UI face" and "do my notes get
+   handwriting" — cannot be misread as one list of six. */
+.hand-font {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.font-hand-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 10px;
+}
+
+.font-hand-title {
+  font-weight: 700;
+  font-size: calc(0.95rem * var(--font-scale));
+}
+
+/* A script face needs more room than a 200px grid cell gives it, and more line
+   height than body text, because its ascenders and descenders interlock. This
+   is the one place in the app allowed to loosen the rhythm. */
+.font-sample-hand {
+  font-size: calc(1.25rem * var(--font-scale));
+  line-height: 1.6;
+}
+
+/* --------------- Önreflexiós kérdőív (Batch 6, P11) --------------- */
+
+.assessment-module,
+.assessment-runner,
+.assessment-result,
+.assessment-log {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assessment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.assessment-head h3,
+.assessment-runner-title,
+.assessment-log-title,
+.assessment-result-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: calc(1.05rem * var(--font-scale));
+}
+
+.assessment-progress {
+  margin: 0;
+  font-size: calc(0.82rem * var(--font-scale));
+  color: var(--app-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.assessment-item {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assessment-legend {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0;
+  font-size: calc(1rem * var(--font-scale));
+  line-height: 1.55;
+}
+
+.assessment-legend-text {
+  flex: 1 1 260px;
+}
+
+/* The crisis notice. Unconditional while the ninth question is on screen, so
+   it is styled to read as information rather than as an error state. */
+.safety-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface);
+  color: var(--app-ink);
+}
+
+.safety-block p {
+  margin: 0;
+  font-size: calc(0.95rem * var(--font-scale));
+  /* The one block whose reading comfort is not negotiable: give it the
+     full body leading plus a step, regardless of the block around it. */
+  line-height: 1.65;
+}
+
+.safety-block-icon {
+  color: var(--accent);
+  flex: none;
+  line-height: 1.4;
+}
+
+.disclaimer-block {
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  font-size: calc(0.95rem * var(--font-scale));
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.disclaimer-block p {
+  margin: 0;
+}
+
+.resources-block {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-2);
+}
+
+/* Used when the supplementary answer needs support: larger, accented, and
+   rendered ABOVE the disclaimer so the way to get help is read first. */
+.resources-emph {
+  border: 3px solid var(--accent);
+  background: var(--app-surface);
+  padding: 18px;
+}
+
+.resources-emph .resources-title,
+.resources-emph .resources-phone,
+.resources-emph .resources-list {
+  font-size: calc(1.12rem * var(--font-scale));
+}
+
+.resources-emph .resources-detail {
+  font-size: calc(1rem * var(--font-scale));
+}
+
+.resources-title {
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: calc(0.95rem * var(--font-scale));
+}
+
+.resources-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: calc(0.92rem * var(--font-scale));
+}
+
+.resources-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--app-dynamic-brand-strong);
+  text-decoration: none;
+  margin-right: 8px;
+}
+
+.resources-detail {
+  color: var(--app-ink-soft);
+}
+
+.band-score {
+  margin: 0;
+  font-size: calc(0.9rem * var(--font-scale));
+  color: var(--app-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.band-label {
+  margin: 0;
+  font-size: calc(1.3rem * var(--font-scale));
+  font-weight: 700;
+  color: var(--app-dynamic-brand-strong);
+}
+
+.band-note {
+  margin: 0;
+  font-size: calc(0.98rem * var(--font-scale));
+  line-height: 1.6;
+}
+
+.assessment-result-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.assessment-answers {
+  margin: 0;
+  padding-left: 20px;
+  font-size: calc(0.88rem * var(--font-scale));
+  color: var(--app-ink-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.assessment-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assessment-log-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface);
+  padding: 4px 12px 12px;
+}
+
+.assessment-log-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.assessment-log-date {
+  font-weight: 700;
+  font-size: calc(0.92rem * var(--font-scale));
+  font-variant-numeric: tabular-nums;
+}
+
+.assessment-log-band {
+  color: var(--app-ink-soft);
+  font-size: calc(0.9rem * var(--font-scale));
+}
+
+.assessment-max {
+  margin: 0;
+  font-size: calc(0.8rem * var(--font-scale));
+}
+
+/* --------------- Ikonkészletek (Batch 7, P12) --------------- */
+
+/* One piece of inlined set artwork (Batch 7b). Sized in `em` so it lines up
+   with the text beside it and grows with --font-scale, exactly like the Lucide
+   icons do. `vertical-align` and `line-height: 0` stop the wrapper's line box
+   from opening a gap under the baseline, which an inline image did not need
+   and a wrapping span does. The inner <svg> is forced to the wrapper's box so
+   an upstream width/height pair cannot override the app's scale. */
+.iconset-inline {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  line-height: 0;
+}
+
+.iconset-inline > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.iconset-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.iconset-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.iconset-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--app-surface);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.iconset-row:hover,
+.iconset-row:focus-visible {
+  border-color: var(--accent);
+}
+
+.iconset-row-active {
+  border-color: var(--accent);
+  background: var(--app-surface-2);
+}
+
+.iconset-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: calc(1rem * var(--font-scale));
+}
+
+.iconset-cost {
+  margin-left: auto;
+  font-size: calc(0.8rem * var(--font-scale));
+  color: var(--app-ink-soft);
+}
+
+/* The five-sample strip. Fixed min-height so every row is the same height
+   whether it draws emoji, Lucide strokes or loaded artwork — a picker whose
+   rows jump around while you hover is hard to compare. */
+.iconset-sample {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 2rem;
+  font-size: calc(1.5rem * var(--font-scale));
+  line-height: 1;
+}
+
+.iconset-blurb {
+  font-size: calc(0.85rem * var(--font-scale));
+  color: var(--app-ink-soft);
+}
+
+.iconset-licences h4 {
+  margin: 8px 0 6px;
+  font-size: calc(0.95rem * var(--font-scale));
+}
+
+/*
+ * The chrome exception, as a disclosure.
+ *
+ * `details` rather than a plain section because the list is 46 rows long and
+ * almost nobody opening Settings is asking "why is this icon still a line".
+ * The summary line answers the question in the user's own terms — how MANY
+ * stayed — and the list is there for the person who does want to check.
+ *
+ * Sized to `--font-scale` like every other text block, so a user who has turned
+ * the type up to read the app comfortably can read this too.
+ */
+.iconset-chrome {
+  margin: 10px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md, 12px);
+  padding: 8px 12px;
+}
+
+.iconset-chrome > summary {
+  cursor: pointer;
+  font-size: calc(0.9rem * var(--font-scale));
+  font-weight: 600;
+}
+
+.iconset-chrome[open] > summary {
+  margin-bottom: 8px;
+}
+
+.iconset-chrome h5 {
+  margin: 10px 0 4px;
+  font-size: calc(0.85rem * var(--font-scale));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--app-ink-soft);
+}
+
+.iconset-chrome ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.iconset-chrome li {
+  font-size: calc(0.82rem * var(--font-scale));
+}
+
+.iconset-chrome code {
+  font-family: var(--app-font);
+  font-weight: 600;
+}
+
+.iconset-licences ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.iconset-licences li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+.iconset-badge {
+  align-self: flex-start;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: calc(0.75rem * var(--font-scale));
+  color: var(--app-ink-soft);
+}
+
+.iconset-licence-line {
+  color: var(--app-ink-soft);
+}
+
+.iconset-licence-note {
+  color: var(--app-ink-soft);
+  font-size: calc(0.8rem * var(--font-scale));
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+}
+
+.theme-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border: 3px solid var(--control-line);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-2);
+  cursor: pointer;
+  min-height: 84px;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+
+.theme-swatch:hover {
+  border-color: var(--brand);
+}
+
+.theme-swatch-active {
+  border-color: var(--brand);
+  transform: scale(1.03);
+  box-shadow: var(--shadow);
+}
+
+.theme-colors {
+  display: flex;
+  gap: 4px;
+}
+
+.theme-colors i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.theme-name {
+  font-weight: 700;
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  /*
+   * THE PAGE BACKDROP. `--app-page` is written by `applyThemeTokens`: it is
+   * the active preset's own CSS picture where the preset carries one (the
+   * five backdrop presets), and `var(--bg)` everywhere else — which resolves
+   * to exactly the flat colour this line painted before the property existed.
+   * The fallback covers the first frame, before the theme has been applied.
+   */
+  background: var(--app-page, var(--bg));
+  /* The theme's ink, and only the theme's: body sits OUTSIDE `.app`, where the
+     ink slots live — an unresolvable `var(--app-ink)` here would fall back to
+     the initial colour, which is black whatever the theme says. */
+  color: var(--ink);
+  font-family: var(--app-font);
+  font-size: calc(17px * var(--font-scale));
+  /* Batch 11 commit 3 — body leading 1.5 → 1.55. One step, not a blanket
+     loosening: every block below is retuned per its own size and job, and
+     the values here are what batch5-typography's metrics pin reads. */
+  line-height: 1.55;
+}
+
+h1, h2, h3, h4 {
+  line-height: 1.25;
+  margin: 0 0 0.4em;
+  /* Headings acquire +0.01em of tracking: at these sizes a hair of air
+     between capitals and around the Hungarian double-accents reads as
+     deliberate rather than tight. Small, optically — and pinned by the
+     batch 11 polish test so it cannot creep. */
+  letter-spacing: 0.01em;
+}
+
+p {
+  margin: 0.35em 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ------------------------------ Layout ------------------------------ */
+
+.app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  /*
+   * The ink the whole tree inherits. Body paints the theme's ink for whatever
+   * sits outside this tree; inside it, every element that declares no colour
+   * of its own — headings above all — takes THIS. Before this line the
+   * inherited value had been computed at body, so the inline `--ink` on `.app`
+   * changed nothing for text that merely inherits: nobody re-read the variable
+   * on the way down, and the headings stayed on the theme's ink no matter what
+   * the picture said.
+   */
+  color: var(--app-ink);
+}
+
+/*
+ * THE APP'S FOUR INK SLOTS — the layer the picture decision writes into.
+ *
+ * `--ink` and `--ink-soft` are the theme's own words; `--app-ink` and
+ * `--app-ink-soft` are what the app's words actually paint. Without a picture
+ * the slots answer with the theme tokens and this sheet is arithmetic no-op;
+ * under `.has-bg` they read the inline decision instead.
+ *
+ * THE RAW TOKENS STAY THE THEME'S, AND THAT IS LOAD-BEARING. The decision used
+ * to be written into `--ink` as well, so that a rule nothing had yet taught
+ * about the slots would still follow the picture. It had the opposite effect:
+ * every SOLID CARRIER below re-pins by writing `--app-ink: var(--ink)`, and once
+ * `--ink` was the picture's ink those pins handed the photograph's colour to
+ * text standing on a theme surface — a light ink on a light tile, and the lock
+ * screen painted in the colours of a picture it covers completely. The pins are
+ * the promise; `--ink` is what they re-pin FROM; so the picture is written only
+ * into the slots (`--app-dynamic-*`, inline on `.app`). A rule that paints text
+ * of its own colour reads a slot — `var(--app-ink)` / `var(--app-ink-soft)` —
+ * and the two remaining raw readers are `body`, which sits outside `.app` where
+ * the slots do not exist, and the slot block itself. The other two slots
+ * are the brand TEXT colours — the two paints differ in every theme, so each
+ * is measured and answered on its own: the decision hands `--brand` text back
+ * the theme's `--brand` where it still reads (and the winning ink where it
+ * does not), and `--brand-strong` text the same for the strong paint. The
+ * FILLS — buttons, badges, borders, selected backgrounds — keep the raw
+ * tokens: those sit on paint of their own, and a fill is a background, not a
+ * word on the card.
+ */
+.app {
+  --app-ink: var(--ink);
+  --app-ink-soft: var(--ink-soft);
+  --app-dynamic-brand: var(--brand);
+  --app-dynamic-brand-strong: var(--brand-strong);
+}
+
+/*
+ * A custom background image, as a LAYER on the app root — not a theme.
+ *
+ * WHY PSEUDO-ELEMENTS AND NOT TWO `background-image` LAYERS. The obvious
+ * recipe is a tint in front of the `url()`, which CSS can only express as a
+ * CSS-image paint — and this stylesheet has none, by design: the shipped
+ * identity is flat, and `tests/batch11-polish.test.ts` pins the total count so
+ * the next commit cannot quietly introduce one. (That test counts the WORD too,
+ * which is why this comment avoids naming one; saying "no X" where the guard
+ * greps for X fails the guard.) So the two layers are two elements instead —
+ * `::before` is the picture, `::after` the flat tint. The soft fill is the one
+ * exception — a real div (`.app-bg-fill` below), because CSS has exactly two
+ * pseudo-elements and both are taken.
+ *
+ * WHY `isolation: isolate`, because it is load-bearing. A `z-index: -1` child
+ * paints behind its parent's OWN background unless the parent establishes a
+ * stacking context, and `position: relative` alone does not do that. `.app` is a
+ * child of `body`, whose background is opaque, so without the `isolation` the
+ * photo would vanish behind it — silently, on every device, with nothing but an
+ * absent background to look at. `isolation: isolate` puts the negative-z children
+ * at the bottom of `.app`'s own stacking context: above `body`, below the content.
+ *
+ * The scrim colour is NOT written here. `--app-bg-scrim-rgb` comes from
+ * `applyThemeTokens` and follows the active theme's polarity, so a light theme
+ * gets a light tint under its dark ink and a dark theme a dark one — the two
+ * cannot come apart, whatever the picture is. The alpha is the reader's slider,
+ * set on the element by App.tsx.
+ *
+ * WHEN THE PICTURE TINTS THE SCRIM, IT IS A SEPARATE PROPERTY.
+ * `--app-bg-tint-rgb` carries the picture's own colour, already blended onto the
+ * polarity above by `deriveScrimRgb`, and `.bg-palette-image` is what selects it.
+ * The two are separate properties rather than one because the rules further down
+ * — high contrast and reduced transparency — need the FLAT value, and an inline
+ * override of `--app-bg-scrim-rgb` here would hand them the tinted one and turn
+ * "opaque scrim" into "opaque, but tinted by the picture", which is the thing
+ * those two rules exist to stop.
+ *
+ * `fixed` so the picture does not travel with the content: a backdrop that
+ * scrolls is one the reader has to re-read on every screen. Safari on iOS ignores
+ * `background-attachment: fixed` and falls back to scrolling, which costs the
+ * effect and nothing else — legibility does not depend on it.
+ */
+.app.has-bg {
+  position: relative;
+  isolation: isolate;
+  /*
+   * UNDER A PICTURE, THE GROUND IS FLAT — and the theme's own flat ground at
+   * that. Two reasons this element paints rather than staying transparent:
+   * a preset that ships a page backdrop would otherwise show through the
+   * empty bands of a `contain` picture, and the ink decision for this stack
+   * was measured against the flat background, so anything showing there has
+   * to be the colour the arithmetic assumed. `--app-page-flat` is declared at
+   * `:root`, so it carries the theme's `--bg` as resolved at the root and the
+   * contrast-high override one level down cannot turn it white.
+   */
+  background: var(--app-page-flat);
+}
+
+/*
+ * UNDER A PICTURE, THE SLOTS READ THE DECISION. The names are the ones App
+ * writes inline once the picture has been measured; the fallbacks are the
+ * theme tokens, so a picture still decoding — or a browser without a canvas —
+ * leaves the app exactly as it was.
+ */
+.app.has-bg {
+  --app-ink: var(--app-dynamic-ink, var(--ink));
+  --app-ink-soft: var(--app-dynamic-ink-soft, var(--ink-soft));
+}
+
+/*
+ * THE SOLID CARRIERS KEEP THE THEME'S WORDS. These selectors sit on paint of
+ * their own — the STAYS_SOLID tiles, chips and badges — so the ground under
+ * their words is their own fill, not the picture behind it. The slots are
+ * re-pinned rather than a colour assigned: the elements' own rules keep reading
+ * the slot names, and the re-pin answers them with the theme, carrier by
+ * carrier — including their children, whose ground is the carrier's fill.
+ */
+.app.has-bg .install-banner,
+.app.has-bg .stale-worker-banner,
+.app.has-bg .yip-tile,
+.app.has-bg .yip-tile-active,
+.app.has-bg .yip-subtitle,
+.app.has-bg .yip-detail,
+.app.has-bg .tracker-read-head,
+.app.has-bg .med-chip-x,
+.app.has-bg .iconset-badge,
+.app.has-bg .badge-label,
+.app.has-bg .tracker-read-label {
+  --app-ink: var(--ink);
+  --app-ink-soft: var(--ink-soft);
+}
+
+/* ---- Recording flow text lives on the fixed #0f172a surface ----
+   That surface is a solid carrier of its own (it owns its ground, so the text
+   under it is the theme's words, not the picture's). Each rule here already
+   names a slot, and the re-pin is the only edit, so under a picture the flow
+   reads the theme the same way the other STAYS_SOLID tiles do.
+
+   The quadrant colour on the lesson card is a SCENE accent, not a carrier ink:
+   QUADRANT_COLORS is handed to MicroLessonCard's own inline styles on the card's
+   dark ground, and it paints the stroked dot and the hidden aria decoration —
+   the contrast those solve is local to that surface and out of the picture's
+   reach. `currentColor` continues to own the ring, chart and lucide strokes.
+   --*/
+.app.has-bg .rec-flow,
+.app.has-bg .rec-flow-title,
+.app.has-bg .rec-flow-sub,
+.app.has-bg .rec-axis,
+.app.has-bg .rec-bubble,
+.app.has-bg .rec-bubble-on,
+.app.has-bg .rec-chip,
+.app.has-bg .rec-chip-on,
+.app.has-bg .rec-quad-label {
+  --app-ink: var(--ink);
+  --app-ink-soft: var(--ink-soft);
+}
+
+/*
+ * THE PIN SCREEN sits on opaque paint of its own, above everything, whatever
+ * the picture is — so its whole subtree keeps the theme's words, slots and
+ * all. Re-declaring the slots here shadows the inline decision for everything
+ * below this element, which is exactly the boundary the screen draws.
+ */
+.app.has-bg .pin-overlay {
+  --app-ink: var(--ink);
+  --app-ink-soft: var(--ink-soft);
+  --app-dynamic-brand: var(--brand);
+  --app-dynamic-brand-strong: var(--brand-strong);
+}
+
+/*
+ * THE SOFT FILL'S THIRD LAYER — the blurred, enlarged copy of the same picture
+ * that fills the bands beside a contained one.
+ *
+ * WHY IT IS AN ELEMENT AND NOT A PSEUDO-ELEMENT. `::before` is the picture and
+ * `::after` is the scrim, both load-bearing; there is no third pseudo-element,
+ * and the fill cannot be folded into either of them: `filter: blur()` is
+ * per-element, so a `background-image` list carrying the same picture twice
+ * would blur the sharp copy along with the fill. The app root renders this div
+ * only when the fit is `soft`, so the other two fits keep the two-layer DOM
+ * they shipped with.
+ *
+ * THE RECIPE IS THE CONSTANTS IN `lib/imageBackground` — `SOFT_FILL_BLUR_PX`,
+ * `SOFT_FILL_OPACITY`, `SOFT_FILL_SCALE` — because the Settings preview paints
+ * the same layer inline, and a preview whose fill was softer or fainter than
+ * the app's is the kind of lie that control exists not to tell. A test pins
+ * these three declarations against those three constants, so neither copy can
+ * move alone.
+ *
+ * `z-index: -2` puts it under the picture at -1; both are children of `.app`'s
+ * stacking context (`isolation: isolate` above), which is what keeps the fill
+ * above `body`'s opaque paint and below the content.
+ */
+.app-bg-fill {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: var(--app-bg-image);
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  filter: blur(40px);
+  opacity: 0.6;
+  transform: scale(1.1);
+}
+
+.app.has-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--app-bg-image);
+  /*
+   * The fit is the reader's, and the default is `soft` — whose PICTURE layer is
+   * `contain`, which is why that keyword is the fallback below.
+   *
+   * `cover` magnifies the picture until it fills the viewport, which is how
+   * this shipped and why a large photograph looked soft: the browser was asked
+   * to scale a 2000 px image up onto a small phone in the direction that has no
+   * pixels to give, and the softening was the symptom. `contain` shows the
+   * whole picture at its own size with the bands beside it left empty, which is
+   * the plain reading of "use this as my background" — and `soft` puts a
+   * blurred, enlarged copy of the same picture (`.app-bg-fill` above) under it,
+   * so the bands are the picture too. Both resolve to `contain` here; the fill
+   * layer is the only difference between them.
+   *
+   * The fallback is `contain` rather than `cover` on purpose — a reader whose
+   * `style` block has not been written yet (the preview in Settings paints
+   * before the app root does) must not get the old surprise back.
+   */
+  background-size: var(--app-bg-size, contain);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  /*
+   * The blur, and the scale that has to come with it. `filter: blur()` fades the
+   * element's own edges to transparent, so a blurred element at `inset: 0` shows
+   * `.app`'s own background through a soft band all the way round — the picture
+   * would appear correctly in the middle and faded at every edge. `scale` pushes
+   * the edges out past the viewport so there is nothing left to fade. It is not
+   * conditional on the blur value: at zero the extra 6% of a `cover`-sized image
+   * is below the threshold of being visible, and a second rule that switched it
+   * would be a second thing to keep in step with the slider.
+   *
+   * `soft` is the one exception, and its own rule below says why: there the
+   * faded edge lands on the fill, which is the same picture blurred, so the
+   * scale buys nothing and costs the whole frame's edges.
+   */
+  filter: blur(var(--app-bg-blur, 6px));
+  transform: scale(1.06);
+}
+
+/*
+ * THE PICTURE LAYER STAYS SHARP IN `soft`, and the 6% magnification goes with
+ * it. The scale exists to push a blurred element's faded edges past the
+ * viewport; in `soft` there is nothing for those edges to reveal but the fill,
+ * which is the same picture already blurred, so the fade is invisible — while
+ * at `contain` the enlargement CROPS the very edges the mode promises to show
+ * whole. Dropping the transform is what makes `soft` the sharp copy; the
+ * reader's blur still lands on this layer, so the slider keeps meaning "soften
+ * the picture" in every mode.
+ */
+.app.has-bg.bg-fit-soft::before {
+  transform: none;
+}
+
+.app.has-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(var(--app-bg-scrim-rgb, 0, 0, 0), var(--app-bg-scrim-alpha, 0.55));
+}
+
+/*
+ * The reader chose the picture's palette. Same shape as the rule above, with the
+ * tint substituted, and the same two fallbacks in the same order: a tint that
+ * never arrived falls back to the flat polarity triple, and a polarity triple
+ * that never arrived falls back to black. `--app-bg-tint-rgb` is written by
+ * App.tsx with the same value `deriveScrimRgb` gives the Settings preview, which
+ * is what keeps the preview from being a promise the app then breaks.
+ */
+.app.has-bg.bg-palette-image::after {
+  background: rgba(
+    var(--app-bg-tint-rgb, var(--app-bg-scrim-rgb, 0, 0, 0)),
+    var(--app-bg-scrim-alpha, 0.55)
+  );
+}
+
+/*
+ * HIGH CONTRAST WINS OVER THE PICTURE — and it wins completely, which is why the
+ * rule is here rather than a tweak of the alpha.
+ *
+ * The reader who turns on high contrast has said that legibility outranks
+ * decoration, and a picture is decoration. Tinting the scrim with it is exactly
+ * the thing that setting exists to rule out: the tint moves the scrim toward a
+ * colour of the reader's choosing, which is the opposite of what "high contrast"
+ * promises. So the tint is dropped AND the alpha is forced to opaque. Opaque
+ * rather than "the picture disappears" on purpose — the setting stays, the
+ * bytes stay, and turning high contrast back off brings the backdrop back exactly
+ * as the reader left it. Nothing is destroyed to satisfy a display preference.
+ *
+ * SOURCE ORDER IS LOAD-BEARING. `.app.has-bg.contrast-high::after` has the same
+ * specificity as `.app.has-bg.bg-palette-image::after` above, so
+ * whichever comes last wins, and this one has to come last. The two selectors in
+ * the list are both here so that the guarantee does not depend on that ordering
+ * for the tinted case — the higher-specificity member wins outright, and the
+ * equal-specificity one wins by being later.
+ */
+.app.has-bg.contrast-high::after,
+.app.has-bg.bg-palette-image.contrast-high::after {
+  background: rgb(var(--app-bg-scrim-rgb, 0, 0, 0));
+}
+
+/*
+ * REDUCED TRANSPARENCY GETS AN OPAQUE SCRIM, NOT NO BACKGROUND.
+ *
+ * The preference is about translucency, so the answer to it is that nothing
+ * translucent is painted — and the honest way to stop painting a translucent
+ * layer is to paint an opaque one. Removing the picture instead would answer a
+ * question nobody asked: the reader did not ask for no picture, and taking it
+ * away would mean the setting and the bytes were silently discarded on the
+ * strength of an operating-system flag. So the scrim goes opaque, the picture
+ * stays, and turning the preference off restores it.
+ *
+ * The same rule shape as high contrast above, and for the same reason: the flat
+ * polarity triple, because a tint is a choice about colour and this is a choice
+ * about opacity. Listed in both selectors so the guarantee does not lean on
+ * source order.
+ */
+@media (prefers-reduced-transparency: reduce) {
+  .app.has-bg::after,
+  .app.has-bg.bg-palette-image::after {
+    background: rgb(var(--app-bg-scrim-rgb, 0, 0, 0));
+  }
+}
+
+.app-main {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px 16px calc(96px + env(safe-area-inset-bottom));
+  flex: 1;
+}
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: viewIn 0.28s ease;
+}
+
+@keyframes viewIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ------------------------------ Header ------------------------------ */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px clamp(16px, 4vw, 28px);
+}
+
+.app-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-logo {
+  font-size: calc(30px * var(--font-scale));
+}
+
+.app-greeting {
+  margin: 0;
+  font-size: calc(0.85rem * var(--font-scale));
+  color: var(--app-ink-soft);
+}
+
+.app-title {
+  margin: 0;
+  font-size: calc(1.25rem * var(--font-scale));
+  color: var(--app-dynamic-brand);
+  letter-spacing: 0.01em;
+}
+
+.app-header-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.streak-chip {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+
+.header-date {
+  color: var(--app-ink-soft);
+  font-size: calc(0.85rem * var(--font-scale));
+  white-space: nowrap;
+}
+
+/* ---------------------------- Bottom nav ---------------------------- */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  /* Only the slide is transitioned. Nothing else about the bar animates, so
+     there is nothing here for the global reduced-motion rule to have to
+     neutralise beyond the usual. */
+  transition: transform 0.22s ease;
+  will-change: transform;
+}
+
+/* --------------- Auto-hiding navigation (Batch 7d, P13) --------------- */
+
+/*
+ * The hidden state exists ONLY below the desktop breakpoint, and that scoping
+ * is the whole design of this rule.
+ *
+ * Above 760px the Desktop block below turns this element from a fixed bar at
+ * the bottom of the viewport into a sticky bar at the TOP of the document. A
+ * navigation that slid away on scroll-down would, there, take the primary
+ * navigation off the top of the page for someone who is trying to read — the
+ * opposite of what the feature is for. So rather than relying on the desktop
+ * block happening to come later in the file and win on equal specificity,
+ * which is true today and is exactly the kind of thing a future edit reorders
+ * silently, the hidden state is scoped to the widths where the bar is
+ * actually a bottom bar.
+ *
+ * `759.98px` rather than `759px` so the two queries tile the range with no gap:
+ * it is the largest width still strictly below the `min-width: 760px` the
+ * desktop block uses. A test holds this number against
+ * `NAV_DESKTOP_BREAKPOINT_PX` so the two cannot drift apart.
+ *
+ * The bar is translated, not removed. It keeps its place in the tab order and
+ * in the accessibility tree while it is out of view; only its position
+ * changes.
+ */
+@media (max-width: 759.98px) {
+  .bottom-nav-hidden {
+    transform: translateY(100%);
+  }
+}
+
+.nav-btn {
+  flex: 1;
+  max-width: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  min-height: 60px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  color: var(--app-ink-soft);
+  transition: background 0.15s ease, color 0.15s ease, transform 100ms ease;
+}
+
+.nav-btn:hover {
+  background: var(--app-hover-fill);
+  box-shadow: inset 0 0 0 1px var(--app-hover-ring);
+}
+
+/* The active tab is a solid carrier: brand fill under the label, not the
+   picture behind it. Re-pin so its words keep the theme under a picture. */
+.nav-btn-active {
+  background: var(--brand);
+  --app-ink: var(--on-brand);
+  color: var(--on-brand);
+}
+
+.nav-icon {
+  font-size: calc(24px * var(--font-scale));
+  line-height: 1;
+}
+
+.nav-label {
+  font-weight: 600;
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+/* ------------------------------ Cards ------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Batch 11 commit 3: transform only — a transition that touched layout
+     would make every press reflow the page. The :active state lives in the
+     polish block at the end of the file, inside prefers-reduced-motion:
+     no-preference. */
+  transition: transform 100ms ease;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: calc(1.15rem * var(--font-scale));
+  color: var(--app-ink);
+}
+
+.card-icon {
+  font-size: calc(1.5rem * var(--font-scale));
+}
+
+.card-action {
+  margin-left: auto;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.section-title-icon {
+  font-size: calc(1.7rem * var(--font-scale));
+}
+
+.section-title h2 {
+  margin: 0;
+  font-size: calc(1.35rem * var(--font-scale));
+}
+
+.section-title p {
+  margin: 2px 0 0;
+  color: var(--app-ink-soft);
+  font-size: calc(0.9rem * var(--font-scale));
+}
+
+/* ------------------------------ Buttons ----------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 12px 22px;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  font-weight: 700;
+  font-size: calc(1rem * var(--font-scale));
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--brand-strong);
+  box-shadow: var(--shadow-lift);
+}
+
+.btn-soft {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.btn-soft:hover {
+  background: color-mix(in srgb, var(--brand-soft) 80%, var(--brand));
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--app-ink);
+}
+
+.btn-ghost:hover {
+  background: var(--app-hover-fill);
+  box-shadow: inset 0 0 0 1px var(--app-hover-ring);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--danger) 85%, black);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--app-surface);
+  cursor: pointer;
+  font-size: calc(1.1rem * var(--font-scale));
+}
+
+.icon-btn:hover {
+  background: var(--app-hover-fill);
+  box-shadow: inset 0 0 0 1px var(--app-hover-ring);
+}
+
+/* ------------------------------- Hero ------------------------------- */
+
+.hero-hint {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--brand-soft);
+  border: 1px solid color-mix(in srgb, var(--brand) 25%, transparent);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+}
+
+.hero-hint span {
+  font-size: calc(1.8rem * var(--font-scale));
+}
+
+.hero-hint p {
+  margin: 0;
+}
+
+/* ------------------------------ Moods ------------------------------- */
+
+.mood-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mood-btn {
+  flex: 1 1 0;
+  min-width: 88px;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 3px solid var(--control-line);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-2);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.mood-btn:hover {
+  background: var(--app-accent-hover-fill);
+  box-shadow: inset 0 0 0 1px var(--app-hover-ring);
+}
+
+.mood-btn-active {
+  background: var(--app-accent-soft);
+  /* Every other selected state in this group — .pill-selected,
+     .font-option-active, .theme-swatch-active, .mood-flow-option-on — sets a
+     border-colour, and this one did not. It could afford not to while the
+     resting border was a hairline; now that all five rest borders are strong
+     and identical, leaving this one alone would make the SELECTED button the
+     least outlined of the five. */
+  border-color: var(--brand);
+  transform: scale(1.04);
+  box-shadow: var(--shadow);
+}
+
+.mood-emoji {
+  font-size: calc(34px * var(--font-scale));
+  line-height: 1;
+}
+
+.mood-label {
+  font-size: calc(0.8rem * var(--font-scale));
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ------------------------------ Sliders ----------------------------- */
+
+.sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.slider-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slider-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slider-emoji {
+  font-size: calc(22px * var(--font-scale));
+}
+
+.slider-label {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.slider-value {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  border-radius: 999px;
+  font-weight: 700;
+  padding: 2px 12px;
+  min-width: 44px;
+  text-align: center;
+}
+
+.slider-hint {
+  color: var(--app-ink-soft);
+  font-size: calc(0.8rem * var(--font-scale));
+}
+
+.slider {
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: 14px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+}
+
+.slider::-moz-range-track {
+  height: 14px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 34px;
+  height: 34px;
+  margin-top: -10px;
+  border-radius: 50%;
+  background: var(--brand);
+  border: 3px solid #fff;
+  box-shadow: var(--shadow);
+}
+
+.slider::-moz-range-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--brand);
+  border: 3px solid #fff;
+  box-shadow: var(--shadow);
+}
+
+.slider-rose::-webkit-slider-thumb {
+  background: var(--danger);
+}
+.slider-rose::-moz-range-thumb {
+  background: var(--danger);
+}
+.slider-amber::-webkit-slider-thumb {
+  background: var(--accent);
+}
+.slider-amber::-moz-range-thumb {
+  background: var(--accent);
+}
+
+/* --------------------------- Inputs & fields ------------------------ */
+
+.field-label {
+  font-weight: 700;
+  font-size: calc(0.92rem * var(--font-scale));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.text-input,
+.text-area {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--control-line);
+  background: var(--app-surface);
+  color: var(--app-ink);
+  font: inherit;
+}
+
+.text-area {
+  resize: vertical;
+}
+
+.text-input:focus,
+.text-area:focus {
+  border-color: var(--brand);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 25%, transparent);
+}
+
+.add-row {
+  display: flex;
+  gap: 10px;
+}
+
+.add-row .text-input {
+  flex: 1;
+}
+
+/* -------------------------- Food autocomplete ------------------------ */
+
+/*
+ * The box and its suggestions are ONE unit. The wrapper is what the absolutely
+ * positioned list is measured against, so opening the list cannot move the row
+ * under it — the reader's finger stays where it was aiming.
+ */
+.food-picker {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.autocomplete-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 2px solid var(--control-line);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface);
+  box-shadow: var(--shadow-lift);
+}
+
+.autocomplete-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.autocomplete-choice {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--app-ink);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.autocomplete-choice:hover,
+.autocomplete-choice:focus-visible {
+  background: var(--app-hover-fill);
+  box-shadow: inset 0 0 0 1px var(--app-hover-ring);
+}
+
+/* The one control that forgets a name the reader owns. It is drawn only on the
+   reader's own rows: a catalogue row has nothing here to forget. */
+.autocomplete-forget {
+  flex: none;
+  border: 0;
+  background: none;
+  color: var(--app-ink-soft);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.autocomplete-forget:hover,
+.autocomplete-forget:focus-visible {
+  color: var(--app-ink);
+}
+
+/* ------------------------------ Pills ------------------------------- */
+
+.pill-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pill {
+  border: 2px solid var(--control-line);
+  background: var(--app-surface);
+  border-radius: 999px;
+  padding: 10px 18px;
+  min-height: 48px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 100ms ease;
+}
+
+.pill:hover {
+  background: var(--app-hover-fill);
+  box-shadow: inset 0 0 0 1px var(--app-hover-ring);
+}
+
+.pill-selected {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.muted-note {
+  color: var(--app-ink-soft);
+  font-size: calc(0.88rem * var(--font-scale));
+  margin: 0;
+}
+
+/* ------------------------------ Goals ------------------------------- */
+
+.progress-track {
+  height: 14px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--brand), var(--ok));
+  transition: width 0.3s ease;
+}
+
+.goal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.goal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--app-surface-2);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+.goal-done {
+  text-decoration: line-through;
+  color: var(--app-ink-soft);
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.check-row input[type="checkbox"] {
+  width: 26px;
+  height: 26px;
+  accent-color: var(--brand);
+  flex-shrink: 0;
+}
+
+/* --------------------------- Balance ring --------------------------- */
+
+/* Phase 2b: the balance card is a CollapsibleCard, so the section itself must
+   stay full-bleed (its head and body divs are block-level rows) and the
+   centre alignment belongs to the body's inner flex column — the ring and its
+   note used to be direct children of the section. */
+.balance-card .collapsible-card-body-inner {
+  align-items: center;
+}
+
+.balance-ring {
+  position: relative;
+}
+
+.ring-bg {
+  stroke: var(--bg-soft);
+}
+
+/*
+ * The balance ring's three tones — Batch 13, commit 10.
+ *
+ * These are the first real readers of `--ring-ok` / `--ring-warn` /
+ * `--ring-bad`, which `applyThemeTokens` writes on every theme switch and
+ * which nothing read until now. They were exempted from the
+ * "every written property is read" check in tests/full-system.test.ts, by
+ * name, precisely so this commit could wire them up and delete the exemption.
+ *
+ * The colour goes on `color`, not on `stroke`, and `BalanceRing` puts no
+ * `stroke` attribute on the value circle at all. `var()` is not valid in an
+ * SVG presentation attribute, so `stroke="var(--ring-ok)"` would resolve to
+ * nothing; `color` + inheritance is the mechanism that works in both SVG and
+ * HTML, and it is why the tone lives in a class instead of an inline style.
+ */
+.ring-value-ok {
+  color: var(--ring-ok);
+}
+
+.ring-value-warn {
+  color: var(--ring-warn);
+}
+
+.ring-value-bad {
+  color: var(--ring-bad);
+}
+
+.ring-number {
+  font-size: 34px;
+  font-weight: 800;
+  fill: var(--app-ink);
+}
+
+.ring-caption {
+  font-size: 13px;
+  fill: var(--app-ink-soft);
+}
+
+.balance-note {
+  text-align: center;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ---------------------------- Collapsible --------------------------- */
+
+.collapsible {
+  padding: 0;
+  overflow: hidden;
+}
+
+.collapsible-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: calc(1.05rem * var(--font-scale));
+  font-weight: 700;
+  text-align: left;
+}
+
+.collapsible-head:hover {
+  background: var(--app-hover-fill);
+  box-shadow: inset 0 0 0 1px var(--app-hover-ring);
+}
+
+.collapsible-title {
+  flex: 1;
+}
+
+.chevron {
+  color: var(--app-ink-soft);
+  font-size: calc(1.2rem * var(--font-scale));
+}
+
+.collapsible-body {
+  padding: 4px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.badge-soft {
+  background: var(--brand-soft);
+  color: var(--app-dynamic-brand-strong);
+  border-radius: 999px;
+  font-size: calc(0.72rem * var(--font-scale));
+  padding: 4px 10px;
+  font-weight: 700;
+}
+
+/* ------------------------------ Toolbox ----------------------------- */
+
+.toolbox {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.toolbox-item {
+  background: var(--app-surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toolbox-item h3 {
+  margin: 0;
+  font-size: calc(1.05rem * var(--font-scale));
+}
+
+.question-text {
+  font-weight: 700;
+  margin: 0;
+}
+
+/* ---------------------------- Breathing ---------------------------- */
+
+.breath-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  border: 4px solid var(--brand);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(1.5rem * var(--font-scale));
+  transition: transform 1s ease-in-out, background 1s ease-in-out;
+  margin: 6px 0;
+}
+
+.breath-circle strong {
+  font-size: calc(1rem * var(--font-scale));
+}
+
+/* ---------------------------- Meditation ---------------------------- */
+
+.meditation-list {
+  list-style: none;
+  margin: 0.75rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.meditation-step {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  color: var(--app-ink-soft);
+}
+
+.meditation-done {
+  color: var(--app-ink);
+}
+
+.meditation-current {
+  background: var(--brand-soft);
+  color: var(--app-ink);
+  font-weight: 600;
+}
+
+.meditation-clock {
+  font-variant-numeric: tabular-nums;
+  color: var(--app-ink-soft);
+  white-space: nowrap;
+}
+
+.meditation-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.meditation-bar span {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+}
+
+.meditation-status {
+  margin: 0.5rem 0;
+  min-height: 1.5em;
+}
+
+/* ----------------------------- Streak banner ------------------------ */
+
+.streak-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+
+.streak-banner strong {
+  font-size: calc(1.2rem * var(--font-scale));
+}
+
+.streak-banner p {
+  margin: 0;
+  opacity: 0.92;
+  font-size: calc(0.9rem * var(--font-scale));
+}
+
+.streak-flame {
+  font-size: calc(2.2rem * var(--font-scale));
+}
+
+/* ------------------------------ Calendar ---------------------------- */
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.cal-weekday {
+  text-align: center;
+  font-weight: 700;
+  color: var(--app-ink-soft);
+  font-size: calc(0.78rem * var(--font-scale));
+}
+
+.cal-day {
+  aspect-ratio: 1;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: var(--surface-2);
+  cursor: pointer;
+  font: inherit;
+  padding: 2px;
+}
+
+.cal-day:disabled {
+  cursor: default;
+}
+
+.cal-outside {
+  opacity: 0.35;
+}
+
+.cal-has-entry {
+  border-color: var(--line);
+}
+
+.cal-has-entry:not(:disabled):hover {
+  background: var(--app-accent-hover-fill);
+  box-shadow: inset 0 0 0 1px var(--app-hover-ring);
+}
+
+.cal-today {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.cal-num {
+  font-size: calc(0.85rem * var(--font-scale));
+  font-weight: 600;
+}
+
+.cal-mood {
+  font-size: calc(1rem * var(--font-scale));
+  line-height: 1.1;
+}
+
+/* --------------------- Year in Pixels (Batch 7g) ---------------------
+
+   The card used six `.yip-*` class names that existed in no rule at all, so
+   the grid was a div of inline-background spans wrapping by text flow: the
+   "pixels" had no height and the legend sat wherever the text ran out. This
+   block is the missing half of the card.
+
+   Two decisions worth keeping in mind while editing it:
+
+   Geometry belongs to `.cal-day`, not to `.yip-cell`. The journal calendar
+   (JournalView) and this one draw the same 7-column month, and a second copy
+   of `aspect-ratio`/`min-height`/`border`/`padding` is a second thing to keep
+   in step. `.yip-cell` only adds the gap between the day number and the mood
+   bar. A test enforces this.
+
+   Colour tokens are restricted to the family `.app.contrast-high` redefines
+   (--ink, --line, --surface, --surface-2, --bg-soft, --shadow). --brand,
+   --brand-strong, --brand-soft, --accent, --danger and --ok are written by
+   applyThemeTokens from the chosen palette, so under the high-contrast theme
+   they still hold a value picked for that palette, not for contrast. That is
+   why the selection ring below is --ink and not the accent the rest of the
+   app rings with, and why the active month tile does not borrow
+   `.segment-active`'s --brand-strong. */
+
+.yip-years,
+.yip-months {
+  display: grid;
+  gap: 6px;
+}
+
+/* `auto-fit` rather than a fixed column count: twelve three-letter labels fit
+   in one row on a wide card and wrap to two or three on a narrow one, and no
+   count can clip "szept" on the smallest phone the app supports. The shared
+   `.segmented` cannot do this — its items are `flex: 1`, which squeezed the
+   old twelve one-letter initials to a twelfth of the card each. */
+.yip-years {
+  grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+}
+
+.yip-months {
+  grid-template-columns: repeat(auto-fit, minmax(3.2em, 1fr));
+}
+
+.yip-tile {
+  min-height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: var(--bg-soft);
+  color: var(--app-ink-soft);
+  font: inherit;
+  font-weight: 700;
+  font-size: calc(0.85rem * var(--font-scale));
+  cursor: pointer;
+  padding: 8px 4px;
+}
+
+.yip-tile-active {
+  background: var(--surface);
+  color: var(--app-ink);
+  box-shadow: var(--shadow);
+}
+
+.yip-subtitle {
+  margin: 0;
+  font-weight: 600;
+  font-size: calc(0.95rem * var(--font-scale));
+  color: var(--app-ink);
+}
+
+/* The day number keeps the tile's own background so it is legible in every
+   theme; the mood is a bar along the bottom of the tile rather than a fill
+   behind the number, because three of the five mood colours are mid-tone and
+   ink on them is not readable. */
+.yip-cell {
+  gap: 4px;
+}
+
+.yip-mood {
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--line);
+}
+
+/* Inset so marking a day moves nothing, the ink SLOT so it survives the
+   high-contrast theme and follows the picture like every other word on this
+   tile, and no transition: this ring tracks the keyboard, and the focus
+   outline it sits beside is instant for the same reason. It was `var(--ink)`,
+   which only answers both questions while the raw token means the theme's ink
+   — see the slot block above for why the picture's decision no longer
+   overwrites it. */
+.yip-cell-selected {
+  box-shadow: inset 0 0 0 3px var(--app-ink);
+}
+
+.yip-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 0;
+}
+
+.yip-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-ink-soft);
+  font-size: calc(0.8rem * var(--font-scale));
+}
+
+.yip-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+}
+
+/* Always rendered, even with nothing selected, so opening a day does not
+   push the rest of the card down as the line appears. */
+.yip-detail {
+  min-height: 2.6em;
+  margin: 0;
+  line-height: 1.3;
+  color: var(--app-ink);
+  font-size: calc(0.88rem * var(--font-scale));
+}
+
+/* ----------------------------- Entry list --------------------------- */
+
+.entry-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entry-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  min-height: 64px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+
+.entry-row:hover {
+  background: var(--app-hover-fill);
+  box-shadow: inset 0 0 0 1px var(--app-hover-ring);
+}
+
+.entry-mood {
+  font-size: calc(1.8rem * var(--font-scale));
+}
+
+.entry-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.entry-meta strong {
+  font-size: calc(0.95rem * var(--font-scale));
+}
+
+.entry-meta span {
+  color: var(--app-ink-soft);
+  font-size: calc(0.85rem * var(--font-scale));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry-vitals {
+  color: var(--app-ink-soft);
+  font-size: calc(0.85rem * var(--font-scale));
+  white-space: nowrap;
+}
+
+/* ------------------------ Segmented control ------------------------ */
+
+.segmented {
+  display: flex;
+  gap: 6px;
+  background: var(--app-soft-surface);
+  border-radius: 14px;
+  padding: 5px;
+}
+
+.segment {
+  flex: 1;
+  min-height: 48px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-weight: 700;
+  font-size: calc(0.92rem * var(--font-scale));
+  cursor: pointer;
+  color: var(--app-ink-soft);
+  padding: 8px 10px;
+  transition: transform 100ms ease;
+}
+
+.segment-active {
+  background: var(--app-surface);
+  color: var(--app-dynamic-brand-strong);
+  box-shadow: var(--shadow);
+}
+
+/* ------------------------------ Stats ------------------------------- */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.stat-box {
+  background: var(--app-surface-2);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: calc(1.6rem * var(--font-scale));
+  font-weight: 800;
+  color: var(--app-dynamic-brand);
+}
+
+.stat-label {
+  color: var(--app-ink-soft);
+  font-size: calc(0.8rem * var(--font-scale));
+}
+
+.chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/*
+ * The mood curve's three series — Batch 13, commit 10. Same mechanism as the
+ * balance ring: the colour rides on `color` and the recharts `<Line>` inherits
+ * it through `stroke="currentColor"`.
+ *
+ * The selector is the class on the `<Line>`, NOT a `.recharts-*` internal.
+ * Matching recharts' own class names would bind this stylesheet to that
+ * library's DOM, which is the kind of coupling that breaks on a dependency
+ * bump with no compile error and no failing test.
+ */
+.chart-series-ok {
+  color: var(--ring-ok);
+}
+
+.chart-series-warn {
+  color: var(--ring-warn);
+}
+
+.chart-series-bad {
+  color: var(--ring-bad);
+}
+
+/*
+ * The progression trend — Phase 6, commit 3. A plain SVG polyline rather than
+ * a recharts series, because the charting family is imported by exactly one
+ * file and reached through `lazy()` so it cannot land in the entry chunk
+ * (`tests/views/insights-split.test.ts` pins that structure). Both names are
+ * used literally in `components/FitnessCard.tsx`, which is what the stylesheet's
+ * own reachability guard checks.
+ */
+.fitness-chart {
+  width: 100%;
+  height: 120px;
+  display: block;
+}
+
+.fitness-chart-line {
+  fill: none;
+  stroke: var(--ring-ok);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fitness-chart-dot {
+  fill: var(--ring-ok);
+}
+
+.corr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.corr-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--app-surface-2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+}
+
+.corr-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.corr-info span {
+  color: var(--app-ink-soft);
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+.corr-delta {
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: calc(0.95rem * var(--font-scale));
+}
+
+.corr-up {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.corr-down {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.insight-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.insight-row {
+  background: var(--app-surface-2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.disclaimer {
+  color: var(--app-ink-soft);
+  font-size: calc(0.82rem * var(--font-scale));
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+/* --------------------- Batch B, commit 4: pattern insights --------------- */
+
+/* Phase 2b removed `.pattern-count`: the count moved from the card's old
+   `action` slot into the CollapsibleCard summary line, which the shared
+   `.collapsible-card-summary` already styles. */
+.pattern-basis {
+  color: var(--app-ink-soft);
+  font-size: calc(0.82rem * var(--font-scale));
+  margin: 0 0 12px;
+}
+
+.pattern-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pattern-row {
+  background: var(--app-surface-2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+}
+
+.pattern-text {
+  margin: 0;
+}
+
+.pattern-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  color: var(--app-ink-soft);
+  font-size: calc(0.78rem * var(--font-scale));
+}
+
+/*
+ * The confidence word is deliberately quiet. A loud chip per pattern would be
+ * an invitation to read the label instead of the sentence, and the sentence is
+ * the finding — so the chip only distinguishes "there is a lot behind this" from
+ * "there is a little", using tokens that already exist.
+ */
+.pattern-conf {
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  color: var(--app-ink-soft);
+}
+
+.pattern-conf[data-level="strong"] {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+
+/* A weak signal is marked by the broken border rather than by a warning
+   colour: it is thin evidence, not a problem with the reader's data. */
+.pattern-conf[data-level="weak"] {
+  border-style: dashed;
+}
+
+/* ------------------------------ Toggles ----------------------------- */
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  min-height: 56px;
+}
+
+.toggle-row:last-child {
+  border-bottom: none;
+}
+
+.toggle-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.toggle-text small {
+  color: var(--app-ink-soft);
+  font-size: calc(0.82rem * var(--font-scale));
+}
+
+.toggle-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggle-ui {
+  width: 58px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--app-soft-surface);
+  border: 2px solid var(--control-line);
+  position: relative;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.toggle-ui::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.toggle-input:checked + .toggle-ui {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.toggle-input:checked + .toggle-ui::after {
+  transform: translateX(24px);
+}
+
+.toggle-input:focus-visible + .toggle-ui {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.privacy-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* --------------------------- Overlays/dialogs ----------------------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(20, 26, 24, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: viewIn 0.18s ease;
+}
+
+.dialog {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+  width: 100%;
+  max-width: 420px;
+  max-height: 85dvh;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dialog-wide {
+  max-width: 520px;
+}
+
+/*
+ * The body of a ConfirmDialog. This was a bare `p` with no rule of its own
+ * until Batch 13, commit 6, when the message became a `ReactNode` so the
+ * consent screen could hold the crisis card. It keeps the old `p` behaviour
+ * exactly — most importantly it does NOT set `white-space: pre-line`, because
+ * the long consent copy is written with blank lines between paragraphs and
+ * starting to honour them would change a surface that already shipped.
+ */
+.dialog-message {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dialog-head h2 {
+  margin: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.detail-mood {
+  font-size: calc(1.3rem * var(--font-scale));
+  font-weight: 700;
+  margin: 0;
+}
+
+.detail-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  color: var(--app-ink-soft);
+}
+
+.detail-tags {
+  margin: 0;
+  color: var(--app-ink-soft);
+}
+
+.detail-note {
+  background: var(--app-surface-2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  white-space: pre-wrap;
+}
+
+/* The user's own words (Batch 8).
+   `--hand-font` is the ONLY thing that separates a note from ordinary body
+   text, and it resolves to the UI stack until a handwriting family is chosen.
+   That is deliberate: the scope is enforced by which elements name this
+   property, not by a class that has to be remembered at every call site. There
+   are exactly three of them — `.detail-note` above, and the two note fields in
+   TodayView and EntryDetail. Buttons, labels and nav never name it, so a
+   script face cannot reach them even if the stylesheet is edited elsewhere.
+
+   The line-height bump is scoped to this class, not to `body`, so enabling
+   handwriting does not reflow the whole app. */
+.journal-note {
+  font-family: var(--hand-font);
+  line-height: 1.7;
+}
+
+.detail-reflection {
+  background: var(--brand-soft);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+}
+
+.detail-reflection h3 {
+  margin: 0 0 6px;
+}
+
+.detail-reflection p {
+  margin: 2px 0;
+}
+
+/* ------------------------------- Toasts ----------------------------- */
+
+.toast-stack {
+  position: fixed;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(92vw, 420px);
+}
+
+.toast {
+  border: none;
+  border-radius: 14px;
+  padding: 14px 18px;
+  min-height: 52px;
+  font-weight: 600;
+  font-size: calc(0.95rem * var(--font-scale));
+  color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow-lift);
+  animation: viewIn 0.2s ease;
+  text-align: left;
+}
+
+/* The tone pair, once. The colour declarations used to sit ~2100 lines above
+   these backgrounds as two separate rules, and they never took effect: `.toast`
+   is a single-class selector too, so it won the specificity tie by being
+   LATER in the file, and every toast drew #fff. They are merged in here so the
+   `--on-*` foreground the themes compute actually reaches the text — in the
+   dark theme `--ok` is a light green and white-on-it is unreadable. */
+.toast-ok {
+  background: var(--ok);
+  color: var(--on-ok);
+}
+
+.toast-warn {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* ---------------------- Attachments & trackers ---------------------- */
+
+.attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attachment-thumb {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+}
+
+.attachment-item audio {
+  height: 40px;
+  max-width: 240px;
+}
+
+.attachment-video {
+  max-width: 240px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+}
+
+/* Custom theme editor */
+.cte-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cte-section h3 {
+  margin: 0;
+  font-size: calc(0.95rem * var(--font-scale));
+  color: var(--app-ink-soft);
+}
+
+.cte-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Phase 3, commit 2: a row is a RADIO, not a label beside two inputs. Tapping
+     it selects which token the one ColorPicker underneath edits, so it is a
+     real button — the reset of the rule is the app's own button chrome, kept
+     quiet so the chip and the name carry the row. */
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 10px;
+}
+
+/* The active token is the one the picker below is editing. Ringed AND tinted:
+   the tint alone would be colour-only state, which a reader who cannot see the
+   difference would lose. */
+.cte-row-active {
+  background: var(--app-surface-2);
+  box-shadow: inset 0 0 0 2px var(--control-line);
+}
+
+.cte-chip {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  flex: none;
+}
+
+/* Phase 4 — the live preview at the top of the panel. It paints the SAME
+   three layers the app draws (page, card, text) with the four named colours,
+   so a tap on a swatch is visible here without leaving the panel. The border
+   is the card's, not a fourth colour: a preview that changed shape with the
+   palette would be a second thing to tune. */
+.cte-preview {
+  border-radius: var(--radius-sm, 12px);
+  border: 1px solid var(--line);
+  padding: 14px;
+}
+
+.cte-preview-card {
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: calc(0.9rem * var(--font-scale));
+}
+
+.cte-label {
+  flex: 1;
+  font-weight: 600;
+}
+
+/* Phase 3: the closed-palette colour picker. No hex field, no native colour
+   dialog — ten families in labelled rows of five shades, and a preview chip
+   that always shows the current value (even a legacy one, which no swatch
+   claims). The rows are radiogroups, so selection is announced and the whole
+   picker is keyboard-operable like every other choice in the app. */
+.color-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.color-picker-label {
+  margin: 0;
+}
+
+.color-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-preview-chip {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  flex: none;
+}
+
+.color-preview-label {
+  font-weight: 600;
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-row-label {
+  flex: 1;
+  font-weight: 600;
+  font-size: calc(0.9rem * var(--font-scale));
+}
+
+.color-shades {
+  display: flex;
+  gap: 6px;
+}
+
+.color-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  /* `--control-line`, not `--line`: the swatch is a control, and the heavy
+     border on a control is the token tests/contrast.test.ts pins. */
+  border: 2px solid var(--control-line);
+  cursor: pointer;
+  padding: 0;
+}
+
+/* The selected swatch is ringed with the accent and poked out of the row —
+   colour alone would fail a reader who cannot see the difference. */
+.color-swatch-active {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+  transform: scale(1.08);
+}
+
+.tracker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Batch 7e: a group of related trackers (Étkezés, Sport, Időjárás) draws as one
+   box with its sub-fields indented behind a rule. A group of ONE gets no box —
+   a border around a lone sleep slider would be noise, and the two thirds of the
+   registry that are singletons are the majority. */
+.tracker-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.tracker-group-solo {
+  padding: 0;
+  border: 0;
+}
+
+.tracker-row-child {
+  padding-left: 14px;
+  border-left: 2px solid var(--line);
+}
+
+/* The five meal-quality switches: two rows on a phone, one on a desktop. */
+.tracker-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 20px;
+}
+
+.tracker-row small {
+  display: block;
+}
+
+/* Batch 7h: the entry detail shows what was recorded, under the note.
+   Reuses `.tracker-group` / `.tracker-group-solo` / `.tracker-flags` from the
+   daily card, so a group looks the same where it is filled in and where it is
+   read back. Only the read-only presentation is new.
+
+   Colour tokens stay inside the family `.app.contrast-high` overrides, for the
+   same reason as the Year in Pixels block: the palette tokens are written by
+   applyThemeTokens from the chosen theme and that theme is not re-checked for
+   contrast. */
+.detail-trackers {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detail-trackers h3 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tracker-read-head {
+  margin: 0;
+  font-weight: 700;
+  color: var(--app-ink);
+}
+
+/* Label left, value right: a wrapping row of label/value pairs is not
+   scannable once there are a dozen of them, and a bare "7" beside "Alvás"
+   does not say out of what. */
+.tracker-read-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+
+/* Five flags cannot sit in an auto-width column on a phone, so that row drops
+   to a single column and the chips wrap under the label. */
+.tracker-read-row-wide {
+  grid-template-columns: 1fr;
+}
+
+.tracker-read-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-ink-soft);
+}
+
+.tracker-read-value {
+  font-weight: 700;
+  text-align: right;
+}
+
+.tracker-chip {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: calc(0.8rem * var(--font-scale));
+  white-space: nowrap;
+}
+
+/* ------------------------------ Empty ------------------------------- */
+
+/* The lazily-loaded Insights chunk's two states. `min-height` on the loading
+   one is not decoration: without reserved height the charts snap the page
+   around as the chunk lands. Tokens only, no new colours. */
+.view-loading,
+.view-error {
+  min-height: 40vh;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--app-ink-soft);
+  font-size: calc(0.95rem * var(--font-scale));
+}
+
+.empty-state {
+  text-align: center;
+  padding: 36px 20px;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--app-surface-2);
+}
+
+.empty-icon {
+  font-size: calc(2.6rem * var(--font-scale));
+  display: block;
+  margin-bottom: 10px;
+}
+
+.empty-state h3 {
+  margin: 0 0 6px;
+}
+
+.empty-state p {
+  margin: 0;
+  color: var(--app-ink-soft);
+}
+
+/* ------------------------------ Desktop ----------------------------- */
+
+@media (min-width: 760px) {
+  .app-main {
+    padding-bottom: 40px;
+  }
+
+  .bottom-nav {
+    position: sticky;
+    bottom: auto;
+    top: 0;
+    order: -1;
+    border-top: none;
+    border-bottom: 1px solid var(--line);
+    padding: 10px;
+  }
+
+  .app {
+    flex-direction: column;
+  }
+
+  .toast-stack {
+    bottom: 24px;
+    left: auto;
+    right: 24px;
+    transform: none;
+  }
+
+  .mood-btn {
+    min-width: 110px;
+  }
+}
+
+/* --------------------- Batch 2: badges / matrix / install ------------- */
+
+.badge-shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+}
+
+.badge-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px 10px;
+  border: 2px solid var(--control-line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  text-align: center;
+}
+
+.badge-earned {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.badge-new {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.badge-icon {
+  font-size: calc(1.8rem * var(--font-scale));
+  line-height: 1;
+  opacity: 0.55;
+}
+
+.badge-label {
+  font-size: calc(0.75rem * var(--font-scale));
+  font-weight: 700;
+  color: var(--app-ink-soft);
+  opacity: 0.55;
+}
+
+.badge-earned .badge-label {
+  color: var(--brand-strong);
+}
+
+/* The dimming moved off `.badge-cell` and onto its three children, because an
+   element-level `opacity` composites the BORDER toward the background as well
+   as the content, which is what held this badge below 3:1 at any token value.
+   The earned badge still renders at full strength, and that used to be
+   `opacity: 1` on the cell itself — so it has to follow the dimming down, or an
+   earned badge would render DIMMER than an unearned one. */
+.badge-earned .badge-icon,
+.badge-earned .badge-label,
+.badge-earned .badge-new-flag {
+  opacity: 1;
+}
+
+.badge-new-flag {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 999px;
+  font-size: calc(0.62rem * var(--font-scale));
+  font-weight: 800;
+  padding: 2px 8px;
+  opacity: 0.55;
+}
+
+.corr-matrix-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.corr-matrix {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 420px;
+}
+
+.corr-matrix th,
+.corr-matrix td {
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  text-align: center;
+  font-size: calc(0.85rem * var(--font-scale));
+  white-space: nowrap;
+}
+
+.corr-matrix thead th {
+  font-size: calc(1.05rem * var(--font-scale));
+  background: var(--surface-2);
+}
+
+.corr-matrix tbody th {
+  text-align: left;
+  font-weight: 600;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.corr-matrix tr:last-child th,
+.corr-matrix tr:last-child td {
+  border-bottom: none;
+}
+
+.corr-cell {
+  font-weight: 800;
+  border-radius: 8px;
+}
+
+.corr-up {
+  color: var(--brand-strong);
+  background: var(--brand-soft);
+}
+
+.corr-down {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.corr-flat {
+  color: var(--app-ink-soft);
+}
+
+.corr-cell-empty {
+  color: var(--app-ink-soft);
+  opacity: 0.5;
+}
+
+.install-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--brand-soft);
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 4px;
+  /*
+   * AND THE SLOTS, because this strip has an opaque fill of its own. It was
+   * inheriting whatever the app's ink was, which under a picture meant the
+   * PHOTOGRAPH's ink on the brand's soft fill — the same defeat the solid
+   * carriers had before the slot block above. It is listed with them now.
+   */
+  color: var(--app-ink);
+}
+
+/*
+ * THE STUCK-WORKER BANNER — the one strip in this app that reports a problem
+ * rather than offering something.
+ *
+ * WHY ITS OWN CLASS AND NOT `.install-banner`. They look alike and mean opposite
+ * things: that one says "you could install this", this one says "the app you are
+ * looking at is not the deployed one". A reader who has learned to ignore the
+ * install offer must not have the last warning wear its colours.
+ *
+ * WHY A SOLID SURFACE AND THE THEME'S AMBER. This is the one banner that has to
+ * be read on ANY picture, including the ones that make the app's own ink change:
+ * so it takes a solid ground (`--surface`), the theme's ink slots on top, and the
+ * amber rail (`--ring-warn`, the same tone the mood rings use) as the signal. It
+ * is listed with the solid carriers above, which is what keeps the ink honest.
+ */
+.stale-worker-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--ring-warn) 45%, transparent);
+  border-left: 3px solid var(--ring-warn);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 4px;
+  color: var(--app-ink);
+}
+
+.stale-worker-banner > span {
+  display: inline-flex;
+  color: var(--ring-warn);
+}
+
+.stale-worker-banner p {
+  flex: 1;
+  margin: 0;
+  font-size: calc(0.88rem * var(--font-scale));
+  color: var(--app-ink-soft);
+}
+
+.stale-worker-banner strong {
+  color: var(--app-ink);
+}
+
+.install-banner > span:first-child {
+  font-size: calc(1.9rem * var(--font-scale));
+}
+
+.install-banner p {
+  flex: 1;
+  margin: 0;
+  font-size: calc(0.88rem * var(--font-scale));
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ================= Batch 3: dose times + PIN lock ===================== */
+
+.med-time-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.med-time-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.med-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.med-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--brand);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.med-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--app-ink-soft);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.med-chip-x:hover {
+  background: var(--app-danger-hover-fill);
+  color: var(--danger);
+  box-shadow: inset 0 0 0 1px var(--app-hover-ring);
+}
+
+.next-dose-note {
+  margin: 4px 0 10px;
+  color: var(--app-dynamic-brand);
+  font-weight: 600;
+}
+
+.pin-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.pin-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 380px;
+  padding: 32px 24px;
+  border: 3px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-2);
+  text-align: center;
+}
+
+.pin-lock-icon {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.pin-box h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--app-dynamic-brand);
+}
+
+.pin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+  text-align: left;
+}
+
+.pin-input {
+  text-align: center;
+  font-size: 1.4rem;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pin-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.pin-forgot {
+  margin: 12px 0 0;
+  color: var(--app-ink-soft);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.pin-forgot strong {
+  color: var(--app-dynamic-brand);
+}
+
+/* ------------------------- Reduced motion --------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * The PDF export's download cost, under its button.
+ *
+ * Set apart from the disclaimer below it because they answer different
+ * questions and a reader should not have to work out which is which: this one is
+ * about bytes, that one is about where the data goes.
+ */
+.export-cost {
+  margin: 8px 0 0;
+  font-size: calc(0.82rem * var(--font-scale));
+}
+
+/*
+ * Edzésprogramok (Batch 8b) — the static workout module. Content only: these
+ * rules exist so an exercise and its dose read as one row, and so the tips
+ * block does not look like the exercise list it is not. Both scale with
+ * --font-scale like every other screen.
+ */
+.workout-day {
+  margin: 12px 0;
+}
+
+.workout-day > strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.workout-exercises {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.workout-exercises li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: calc(0.95rem * var(--font-scale));
+}
+
+.workout-dose {
+  color: var(--app-ink-soft);
+  white-space: nowrap;
+}
+
+.workout-nutrition-title {
+  display: block;
+  margin: 12px 0 4px;
+}
+
+.workout-nutrition {
+  margin: 0;
+  padding-left: 18px;
+  font-size: calc(0.95rem * var(--font-scale));
+}
+
+.workout-nutrition li {
+  margin-bottom: 4px;
+}
+
+/*
+ * The weather API card (Batch 8b): the try-now action is a normal button with
+ * its status line under it; nothing here needs a component of its own.
+ */
+.weather-try {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ================= Batch 11, commit 1 — collapsible cards ================= */
+
+/* The tracker groups and the four feature cards draw as CollapsibleCards now.
+   The outer list loses its single-frame spacing and stacks the cards with the
+   same 14px rhythm the rest of the app's cards use. */
+.tracker-list-cards {
+  gap: 14px;
+}
+
+/* One muted line under the title: the collapsed card's whole story. */
+.collapsible-card-titles {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.collapsible-card-summary {
+  font-size: calc(0.82rem * var(--font-scale));
+  font-weight: 400;
+  color: var(--app-ink-soft);
+  line-height: 1.55;
+}
+
+/* The head is the whole tap target: two lines of text plus padding must clear
+   44px on every font scale, so the button carries an explicit minimum. */
+.collapsible-card-head {
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+
+/* The body is a grid row so the collapse can animate to an unknown height.
+   The inner div carries the padding: padding directly on the row would step
+   in on the 0fr frame and turn the animation into a snap.
+
+   EVERY `.collapsible-open` RULE IN THIS BLOCK IS A DIRECT-CHILD (`>`), and
+   that is the whole nested-card fix. Cards nest in this app: the Ma tab's
+   `tracker-frame` holds the group cards ("Alvás", "Tünetek"), the Egészség
+   tab's `health-general` holds its cards, and as DESCENDANT selectors these
+   rules out-specified the nested card's own (0-2-0 and 0-3-0 against 0-1-0
+   and 0-2-0): every card inside an open card was forced to `1fr` and
+   `visibility: visible`, so a click flipped `aria-expanded` and `hidden` and
+   changed nothing on screen. At `>` scope a card's open state reaches only
+   its own body, and a nested card collapses like a top-level one. */
+.collapsible-card-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease;
+}
+
+.collapsible-open > .collapsible-card-body {
+  grid-template-rows: 1fr;
+}
+
+.collapsible-card-body[hidden] {
+  /* [hidden] keeps the content out of the a11y tree and tab order while the
+     row is 0fr; the transition still runs, it just has nothing to show. */
+  visibility: hidden;
+  transition:
+    grid-template-rows 200ms ease,
+    visibility 0s 200ms;
+}
+
+.collapsible-open > .collapsible-card-body[hidden] {
+  visibility: visible;
+  transition: grid-template-rows 200ms ease;
+}
+
+.collapsible-card-body-inner {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 20px;
+}
+
+.collapsible-open > .collapsible-card-body > .collapsible-card-body-inner {
+  padding-bottom: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collapsible-card-body,
+  .collapsible-card-body[hidden],
+  .collapsible-open > .collapsible-card-body {
+    transition: none;
+  }
+}
+
+/* ------------ Batch 11, commit 2 — the tabs' order (Settings) ---------- */
+
+/* Four rows, one per tab: the number and the label read left, the two move
+   buttons sit right. The plain-text arrows are drawn by the system face —
+   they are controls, not content, and they keep the commit at 0 new icons. */
+.tab-order {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.tab-order-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.tab-order-label {
+  font-weight: 600;
+}
+
+.tab-order-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.tab-order-controls .btn {
+  min-width: 2.4em;
+  /* Compact, but never under the 44px touch target the collapsible heads
+     keep. */
+  min-height: 44px;
+  padding: 4px 10px;
+}
+
+/* ============ Batch 11, commit 3 — the premium-polish pass ============= */
+
+/* The polish block, in one place, because every rule here is the same kind of
+   change: it adjusts how a surface reads without moving anything. The
+   scoping-guard-claimed edits above (the shadow token, the heading tracking,
+   the per-block leading) live at their original declarations; this block
+   holds only the NEW rules — section dividers and press feedback.
+
+   NOT DONE ON PURPOSE: gradients, heavier shadows, glassmorphism, or any
+   decorative layer. The app's identity is flat surfaces, one accent, honest
+   whitespace; the pass refines that, it does not decorate over it. */
+
+/* A hairline between consecutive cards inside a view (Insights, Settings).
+   50% of --line keeps the rule quieter than a card's own border — a divider
+   separates without drawing a third box. `color-mix` is supported everywhere
+   the app ships (baseline 2023), and inside it the token stays theme-aware,
+   so dark mode needs no second rule. */
+.view > .card + .card,
+.view > .collapsible + .card,
+.view > .card + .collapsible {
+  position: relative;
+}
+
+.view > .card + .card::before,
+.view > .collapsible + .card::before,
+.view > .card + .collapsible::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -9px; /* half of the .view 18px gap, so the rule sits mid-gap */
+  border-top: 1px solid color-mix(in srgb, var(--line) 50%, transparent);
+  pointer-events: none;
+}
+
+/* Press feedback: the card or button visibly receives the touch, then
+   releases. transform + box-shadow ONLY — never layout properties — so a
+   press can reflow nothing. Wrapped in no-preference: with reduced motion
+   the elements simply do not scale, and the app loses nothing but the
+   animation (the blanket reduce block at the top of the file would collapse
+   the transition anyway; this keeps it off the books entirely).
+
+   The transition declarations live at each component's own rule (batch7g
+   counts every `.segment`-family selector, and a second rule here would be
+   counted as a second definition); this block only owns the :active state. */
+@media (prefers-reduced-motion: no-preference) {
+  .card:active,
+  .collapsible:active,
+  .btn:active,
+  .pill:active,
+  .nav-btn:active {
+    transform: scale(0.98);
+  }
+
+  /* The segmented control's press state is scoped to the control itself —
+     a bare fourth `.segment` rule is what the batch7g selector count exists
+     to catch, so the state hides inside the media query AND under the real
+     container. The batch7g pin names this fourth selector deliberately. */
+  .segmented .segment:active {
+    transform: scale(0.98);
+  }
+}
+
+/* The EmptyState cta slot (commit 3): one button, centered, kept out of the
+   hint text's measure. */
+.empty-state-cta {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ---------- Batch 11, commit 4 — the nutrition tips ---------- */
+
+/* The one-line tip under the tracker inputs: a muted status line, no box,
+   so it reads as a remark rather than a result. */
+.nutrition-tip {
+  margin: 0;
+  font-style: italic;
+}
+
+/* The Settings transparency card's list: the exact sentences, verbatim. */
+.tips-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--app-ink-soft);
+}
+
+/* The weekly safety line: a calm surface, the weight of an aside. */
+.nutrition-safety {
+  border-left: 3px solid var(--brand-soft);
+  padding-left: 12px;
+}
+
+/* Batch A, Recording 2.0: the 3-step flow.
+
+   The meter is the batch's pinned design: full-screen dark surface
+   (#0f172a), 32px corners, the four quadrant fills behind one marked
+   point. Everything else stays on the app's tokens so the flow reads
+   as the same product in the other two steps. */
+
+.rec-flow {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #0f172a;
+  border-radius: 32px;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: clamp(16px, 4vw, 32px);
+  overflow-y: auto;
+  outline: none;
+}
+
+.rec-flow-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rec-flow-steps {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.rec-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(248, 250, 252, 0.25);
+}
+
+.rec-dot-on {
+  background: #f8fafc;
+}
+
+.rec-flow-title {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.rec-flow-sub {
+  margin: 0;
+  color: rgba(248, 250, 252, 0.72);
+}
+
+/* Step 1 — the meter */
+.rec-meter-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.rec-axis {
+  font-size: 0.8rem;
+  color: rgba(248, 250, 252, 0.6);
+  text-align: center;
+}
+
+.rec-meter-frame {
+  position: relative;
+  flex: 1;
+  min-height: 300px;
+  /* The meter is a control, so it says so, and a press-drag paints rather
+     than scrolling the page out from under the finger (`touch-action` is the
+     only way to say that on touch; `preventDefault` alone does not stop a
+     scroll that has already started). */
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.rec-meter {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  border-radius: 32px;
+  overflow: hidden;
+  /* A drag across the labels must not leave a text selection behind it. */
+  user-select: none;
+}
+
+.rec-quad {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  padding: 12px;
+}
+
+/* Quadrant fills are inline styles from QUADRANT_COLORS: one owner, the
+   palette the batch pins, shared with Insights. */
+
+.rec-quad-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--app-ink);
+}
+
+/* The chosen tile is the one the point is standing in. The point alone moves
+   across the whole meter, which answers "where am I" but not "what did I just
+   pick" — a reader pressing a corner should see THAT tile change, not a dot
+   that might be 200 px away from the tile they hit. */
+.rec-quad-active {
+  box-shadow: inset 0 0 0 4px rgba(248, 250, 252, 0.92);
+}
+
+.rec-point {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  transform: translate(-50%, 50%);
+  border: 3px solid #0f172a;
+  box-shadow: 0 0 0 3px rgba(248, 250, 252, 0.9);
+  transition: left 0.15s ease, bottom 0.15s ease;
+}
+
+/* The keyboard surface: transparent, it carries the slider role while the
+   grid above paints. Clicks land through it (pointer-events: none) to the
+   FRAME underneath, which is what turns a press into coordinates — that
+   handler is `onFramePointerDown` in the component. This element must stay
+   transparent to the pointer forever: it is the accessibility surface, not an
+   input, and the two would otherwise disagree about who owns a press. */
+.rec-slider {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* The energy slider that stands BESIDE the meter (step 1).
+
+   Self-contained rather than reusing `.slider`, because the flow paints a
+   fixed dark palette whatever the theme is (`#0f172a` / `#f8fafc`, see
+   `.rec-flow`) and `.slider` is drawn in TOKENS — `--bg-soft` for the track
+   would be nearly invisible on this background in a dark theme, which is the
+   one theme where an unstyled control disappears. So the track is the light
+   ink the rest of the dialog is drawn in, the thumb is the amber energy
+   accent the Ma card's own energy slider uses, and the hit area keeps the
+   app's 44px. */
+.rec-energy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 2px solid rgba(248, 250, 252, 0.18);
+  border-radius: 20px;
+  background: rgba(248, 250, 252, 0.06);
+  padding: 10px 16px 4px;
+}
+
+.rec-energy-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rec-energy-label {
+  flex: 1;
+  font-weight: 700;
+}
+
+.rec-energy-value {
+  background: rgba(248, 250, 252, 0.16);
+  border-radius: 999px;
+  font-weight: 700;
+  min-width: 44px;
+  padding: 2px 12px;
+  text-align: center;
+}
+
+.rec-energy-range {
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.rec-energy-range::-webkit-slider-runnable-track {
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.22);
+}
+
+.rec-energy-range::-moz-range-track {
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.22);
+}
+
+.rec-energy-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 34px;
+  height: 34px;
+  margin-top: -10px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid #f8fafc;
+  box-shadow: var(--shadow);
+}
+
+.rec-energy-range::-moz-range-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid #f8fafc;
+  box-shadow: var(--shadow);
+}
+
+/* Step transitions: a fade+scale in, removed entirely under reduced motion. */
+.rec-enter {
+  animation: rec-enter 0.28s ease both;
+}
+
+@keyframes rec-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Step 2 — bubbles */
+.rec-bubbles,
+.rec-context {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.rec-bubble-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  align-content: center;
+}
+
+.app.has-bg .rec-bubble {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.08);
+  --app-ink: var(--on-ink);
+  color: var(--app-ink);
+  padding: 10px 18px;
+  font-size: 1rem;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.rec-bubble-sm { font-size: 0.85rem; padding: 8px 14px; }
+.rec-bubble-lg { font-size: 1.15rem; padding: 14px 24px; }
+
+.app.has-bg .rec-bubble-on {
+  background: rgba(248, 250, 252, 0.92);
+  --app-ink: var(--ink);
+  color: var(--app-ink);
+  transform: scale(1.06);
+}
+
+.rec-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rec-custom-row {
+  display: flex;
+  gap: 8px;
+}
+
+.rec-custom-row .text-input {
+  flex: 1;
+}
+
+.rec-intensity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Step 3 — context rows */
+.rec-context-dim {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rec-context-h {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.rec-chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.app.has-bg .rec-chip {
+  flex: 0 0 auto;
+  border: 2px solid rgba(248, 250, 252, 0.3);
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.06);
+  --app-ink: var(--on-ink);
+  color: var(--app-ink);
+  padding: 8px 16px;
+  font-size: 0.95rem;
+}
+
+.app.has-bg .rec-chip-on {
+  background: rgba(248, 250, 252, 0.92);
+  --app-ink: var(--ink);
+  color: var(--app-ink);
+}
+
+/* Actions */
+.rec-flow-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.rec-flow-actions .btn-primary {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.rec-flow-actions .btn {
+  background: rgba(248, 250, 252, 0.12);
+  color: #f8fafc;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rec-enter {
+    animation: none;
+  }
+  .rec-point {
+    transition: none;
+  }
+  .rec-bubble {
+    transition: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .rec-flow {
+    border-radius: 0;
+  }
+  .rec-flow-actions .btn {
+    flex: 1;
+  }
+}
+
+/* The Today card's new-flow call to action. */
+.mood-flow-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mood-flow-cta .muted-note {
+  margin: 0;
+}
+
+/* The Settings card's radio pair. */
+.mood-flow-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mood-flow-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  border: 2px solid var(--control-line);
+  border-radius: 14px;
+  background: var(--app-surface);
+  padding: 12px 14px;
+  color: var(--app-ink);
+}
+
+.mood-flow-option-on {
+  border-color: var(--brand);
+  background: var(--app-accent-soft);
+}
+
+.mood-flow-name {
+  font-weight: 600;
+}
+
+.mood-flow-desc {
+  font-size: 0.9rem;
+  color: var(--app-ink-soft);
+}
+
+/* Mega Batch, commit 2 — the education library. Tokens only, no new colours. */
+.edu-nav { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.edu-item {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.5rem; margin-top: 0.5rem; padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.edu-para { margin: 0.75rem 0; line-height: 1.6; }
+.edu-title { margin: 0.75rem 0 0.25rem; font-size: 1.1rem; color: var(--app-ink); }
+.edu-takeaway, .edu-action { margin: 0.75rem 0; }
+.edu-takeaway { border-left: 3px solid var(--ok); padding-left: 0.75rem; }
+.edu-action { border-left: 3px solid var(--accent); padding-left: 0.75rem; }
+.edu-read { color: var(--ok); font-size: 0.9rem; white-space: nowrap; }
+
+/* Batch B, commit 1 — the micro-lesson card. Dark like the recording flow
+   (--ink inverted onto a fixed slate), with the quadrant colour injected
+   inline from QUADRANT_COLORS. No new colours are declared here. */
+/* Phase 2b: padding is the collapsible's (head/body own it now), so only the
+   dark surface treatment stays on the card itself. */
+.lesson-card { border-radius: 24px; background: #0f172a; color: #e2e8f0; }
+.lesson-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+.lesson-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.lesson-label { font-size: 0.85rem; letter-spacing: 0.02em; opacity: 0.75; }
+.lesson-text { margin: 0 0 0.75rem; line-height: 1.6; }
+.lesson-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/* The breathing prompt. Reduced motion is handled in CSS, at the only place
+   that can actually stop an animation — see the card's own comment. */
+.lesson-circle {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: currentColor; margin: 0 auto 0.75rem;
+  animation: lesson-breathe 8s ease-in-out infinite;
+}
+@keyframes lesson-breathe {
+  0%, 100% { transform: scale(0.82); opacity: 0.55; }
+  50%      { transform: scale(1.08); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lesson-circle { animation: none; opacity: 0.8; }
+}
+
+/* Mega Batch, commit 3 — the weekly reflection card. */
+.week-theme {
+  margin: 0 0 0.25rem; font-size: 0.8rem; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--app-ink-soft);
+}
+.week-question { margin: 0 0 0.5rem; font-size: 1.05rem; line-height: 1.5; }
+.week-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+.week-actions .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* ------------------- Background image picker (Settings) ----------------- */
+
+.bg-picker { display: flex; flex-direction: column; gap: 12px; }
+
+/*
+ * A real <input type="file"> UNDER a styled <label>, rather than a <button>
+ * that calls input.click(). The label form keeps the browser's own picker —
+ * the thing that knows about the camera roll, cloud drives and formats — and it
+ * is keyboard-reachable without a keydown handler. The input itself is hidden
+ * but NOT `display: none`: that would take it out of the tab order and the
+ * label would stop being operable at all.
+ */
+.bg-pick-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.bg-pick-button { align-self: flex-start; cursor: pointer; }
+.bg-pick-button:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+.bg-pick-busy { opacity: 0.6; cursor: progress; }
+
+.bg-pick-error {
+  color: var(--danger);
+  font-size: calc(0.85rem * var(--font-scale));
+  margin: 0;
+}
+
+/*
+ * THE AA NOTICE, under the scrim row — the one line in this control that
+ * REPORTS rather than labels, so it gets its class of its own. Quieter than
+ * the error above it (this is advice, not a failure): the muted ink and the
+ * brand rail, which is the app speaking in its own voice. The words inherit
+ * the dynamic ink like every other word on the card, so the notice about
+ * unreadable text is itself readable on the picture it describes.
+ */
+.bg-pick-ink-warning {
+  /*
+   * THE SLOT, not the theme's own soft ink — and this pair of rules is the
+   * reason it matters. `var(--ink-soft)` here resolved to the THEME's quiet
+   * tint whatever the picture said, so the two lines that REPORT on the
+   * picture's legibility were the two lines that ignored it: a reader whose
+   * photograph is dark and whose theme is light read a mid-grey sentence on a
+   * dark ground, from the card whose whole job is to say that the text is
+   * legible. Every other word in this control already reads `--app-ink-soft`
+   * (see `.bg-pick-hint`, `.bg-pick-palette-label` just above), so this is the
+   * gap being closed rather than a new policy.
+   */
+  color: var(--app-ink-soft);
+  font-size: calc(0.85rem * var(--font-scale));
+  margin: 0;
+  padding-left: 8px;
+  border-left: 3px solid var(--brand);
+}
+
+/*
+ * The veil notice: informational, not a warning. Nothing is wrong — the app had
+ * to strengthen the veil the reader asked for, and a surface that changed under
+ * the reader's hands has to say so. The same shape as the warning above with a
+ * neutral edge instead of the brand's, because the two can stand together on
+ * the same card and the reader has to be able to tell which is which at a
+ * glance.
+ */
+.bg-pick-ink-lifted {
+  /* The same slot as the warning above, for the same reason: under a picture
+     both notices answer the picture, not the theme. */
+  color: var(--app-ink-soft);
+  font-size: calc(0.85rem * var(--font-scale));
+  margin: 0;
+  padding-left: 8px;
+  border-left: 3px solid var(--line);
+}
+
+/*
+ * The three things that appear once a picture is set — the preview, the scrim
+ * row and the remove button — are one column with the app's own gap. Without
+ * this they stack by block flow, which puts the button hard against the slider
+ * and leaves the preview touching them; the class was on the element before any
+ * rule named it, so the spacing was an accident of the default box model.
+ */
+.bg-pick-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/*
+ * The preview is the SAME composition the app uses: the picture, and the flat
+ * tint over it, as two elements rather than one — because the app does it with
+ * two elements too. A preview that simplified the recipe would be a promise the
+ * screen then breaks.
+ */
+.bg-pick-preview {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.bg-pick-preview-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center center;
+}
+
+/*
+ * The soft fill inside the preview: the same third layer the app paints, under
+ * the sharp copy. Only the recipe's numbers are inline (they come from the same
+ * three exports the stylesheet's own `.app-bg-fill` carries); the positioning
+ * lives here, exactly as it does for the picture above.
+ */
+.bg-pick-preview-fill {
+  position: absolute;
+  inset: 0;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.bg-pick-preview-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--app-bg-scrim-rgb, 0, 0, 0), var(--app-bg-scrim-alpha, 0.55));
+}
+
+/*
+ * The sample card inside the preview. It reads `--app-card-transparency` and
+ * nothing else, for the same reason the app's own cards do: one number written
+ * on the app root, one `color-mix()`, and no way for the preview's idea of the
+ * surface to drift from the screen's.
+ *
+ * It is inset rather than full-bleed so the picture stays visible around it —
+ * a card that filled the frame would hide the thing the reader is adjusting.
+ * `pointer-events: none` because it is a picture of a card, not a card: it must
+ * not take the click meant for the input behind it.
+ *
+ * NO `@supports` HERE DELIBERATELY. The mix below is the whole point of this
+ * element, so if a browser cannot do it the honest outcome is a preview that
+ * falls back to the plain `--surface` — which is exactly what it would show.
+ */
+.bg-pick-preview-card {
+  position: absolute;
+  inset: 18px 22px auto;
+  padding: 10px 12px;
+  border-radius: calc(var(--radius) * 0.7);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: calc(0.8rem * var(--font-scale));
+  pointer-events: none;
+}
+@supports (background-color: color-mix(in srgb, red 50%, blue)) {
+  .bg-pick-preview-card {
+    background: color-mix(
+      in srgb,
+      var(--surface) calc((1 - var(--app-card-transparency)) * 100%),
+      transparent
+    );
+  }
+}
+
+.bg-pick-row { display: flex; align-items: center; gap: 10px; }
+.bg-pick-scrim-label { font-size: calc(0.9rem * var(--font-scale)); }
+.bg-pick-row .slider { flex: 1; }
+.bg-pick-scrim-value {
+  min-width: 3.2em;
+  text-align: right;
+  color: var(--app-ink-soft);
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+/*
+ * The preview is blurred by the app too, and `filter` fades the element's own
+ * edges — the preview clips with `overflow: hidden`, so without the matching
+ * scale the picture would look right in the middle of the box and softly faded
+ * against its border. Same 6% as `.app.has-bg::before`, and for the same reason:
+ * below the threshold of being visible at zero blur.
+ */
+.bg-pick-preview-image { transform: scale(1.06); }
+
+/*
+ * The palette choice and the line that explains what it will do. The label is
+ * its own element rather than a fieldset legend because this is a group of two
+ * buttons, not a form control, and the `.segmented` control already carries the
+ * accessible name through its own `ariaLabel`.
+ */
+.bg-pick-palette { display: flex; flex-direction: column; gap: 6px; }
+.bg-pick-palette-label {
+  font-size: calc(0.9rem * var(--font-scale));
+  color: var(--app-ink-soft);
+}
+.bg-pick-hint {
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+/*
+ * The crisis help surface — Batch 13, commit 6.
+ *
+ * `src/components/CrisisCard.tsx` renders these from the `RESOURCES` and
+ * `DISCLAIMER` constants in `lib/assessments.ts`. The numbers are not in this
+ * file and must never be: styling is the only thing that belongs here.
+ *
+ * Every rule below is built from tokens that already existed. This feature
+ * adds no custom property, because the card has to be legible in all fifteen
+ * themes and in the high-contrast override without anyone having to audit
+ * fifteen more token pairs for contrast.
+ */
+.crisis-card {
+  /* An accent edge rather than a filled panel: the card sits above ordinary
+     content on Settings, and a heavy fill would read as a warning about the
+     settings rather than about the reader. */
+  border-left: 4px solid var(--accent);
+}
+
+.crisis-card-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: calc(1.05rem * var(--font-scale));
+  color: var(--brand-strong);
+}
+
+.crisis-card-intro {
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: calc(0.92rem * var(--font-scale));
+}
+
+.crisis-card-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/*
+ * The number and its name share a row, and the row wraps as ONE unit. A number
+ * on one line and the service it belongs to on the next is how a reader ends
+ * up dialling the children's line for an adult, so they must never be
+ * separated by a wrap — hence `align-items: baseline` on a flex row rather
+ * than two block children.
+ */
+.crisis-card-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: calc(0.92rem * var(--font-scale));
+}
+
+.crisis-card-tel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: calc(1.05rem * var(--font-scale));
+  color: var(--brand-strong);
+  text-decoration: none;
+  /* A phone number is a target, not text: keep it at least 44px tall so it
+     can be tapped without precision on a phone held one-handed. */
+  min-height: 44px;
+}
+
+.crisis-card-link {
+  font-weight: 600;
+  color: var(--brand-strong);
+}
+
+.crisis-card-label {
+  color: var(--app-ink-soft);
+}
+
+/*
+ * The disclaimer repeats here on purpose. The questionnaire already showed it
+ * beside the resources and a test requires it there; a reader who arrives at
+ * Settings without ever touching the questionnaire has to be told the same
+ * thing in the same words, and silence would imply the app had assessed them
+ * when it has not.
+ */
+.crisis-card-disclaimer {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  font-weight: 600;
+  font-size: calc(0.92rem * var(--font-scale));
+  line-height: 1.6;
+}
+
+/* ------------------------------ Strip ------------------------------- */
+
+/*
+ * The compact form. It sits inside a result that already has a heading and a
+ * score, or at the foot of a journal entry, so it must not shout — it is a
+ * permanent affordance, not an alarm. One accent edge is the whole treatment.
+ */
+.crisis-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-2);
+}
+
+.crisis-strip-lead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--brand-strong);
+  font-size: calc(0.95rem * var(--font-scale));
+}
+
+.crisis-strip-numbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.crisis-strip-tel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--brand-strong);
+  text-decoration: none;
+  min-height: 44px;
+  font-size: calc(1rem * var(--font-scale));
+}
+
+.crisis-strip-note {
+  color: var(--app-ink-soft);
+  font-size: calc(0.85rem * var(--font-scale));
+  line-height: 1.6;
+}
+
+/*
+ * Self-experiments — Batch 13, commit 7.
+ *
+ * The day counter is the loudest element in this block on purpose. The failure
+ * the three-day window is designed to prevent is the reader forgetting what
+ * they started within a week; if "2. nap / 3" is the thing their eye lands on,
+ * the experiment does not need remembering, only finishing.
+ *
+ * Every rule here reuses a token that already existed. An experiment is a
+ * mood-adjacent surface shown next to the journal, so borrowing the existing
+ * surface colours keeps it consistent with the cards around it in all four
+ * themes without adding pairs somebody would have to audit for contrast.
+ */
+.exp-start,
+.exp-live,
+.exp-rate,
+.exp-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.exp-day {
+  margin: 0;
+  color: var(--brand-strong);
+  font-size: calc(1.05rem * var(--font-scale));
+}
+
+.exp-avg,
+.exp-window {
+  color: var(--app-ink-soft);
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+.exp-window {
+  margin: 0;
+}
+
+/*
+ * The days already rated read as chips rather than as a list, because they are
+ * a running tally and the reader wants to see how MANY there are at a glance,
+ * not re-read each one.
+ */
+.exp-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.exp-check {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--app-surface-2);
+  color: var(--app-ink-soft);
+  font-size: calc(0.82rem * var(--font-scale));
+}
+
+/*
+ * `flex-wrap` because a 320px screen cannot hold three buttons. `min-height`
+ * on the row is not set: these are ordinary `btn`s and already carry their own
+ * touch target, and a second floor here would only add height.
+ */
+.exp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.exp-history {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.exp-history-title {
+  margin: 0;
+  font-size: calc(0.9rem * var(--font-scale));
+  color: var(--app-ink-soft);
+}
+
+.exp-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/*
+ * `align-items: baseline` again, for the same reason as the crisis card's rows:
+ * a verdict and the thing it is a verdict ABOUT must not be separated by a
+ * wrap, or "bevált" ends up describing the line below it.
+ */
+.exp-history-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: calc(0.88rem * var(--font-scale));
+}
+
+.exp-history-what {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.exp-verdict {
+  flex: none;
+  font-weight: 700;
+}
+
+.exp-yes {
+  color: var(--app-dynamic-brand-strong);
+}
+
+.exp-no {
+  color: var(--app-ink-soft);
+}
+
+/* -------------------- Encrypted cloud backup (Commit 5) -----------------
+   Three rules for the backup card, and only for it. The twelve words are the
+   one place in the app where the user must READ something off the screen and
+   retype it elsewhere, so they are laid out as a numbered-free word list with
+   a monospaced face rather than as a sentence: a wrapped paragraph of twelve
+   words is exactly how one of them gets copied wrong. The border is a 1px
+   `--line` hairline because these are not controls — there is nothing to
+   click, and `--control-line` on a non-control is the mistake the contrast
+   guard exists to catch. */
+.backup-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-2);
+  border: 1px solid var(--line);
+  font-family: monospace;
+}
+
+.backup-word {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--app-surface);
+  border: 1px solid var(--line);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.backup-status {
+  margin: 0;
+  color: var(--app-ink);
+  font-size: calc(0.92rem * var(--font-scale));
+  font-weight: 600;
+}
+
+/*
+ * THE FADED CARD SURFACE, where `color-mix()` exists.
+ *
+ * `calc((1 − var(--app-card-transparency)) × 100%)` is the percentage of the
+ * card's own colour that survives. At 0 it is 100% — the card is opaque — and at
+ * 1 it is 0%, so the card contributes nothing and what shows through is the
+ * scrim. It is a percentage in a `color-mix()` weight, which is the only
+ * reason it is written this way rather than as a second variable App.tsx
+ * computes: one number in, one rule out, and no chance of the two disagreeing
+ * about what 40% means.
+ *
+ * The scrim underneath IS left where the reader put it — the two sliders are
+ * two surfaces, and this one fades the card alone. Where the card is gone the
+ * text stands on the scrim the reader set: the same ground the app's own
+ * background text uses, never a worse one, which is the guarantee
+ * `tests/card-contrast.test.ts` walks. See `effectiveScrimAlpha` for the
+ * one-argument shape that makes the independence enforceable.
+ */
+@supports (background-color: color-mix(in srgb, red 50%, blue)) {
+  /*
+   * ON `.app`, NOT ON `:root` — and the difference is the whole feature.
+   *
+   * A custom property substitutes its `var()`s at computed-value time ON THE
+   * ELEMENT IT IS DECLARED ON, and the substituted value is what inherits
+   * (CSS Variables 1: custom properties "resolve any var() functions in their
+   * values at computed-value time, which occurs before the value is inherited").
+   * `App.tsx` writes `--app-card-transparency` on `.app` as an inline style, so
+   * a mix declared at `:root` would read the `:root` default of 0, bake in
+   * "opaque", and hand that down to every card: the slider would move and no
+   * card would fade. Declaring it on the element that carries the reader's own
+   * number is what lets one write reach every card, and `tests/background-stack`
+   * pins the selector rather than trusting this comment.
+   */
+  .app {
+    --app-surface: color-mix(
+      in srgb,
+      var(--surface) calc((1 - var(--app-card-transparency)) * 100%),
+      transparent
+    );
+    --app-surface-2: color-mix(
+      in srgb,
+      var(--surface-2) calc((1 - var(--app-card-transparency)) * 100%),
+      transparent
+    );
+    /*
+     * THE HOVER FILLS, on the same terms as the surfaces above: the SAME
+     * `calc((1 − transparency) × 100%)` weight, so a row that fades with its
+     * card cannot disagree with the card about how transparent the reader
+     * asked to be. Two fills rather than one because eight rules hovered with
+     * `--surface-2` and two with `--brand-soft`, and collapsing them into one
+     * token would quietly recolour the accent hovers for every reader who has
+     * never opened this control.
+     */
+    --app-hover-fill: color-mix(
+      in srgb,
+      var(--surface-2) calc((1 - var(--app-card-transparency)) * 100%),
+      transparent
+    );
+    --app-accent-hover-fill: color-mix(
+      in srgb,
+      var(--brand-soft) calc((1 - var(--app-card-transparency)) * 100%),
+      transparent
+    );
+    --app-danger-hover-fill: color-mix(
+      in srgb,
+      var(--danger-soft) calc((1 - var(--app-card-transparency)) * 100%),
+      transparent
+    );
+    /*
+     * AND THE RING, which is what the hover still IS at 100% transparency,
+     * where a fill has nothing left to tint. An inset hairline in ink at 22%,
+     * not a shadow: an inset ring cannot fall outside the element's own
+     * rounded corner, and a shadow on a translucent row would read as dirt on
+     * the photograph underneath it.
+     */
+    --app-hover-ring: color-mix(in srgb, var(--app-ink) 22%, transparent);
+    /*
+     * THE NESTED TINTS, which is the whole of commit 3.
+     *
+     * `--app-surface` and `--app-surface-2` were the only two selectors the
+     * fade could reach, and a reader who faded their cards to 100% still met
+     * solid panels everywhere inside them: the segmented control, the pill
+     * clouds, the mood buttons, the stat tiles, the option rows in Settings.
+     * Those are the surfaces that read as a SMALL MENU sitting on a card, and
+     * each of them was painting a theme token directly, so no value of the
+     * slider could have reached it.
+     *
+     * Two more tokens rather than a rewrite of the card rule, because the rule
+     * is correct and the surfaces are the missing half: a mix declared on
+     * `.app` reaches every descendant, so one declaration per tint is enough
+     * for all of them and none of them can drift from the card.
+     */
+    --app-soft-surface: color-mix(
+      in srgb,
+      var(--bg-soft) calc((1 - var(--app-card-transparency)) * 100%),
+      transparent
+    );
+    /*
+     * AND THE TINTED SELECTION, which is `--brand-soft` and not `--brand`: the
+     * soft one is a wash behind `--ink`, the way the hover accent fill is, and
+     * a wash has nothing to keep when the thing behind it fades. The FILLED
+     * selections (`--brand`, with `--on-brand` text on top) are deliberately
+     * not here — white on a transparent brand is white on a photograph, which
+     * is the one case C1's hover fix refused to make.
+     */
+    --app-accent-soft: color-mix(
+      in srgb,
+      var(--brand-soft) calc((1 - var(--app-card-transparency)) * 100%),
+      transparent
+    );
+  }
+}
+
+/*
+ * Only the two content containers fade. Rows, chips, table headers and hover
+ * states keep the solid surface on purpose: they are small, they carry text at
+ * a size that has nothing to spare, and a faded table header over a photograph
+ * is not a softer app, it is an unreadable one. The card is the surface with
+ * enough area for the picture to be a backdrop rather than a background for a
+ * single word.
+ */
+.card,
+.dialog {
+  background: var(--app-surface);
+}
+
+/*
+ * THE INK CROSSFADE, and only where the reader has asked for motion.
+ *
+ * `--ink` is inherited, so rewriting it on `.app` changes every word at once;
+ * what makes that a fade rather than a jump is a transition on `color`, and a
+ * transition only runs where one is declared. The app root carries it, and so
+ * does every element that prints text of its own colour — which is why the
+ * selector is a small list rather than a universal `*`, which would have
+ * overridden the app's own transitions and re-enabled motion under the
+ * reduced-motion rules above.
+ *
+ * Under `prefers-reduced-motion: reduce` there is no transition at all: the ink
+ * changes instantly, which is the same answer every other motion in this app
+ * gives.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .app,
+  .app .card,
+  .app .dialog,
+  .app .entry-row,
+  .app .collapsible-head,
+  .app .collapsible-body,
+  .app .pill,
+  .app .stat-box,
+  .app .muted-note,
+  .app h1,
+  .app h2,
+  .app h3,
+  .app p,
+  .app li,
+  .app label,
+  .app button {
+    transition: color 0.2s ease;
+  }
+  /* The inks also reach svg text and the icon strokes; a colour that fades
+     smoothly everywhere else should not snap inside a `<text>`. */
+  .app svg,
+  .app text,
+  .app tspan {
+    transition: fill 0.2s ease, stroke 0.2s ease;
+  }
+  .app .app-title,
+  .app .stat-value,
+  .app .font-category-title,
+  .app .band-label,
+  .app .badge-soft,
+  .app .font-option-badge {
+    transition: color 0.2s ease;
+  }
+}
+
+.dialog {
+  background: var(--app-surface-2);
+}
+
+/*
+ * THE TWO ACCESSIBILITY MODES OVERRIDE THE CARD FADE, and they have to do it by
+ * re-painting the background rather than by re-declaring the number.
+ *
+ * `--app-card-transparency` is written on `.app` as an INLINE style, so a
+ * stylesheet rule naming that property on that element loses to it outright —
+ * `!important` would win and is exactly the wrong thing to reach for. The
+ * scrim rules above face the same problem and solve it the same way: they
+ * override `background` on `::after` and never mention the alpha. This is the
+ * card-shaped version of that move, and it is why these two rules exist at all
+ * rather than being optional polish.
+ *
+ * Without them a reader who asked for high contrast, or whose system asks for
+ * reduced transparency, would get an opaque scrim AND faded cards — and a
+ * faded card is transparent, which is precisely what both of those settings
+ * say they do not want. The legibility guarantee in `lib/imageBackground` is
+ * stated in terms of an opaque scrim underneath; removing the scrim's
+ * translucency without restoring the card's would leave the text sitting on
+ * that opaque scrim with nothing in front of it.
+ */
+.app.contrast-high .card {
+  background: var(--surface);
+}
+.app.contrast-high .dialog {
+  background: var(--surface-2);
+}
+
+/*
+ * AND THE TOKENS, for every surface commit 3 added to the fade.
+ *
+ * The two rules above re-paint `.card` and `.dialog`, and they were enough
+ * while the fade reached nothing else. It now reaches thirty-odd nested
+ * surfaces, and a reader in either of these modes would get an OPAQUE card
+ * with an invisible stat tile inside it: the card rule paints, the tile's own
+ * `color-mix` still resolves to zero alpha, and the thing the mode exists to
+ * make legible is the thing that disappeared.
+ *
+ * So the tokens are re-declared at their solid values instead. They are not
+ * inline — only `--app-card-transparency` is — so a rule naming them on `.app`
+ * wins on specificity alone, and this is the one place in the stylesheet where
+ * that is true rather than a trap. The card rules above are kept anyway: they
+ * cost nothing, they say what the mode does in the place a reader of the sheet
+ * will look, and they are the anchor the inventory points at.
+ */
+.app.contrast-high {
+  --app-surface: var(--surface);
+  --app-surface-2: var(--surface-2);
+  --app-soft-surface: var(--bg-soft);
+  --app-accent-soft: var(--brand-soft);
+  --app-hover-fill: var(--surface-2);
+  --app-accent-hover-fill: var(--brand-soft);
+  --app-danger-hover-fill: var(--danger-soft);
+  /* The ink slots come back to the theme too: a solid surface is the theme's
+     own ground, and the theme's words are what its ink was chosen for. Both
+     brand text slots as well — the decision may offer an ink where the theme's
+     brand fails on the composite, but a pinned-opaque surface is the ground
+     the brand was chosen against. */
+  --app-ink: var(--ink);
+  --app-ink-soft: var(--ink-soft);
+  --app-dynamic-brand: var(--brand);
+  --app-dynamic-brand-strong: var(--brand-strong);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .app.has-bg .card {
+    background: var(--surface);
+  }
+  .app.has-bg .dialog {
+    background: var(--surface-2);
+  }
+  .app.has-bg {
+    --app-surface: var(--surface);
+    --app-surface-2: var(--surface-2);
+    --app-soft-surface: var(--bg-soft);
+    --app-accent-soft: var(--brand-soft);
+    --app-hover-fill: var(--surface-2);
+    --app-accent-hover-fill: var(--brand-soft);
+    --app-danger-hover-fill: var(--danger-soft);
+    /* Solid surfaces, theme ink — the same answer contrast-high gives. */
+    --app-ink: var(--ink);
+    --app-ink-soft: var(--ink-soft);
+    --app-dynamic-brand: var(--brand);
+    --app-dynamic-brand-strong: var(--brand-strong);
+  }
+}

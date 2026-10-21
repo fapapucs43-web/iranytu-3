@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    # Pinned, not `latest`. This is the second of the two annotations.
+    #
+    # `ubuntu-latest` moves on its own: GitHub's published schedule moves that
+    # label off Ubuntu 24.04 on 2026-10-19, so this job would silently change
+    # base image on that date, unannounced and never tested. A rolling label in
+    # a verification gate means the answer to "did it go green?" depends on
+    # when the question was asked.
+    #
+    # 24.04 is the image every green run of this workflow has executed on so
+    # far, so pinning to it changes nothing observable today and removes the
+    # surprise. Reaching 26.04 afterwards is then one line, on a date somebody
+    # chose, with a diff to show for it.
+    #
+    # The ubuntu-26.04 image was not confirmed available as a runner label for
+    # this repository when this was written — two lookups disagreed — and an
+    # unavailable label fails the job outright rather than falling back, so the
+    # conservative pin is the one to take until that is settled.
+    runs-on: ubuntu-24.04
+    steps:
+      # Both action runtimes and the toolchain they install, bumped together.
+      #
+      # Every run carried two annotations of the same kind: `checkout@v4` and
+      # `setup-node@v4` both run on a Node 20 runtime, which GitHub flags on
+      # every job. @v5 moves both to the Node 24 runtime.
+      #
+      # The toolchain goes to Node 22 rather than to 24, because 22 is the one
+      # that was actually exercised rather than the newest: typecheck, all 2709
+      # tests and the production build pass on 22.23.2, and the build output is
+      # unchanged — same asset names, same precache manifest at 39 entries and
+      # 2,914,506 B. The bump moves the toolchain, not the artefact.
+      - uses: actions/checkout@v5
+        with:
+          # Full history, deliberately. This is not about debugging a bad
+          # bisect — four of the tests genuinely cannot run without it.
+          #
+          # The batch scope guards answer "which files has this batch
+          # touched?" by finding the commit that introduced a module and
+          # diffing from it, via `git log --diff-filter=A` and `git diff`.
+          # At the default depth of 1 there is no parent to diff against and
+          # those guards fail — not vacuously, but with a fatal git error —
+          # so the suite would be red on every PR for a reason that has
+          # nothing to do with the change under test.
+          #
+          # Verified: `git clone --depth 1` + `bun test` = 4 failures, all of
+          # them these guards. Full history = 1117 pass, 0 fail.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # bun from npm, not from a third-party action.
+      #
+      # `oven-sh/setup-bun` is the usual answer and it is a good one, but it
+      # adds an action to trust and to keep reviewing, and this repository is
+      # built on not doing that: no CDN, no third-party font host, every
+      # shipped byte vendored and licence-checked. bun published on npm comes
+      # from the registry `npm ci` has already trusted on the line above, so
+      # this introduces no new supply-chain surface at all.
+      #
+      # Pinned to an exact version rather than a range or `latest`: the suite
+      # is verified against 1.4.2, and a silent runner upgrade that changes
+      # test discovery would be a red build nobody could explain.
+      - name: Install bun (the test runner)
+        run: npm install --global bun@1.4.2
+
+      # The suite, and the only gate in this workflow that was missing.
+      #
+      # 1117 assertions guarded the shape of seven batches — the artwork that
+      # must be inlined, the fonts that must be scoped to the user's own
+      # notes, the correlation keys that must stay byte-identical. All of it
+      # ran locally and none of it ran here, which is how a commit reached
+      # main failing two of its own scope guards: nothing in this workflow
+      # was looking.
+      #
+      # Run through `npm test` rather than a bare `bun test` so CI and a
+      # developer run the identical command, declared once in package.json.
+      # Actions fail a step on a non-zero exit, so one failing test fails the
+      # job; nothing here sets continue-on-error, and nothing should.
+      - name: Tests
+        run: npm test
+
+      # Last, so a behavioural failure is reported without first spending a
+      # production build on it.
+      - name: Production build
+        run: npm run build

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Belső Iránytű — hangulat- és közérzet-napló nagybetűs, közérthető felülettel. offline, a saját eszközödön tárolva." />
+    <meta name="theme-color" content="#0d5c4d" />
+    <!--
+      THE DOCUMENT ASKS NOT TO BE KEPT — the third layer of the same request,
+      and the one that covers a cache the server's headers never reach.
+
+      What actually keeps a deploy moving is the pair below it: the hosting
+      sends `cache-control: max-age=0, must-revalidate` for every file, and
+      `public/sw.js` serves navigations network-first, so a returning reader
+      gets the current `index.html` over the network whenever there is one. But
+      "the server said so" and "the document says so" are read by different
+      things: a proxy or an antivirus/enterprise cache that only ever looks at
+      the markup never sees the header, and a browser restoring a page from the
+      back/forward cache re-reads the document without asking anything. These
+      three tags are that second reading. They are not a substitute for the
+      header — `no-store` in a `<meta>` is ignored by modern browsers' HTTP
+      caches — and they cost nothing.
+    -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!--
+      iOS-SPECIFIC, and read from THIS document rather than the manifest.
+
+      Safari on iOS does not consult `manifest.webmanifest` for any of the
+      three things below — it has its own tags, and a Home Screen add without
+      them is a plain web-clip: Safari's own address bar and toolbar stay
+      around the page, the status bar gets the default treatment, and the
+      system picks an icon by scaling the page rather than reading a declared
+      one. Chrome/Android needs none of this (it reads the manifest), which is
+      why these lines look redundant beside the manifest link and are not.
+
+      `apple-mobile-web-app-capable` is what buys the full-screen standalone
+      surface on iOS. `black-translucent` lets the document run under the
+      status bar while keeping the glyphs legible; the app already paints its
+      own top area (`.app-header`), and `theme-color` above colours the status
+      bar on the platforms that read it. `apple-touch-icon` is the 192 PNG the
+      manifest also lists — iOS wants it named here specifically, adds the
+      rounded mask and its own gloss itself, and falls back to a screenshot if
+      no touch icon is declared.
+    -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%AD%3C/text%3E%3C/svg%3E" />
+    <title>Belső Iránytű — hangulat- és közérzet-napló</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
+</html>
