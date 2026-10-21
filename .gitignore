@@ -53,3 +53,8 @@ yarn-error.log*
 # verified — so the bundle produced by either is byte-identical. Both are
 # tracked so that neither surface can silently drift away from the other.
 # See docs/PROJECT-INVENTORY.md, "Two lockfiles, one tree".
+
+# The jsPDF probe writes its script under the repo root so ESM resolution
+# reaches node_modules; the directory is removed in a finally, and this line is
+# what keeps a killed test run from leaving one behind in a commit.
+.tmp-pdf-*

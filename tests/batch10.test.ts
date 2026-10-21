@@ -18,6 +18,7 @@
 import { describe, expect, test, beforeEach } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   saveApiKey,
   clearApiKey,
@@ -111,8 +112,8 @@ describe("no bundled key", () => {
         }
       }
     };
-    walk(new URL("../src", import.meta.url).pathname);
-    walk(new URL("../scripts", import.meta.url).pathname);
+    walk(fileURLToPath(new URL("../src", import.meta.url)));
+    walk(fileURLToPath(new URL("../scripts", import.meta.url)));
     expect(offenders).toEqual([]);
   });
 });

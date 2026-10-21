@@ -33,7 +33,7 @@ claims has two possible anchors and no way to tell which one went stale.
     "stateFiles": 5,
     "stateLines": 1272,
     "testFiles": 126,
-    "testLines": 49417,
+    "testLines": 49425,
     "scriptFiles": 6,
     "publicFontWoff2": 24,
     "publicFontLicences": 10,
@@ -737,7 +737,7 @@ a font problem that shows up there, not an i18n problem.
 
 ## 10. The test suite
 
-**126 files, 49 417 lines, 3 727 tests.** `bun test` — no test framework in the
+**126 files, 49 425 lines, 3 727 tests.** `bun test` — no test framework in the
 dependency block; the runner is bun's own. This table is the second half of the
 document's proof: its file count, its total and the five group sums are all
 recomputed from the rows below, so a file that lands without a row, a row whose

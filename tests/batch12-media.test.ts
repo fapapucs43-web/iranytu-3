@@ -43,6 +43,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   PREFERS_DARK,
@@ -288,11 +289,13 @@ describe("the auto theme really does follow the operating system", () => {
             const code = readFileSync(path, "utf8")
               .replace(/\/\*[\s\S]*?\*\//g, "")
               .replace(/^\s*\/\/.*$/gm, "");
-            if (code.includes(literal)) hits.push(path.split("/src/")[1]);
+            if (code.includes(literal)) {
+              hits.push((path.split(/[/\\]src[/\\]/)[1] ?? path).replace(/\\/g, "/"));
+            }
           }
         }
       };
-      walk(new URL("../src/", import.meta.url).pathname);
+      walk(fileURLToPath(new URL("../src/", import.meta.url)));
       return hits;
     };
     expect(inCode("(prefers-color-scheme: dark)")).toEqual(["lib/media.ts"]);

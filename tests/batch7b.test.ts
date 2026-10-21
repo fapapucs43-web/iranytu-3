@@ -20,6 +20,7 @@
  */
 import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import { NAV_ICONS, navCharacter, navFluentStem, navIconDef } from "../src/lib/nav-icons";
@@ -306,7 +307,7 @@ describe("the nav change did not touch the content icons", () => {
     const dir = new URL("../src/", import.meta.url);
     const offenders: string[] = [];
     const walk = (d: URL) => {
-      for (const name of readdirSync(d.pathname)) {
+      for (const name of readdirSync(fileURLToPath(d))) {
         const full = new URL(name + (name.includes(".") ? "" : "/"), d);
         if (name.includes(".")) {
           if (!/\.tsx$/.test(name)) continue;

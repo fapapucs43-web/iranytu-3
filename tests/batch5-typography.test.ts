@@ -21,6 +21,7 @@
  */
 import { describe, expect, test } from "bun:test";
 import { readFileSync, readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import {
   DEFAULT_FONT,
   FONTS,
@@ -362,7 +363,7 @@ describe("the self-hosted binaries exist and are real woff2", () => {
     // most sources still say so. There is no Apache-licensed family here, so
     // no Apache text should exist.
     const dir = new URL("../public/fonts/", import.meta.url);
-    const all = readdirSync(dir.pathname);
+    const all = readdirSync(fileURLToPath(dir));
     // The licence texts are the prose files; the binaries are woff2 and are
     // checked separately by the magic-number test above.
     const names = all.filter((n) => n.toUpperCase().includes("OFL") || /licen[cs]e/i.test(n));

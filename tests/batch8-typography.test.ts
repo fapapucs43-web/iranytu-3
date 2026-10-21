@@ -20,6 +20,7 @@
  */
 import { describe, expect, test } from "bun:test";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import {
@@ -66,10 +67,10 @@ const SUBSETTER_OWNED = (): string[] =>
 
 /** Recursive file walk, so a guard cannot pass by only seeing `src/*.ts`. */
 function walkFiles(dir: URL, visit: (path: URL, name: string) => void): void {
-  for (const name of readdirSync(dir.pathname)) {
+  for (const name of readdirSync(fileURLToPath(dir))) {
     const full = new URL(name + (name.includes(".") ? "" : "/"), dir);
     if (name.includes(".")) visit(full, name);
-    else if (existsSync(full.pathname)) walkFiles(full, visit);
+    else if (existsSync(fileURLToPath(full))) walkFiles(full, visit);
   }
 }
 
@@ -170,7 +171,7 @@ describe("Manrope and Plus Jakarta Sans are fully withdrawn", () => {
     // deploy, and worse: it is still a downloadable copy of a font the app no
     // longer offers, sitting in the app's own privacy promise.
     const dir = new URL("../public/fonts/", import.meta.url);
-    const onDisk = readdirSync(dir.pathname);
+    const onDisk = readdirSync(fileURLToPath(dir));
     for (const name of onDisk) {
       for (const gone of ["manrope", "jakarta"]) {
         expect(name.toLowerCase().includes(gone)).toBe(false);
@@ -258,7 +259,7 @@ describe("Manrope and Plus Jakarta Sans are fully withdrawn", () => {
     // TrueType, pinned by URL, byte count and SHA-256, and refuses to write a
     // `latin-ext` that cannot spell őűŐŰ.
     const dir = new URL("../public/fonts/", import.meta.url);
-    const onDisk = readdirSync(dir.pathname).filter((n) => n.toLowerCase().includes("lato"));
+    const onDisk = readdirSync(fileURLToPath(dir)).filter((n) => n.toLowerCase().includes("lato"));
     expect(onDisk.sort()).toEqual([
       "OFL-lato.txt",
       "lato-400-latin-ext.woff2",
@@ -328,8 +329,8 @@ describe("the replacement families are really there", () => {
       if (f.family === null) continue;
       for (const file of f.files) {
         const path = new URL(file.file, new URL("../public/fonts/", import.meta.url));
-        expect(existsSync(path.pathname)).toBe(true);
-        const bytes = readFileSync(path.pathname);
+        expect(existsSync(fileURLToPath(path))).toBe(true);
+        const bytes = readFileSync(fileURLToPath(path));
         expect(bytes.length).toBeGreaterThan(1000);
         expect(bytes.subarray(0, 4).toString("latin1")).toBe("wOF2");
         // The size the picker shows must be the real size.
