@@ -1,6 +1,7 @@
 /**
- * Phase 4 — the AI engine: three modes, the reader's own key, one weekly
- * summary call. The card that drives it is `components/AiSettingsCard.tsx`,
+ * Phase 4 — the AI engine: three modes, the reader's own key, the weekly
+ * summary and one question about the week, with the crisis guard in front of
+ * both calls. The card that drives it is `components/AiSettingsCard.tsx`,
  * the one that asks for the text is `components/WeeklyAiSummaryCard.tsx`, and
  * `docs/mega-features-plan.md` §Phase 4 is the shape this implements.
  *
@@ -37,15 +38,20 @@
  * The fetch is injectable for the same reason `lib/foodAi`'s is: every branch
  * of this function is testable without a network, and a suite that cannot
  * reach a branch cannot guard it.
+ * The crisis gate sits before all of it: if the week's data or the question
+ * carries a self-harm signal, NO call happens in any mode — the answer comes
+ * from `lib/crisisGuard` and the shared resources list, offline and instantly,
+ * so a failed key or a dead network can never swallow that sentence.
  */
 import { t } from "./i18n";
 import { moodByLevel } from "./mood";
+import { crisisReply, hasCrisisSignal } from "./crisisGuard";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 import type { Entry } from "../types";
 
 export type AiMode = "off" | "on-device" | "byok";
 export type AiProvider = "openai" | "deepseek";
-export type AiConfig = { mode: AiMode; provider: AiProvider };
+export type AiConfig = { mode: AiMode; provider: AiProvider; model: DeviceModelSize };
 
 /** The three modes, in the order the settings card offers them. */
 export const AI_MODES: readonly AiMode[] = ["off", "on-device", "byok"] as const;
@@ -74,30 +80,57 @@ const MODELS: Readonly<Record<AiProvider, string>> = {
 };
 
 /**
- * THE ON-DEVICE MODEL, AND WHY IT IS THIS ONE
+ * THE ON-DEVICE MODELS, AND WHY THEY ARE THESE
  *
- * `Qwen3-0.6B-q4f16_1-MLC` is chosen because it is IN the prebuilt model list
- * of the installed `@mlc-ai/web-llm` (0.2.86): `CreateMLCEngine` resolves it
- * without any custom `ModelRecord`, and the cache helpers below find it the
- * same way. The plan originally named `dict-xs-mlc-q4f16_1` — a HuggingFace
- * repo (`ikhou/dict-xs-mlc-q4f16_1`) that is NOT in that list, so the download
+ * `Qwen3-0.6B-q4f16_1-MLC` (the default) and `Qwen3-1.7B-q4f16_1-MLC` are
+ * chosen because they are IN the prebuilt model list of the installed
+ * `@mlc-ai/web-llm` (0.2.86): `CreateMLCEngine` resolves them without any
+ * custom `ModelRecord`, and the cache helpers below find them the same way.
+ * The plan originally named `dict-xs-mlc-q4f16_1` — a HuggingFace repo
+ * (`ikhou/dict-xs-mlc-q4f16_1`) that is NOT in that list, so the download
  * button would have thrown "model not found" on the first press. That repo is
  * a dictionary/glossing finetune of THIS SAME base model, and its measured
  * size (340.7 MB) is why the plan says ~335 MB — the official prebuilt repo
- * measures 335.2 MB over its 18 files, which is the number the card promises.
+ * measures 335.2 MiB over its 18 files, which is the number the card promises.
+ *
+ * BOTH SIZES ARE MEASURED, NOT GUESSED, with the same method: the sum of the
+ * file sizes the HuggingFace API reports for the model repo (0.6B: 18 files,
+ * 335.2 MiB → 335; 1.7B: 39 files, 938.6 MiB → 939), taken 2026-10-22. The
+ * 0.6B number matching the long-shipping 335 is what validates the method
+ * rather than trusting it.
  *
  * 0.2.86 is pinned in package.json: the prebuilt list changes between
  * versions, and an id that exists today can be renamed away. If the dependency
  * is ever bumped, re-check `node_modules/@mlc-ai/web-llm/lib/index.js` for
- * this id before shipping.
+ * BOTH ids before shipping.
  */
-export const ON_DEVICE_MODEL = "Qwen3-0.6B-q4f16_1-MLC";
-export const ON_DEVICE_MODEL_MB = 335;
+export type DeviceModelSize = "small" | "large";
+
+/** The picker's order — small first, because small is the default. */
+export const DEVICE_MODEL_SIZES: readonly DeviceModelSize[] = ["small", "large"] as const;
+
+type DeviceModel = { id: string; mb: number };
+
+const DEVICE_MODELS: Readonly<Record<DeviceModelSize, DeviceModel>> = {
+  small: { id: "Qwen3-0.6B-q4f16_1-MLC", mb: 335 },
+  large: { id: "Qwen3-1.7B-q4f16_1-MLC", mb: 939 },
+};
+
+/** The MLC id a size downloads and caches under. */
+export function deviceModelId(size: DeviceModelSize): string {
+  return DEVICE_MODELS[size].id;
+}
+
+/** The size the card promises in the download button's label. */
+export function deviceModelMb(size: DeviceModelSize): number {
+  return DEVICE_MODELS[size].mb;
+}
+
 
 const CONFIG_KEY = "belso-iranytu-ai-config";
 const SECRET_KEY = "belso-iranytu-ai-key";
 
-const DEFAULT_CONFIG: AiConfig = { mode: "off", provider: "openai" };
+const DEFAULT_CONFIG: AiConfig = { mode: "off", provider: "openai", model: "small" };
 
 /* ------------------------------ the config ------------------------------ */
 
@@ -132,7 +165,14 @@ export function getAiConfig(): AiConfig {
     const provider: AiProvider = AI_PROVIDERS.includes(parsed.provider as AiProvider)
       ? (parsed.provider as AiProvider)
       : DEFAULT_CONFIG.provider;
-    return { mode, provider };
+    // The size field is absent from every config stored before the second
+    // model shipped — absence reads as the default, exactly like the others.
+    const model: DeviceModelSize = DEVICE_MODEL_SIZES.includes(
+      parsed.model as DeviceModelSize,
+    )
+      ? (parsed.model as DeviceModelSize)
+      : DEFAULT_CONFIG.model;
+    return { mode, provider, model };
   } catch {
     // Corrupt JSON reads as the default rather than taking the card down.
     return { ...DEFAULT_CONFIG };
@@ -144,6 +184,7 @@ export function setAiConfig(patch: Partial<AiConfig>): AiConfig {
   const next: AiConfig = { ...getAiConfig(), ...patch };
   if (!AI_MODES.includes(next.mode)) next.mode = DEFAULT_CONFIG.mode;
   if (!AI_PROVIDERS.includes(next.provider)) next.provider = DEFAULT_CONFIG.provider;
+  if (!DEVICE_MODEL_SIZES.includes(next.model)) next.model = DEFAULT_CONFIG.model;
   try {
     localStore()?.setItem(CONFIG_KEY, JSON.stringify(next));
   } catch {
@@ -267,6 +308,11 @@ const SYSTEM_PROMPT = [
   t("ai.promptIntro"),
   t("ai.promptStyle"),
   t("ai.promptGround"),
+  // THE MODEL'S OWN CRISIS OBLIGATION, in the same instruction the answer is
+  // generated from — the client-side filter in `lib/crisisGuard` gates the
+  // INPUT, and this line binds the OUTPUT: if the week or the question touches
+  // self-harm, the model must direct to the app's helplines itself.
+  t("ai.promptCrisis"),
 ].join(" ");
 
 /**
@@ -298,47 +344,92 @@ export function weeklyFacts(entries: Entry[]): string[] {
 /* ------------------------------ the engine ------------------------------ */
 
 /**
- * The on-device engine, once. Two fields and one promise, and the reason for
- * the promise rather than a lock is the download button: a second press while
- * the first download is running must join it, not start a second 335 MB fetch.
+ * The on-device engine, once — and once per SIZE.
+ *
+ * One slot, two sizes: it holds whichever size was last loaded, and a switch
+ * loads the other one. The promise is what keeps a second press from starting
+ * a second fetch — of EITHER size: a press for the same size joins the
+ * running download, and a press for the other size awaits it and then
+ * switches, instead of racing two CreateMLCEngine calls into one device.
  */
 let engine: MLCEngine | null = null;
+/** Which size the loaded engine holds; null when none is loaded. */
+let engineModel: DeviceModelSize | null = null;
 let enginePending: Promise<MLCEngine> | null = null;
+/** Which size is on its way in `enginePending`. */
+let pendingModel: DeviceModelSize | null = null;
 let progressSink: ((fraction: number) => void) | null = null;
 
-async function ensureEngine(): Promise<MLCEngine> {
-  if (engine) return engine;
-  if (!enginePending) {
-    enginePending = (async () => {
-      // The one dynamic import in the app. Static, this package would put the
-      // runtime in the main bundle for a feature that is off by default.
-      const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
-      const created = await CreateMLCEngine(ON_DEVICE_MODEL, {
-        initProgressCallback: (report) => {
-          if (typeof report.progress === "number") progressSink?.(report.progress);
-        },
-      });
-      engine = created;
-      return created;
-    })();
-    // A failed download must be retryable: clear the promise so the next press
-    // starts a new attempt instead of re-awaiting the rejected one.
-    enginePending.catch(() => {
-      enginePending = null;
-    });
+async function ensureEngine(size: DeviceModelSize = getAiConfig().model): Promise<MLCEngine> {
+  // Already holding THIS size — the fast path every repeat call takes.
+  if (engine && engineModel === size) return engine;
+  // The same download is already running: join it, never start a second one.
+  if (enginePending && pendingModel === size) return enginePending;
+  // Another size is loading: let it settle, then re-answer from the top. No
+  // lock — after the await the same two checks decide again, so the first
+  // press finishes and the second either joins it or switches afterwards.
+  if (enginePending) await enginePending.catch(() => null);
+  if (engine && engineModel === size) return engine;
+  if (enginePending && pendingModel === size) return enginePending;
+  if (engine) {
+    // Switching sizes frees the old one first: the 335 MB model's WebGPU
+    // buffers do not belong beside the 939 MB one's, and CreateMLCEngine on
+    // top of a live engine is an undefined state rather than a swap.
+    try {
+      await engine.unload();
+    } catch {
+      // An engine that refuses to unload must still not block the switch.
+    }
+    engine = null;
+    engineModel = null;
+    // The old promise is SPENT — it resolved to the engine just unloaded —
+    // so it must never answer the next call for a size again.
+    enginePending = null;
+    pendingModel = null;
   }
-  return enginePending;
+  const wanted = size;
+  const pending = (async () => {
+    // The one dynamic import in the app. Static, this package would put the
+    // runtime in the main bundle for a feature that is off by default.
+    const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+    const created = await CreateMLCEngine(deviceModelId(wanted), {
+      initProgressCallback: (report) => {
+        if (typeof report.progress === "number") progressSink?.(report.progress);
+      },
+    });
+    engine = created;
+    engineModel = wanted;
+    return created;
+  })();
+  enginePending = pending;
+  pendingModel = wanted;
+  // A failed download must be retryable: clear THIS attempt's promise so the
+  // next press starts a new one instead of re-awaiting the rejected one —
+  // and only while it is still the current one, so a late failure cannot drop
+  // a newer attempt that has already replaced it.
+  pending.catch(() => {
+    if (enginePending === pending) {
+      enginePending = null;
+      pendingModel = null;
+    }
+  });
+  return pending;
 }
 
-/** Whether the model is already in memory (the button's "ready" state). */
-export function isModelReady(): boolean {
-  return engine !== null;
+/**
+ * Whether a size is in memory (the button's "ready" state). With no argument
+ * it keeps the old meaning — SOMETHING is loaded — for callers that do not
+ * care which.
+ */
+export function isModelReady(size?: DeviceModelSize): boolean {
+  if (engine === null) return false;
+  return size === undefined || engineModel === size;
 }
 
 /* --------------------------- the model on disk -------------------------- */
 
 /**
- * Whether the model's 335 MB is already in the browser's cache.
+ * Whether a size's megabytes are already in the browser's cache.
  *
  * THE CACHE IS NOT SOMETHING THIS FILE GUESSES AT. `@mlc-ai/web-llm` 0.2.86
  * exports the machinery from its own entry point (`lib/index.d.ts:7` re-exports
@@ -348,7 +439,7 @@ export function isModelReady(): boolean {
  *   deleteModelAllInfoInCache(modelId, appConfig?) → void
  *
  * both defaulting `appConfig` to `prebuiltAppConfig`, which is exactly where
- * `ON_DEVICE_MODEL` lives. Under the hood they resolve the model record's URL
+ * both model ids live. Under the hood they resolve the model record's URL
  * and reach three Cache Storage entries named by the package's own `CacheScope`
  * type: `webllm/model` (the param shards), `webllm/config` (mlc-chat-config)
  * and `webllm/wasm` (the runtime). Those names are version-pinned facts of
@@ -359,10 +450,10 @@ export function isModelReady(): boolean {
  * Everything is behind a dynamic import for the same reason `ensureEngine` is:
  * this module must not pull the runtime into the bundle to ask a question.
  */
-export async function isModelCached(): Promise<boolean> {
+export async function isModelCached(size: DeviceModelSize = getAiConfig().model): Promise<boolean> {
   try {
     const { hasModelInCache } = await import("@mlc-ai/web-llm");
-    return await hasModelInCache(ON_DEVICE_MODEL);
+    return await hasModelInCache(deviceModelId(size));
   } catch {
     // No Cache Storage (private mode, a browser that blocks it): the honest
     // answer is "not cached", which keeps the delete button hidden rather
@@ -382,21 +473,27 @@ export async function isModelCached(): Promise<boolean> {
  * `CreateMLCEngine` on the next download), then `deleteModelAllInfoInCache`,
  * which removes model + wasm + chat config in one call.
  */
-export async function deleteOnDeviceModel(): Promise<{ ok: boolean }> {
+export async function deleteOnDeviceModel(
+  size: DeviceModelSize = getAiConfig().model,
+): Promise<{ ok: boolean }> {
   try {
-    if (engine) {
+    // Memory first — but only THIS size's engine: deleting the small model
+    // while the large one is loaded must not unload the large one.
+    if (engine && engineModel === size) {
       try {
         await engine.unload();
       } catch {
         // An engine that refuses to unload must still not block the delete:
         // the refs are dropped either way and the cache removal below is what
-        // actually frees the 335 MB.
+        // actually frees the megabytes.
       }
       engine = null;
+      engineModel = null;
       enginePending = null;
+      pendingModel = null;
     }
     const { deleteModelAllInfoInCache } = await import("@mlc-ai/web-llm");
-    await deleteModelAllInfoInCache(ON_DEVICE_MODEL);
+    await deleteModelAllInfoInCache(deviceModelId(size));
     return { ok: true };
   } catch {
     return { ok: false };
@@ -410,10 +507,11 @@ export async function deleteOnDeviceModel(): Promise<{ ok: boolean }> {
  */
 export async function downloadOnDeviceModel(
   onProgress?: (fraction: number) => void,
+  size: DeviceModelSize = getAiConfig().model,
 ): Promise<{ ok: boolean }> {
   progressSink = onProgress ?? null;
   try {
-    await ensureEngine();
+    await ensureEngine(size);
     onProgress?.(1);
     return { ok: true };
   } catch {
@@ -438,29 +536,33 @@ export type AiCallOptions = {
 };
 
 /**
- * Summarise one week, in whichever mode the reader chose.
- *
- * `entries` are the caller's CURRENT WEEK and nothing else — the card passes
- * the week it is showing, so the prompt cannot grow to include the whole
- * journal by accident. The order of the three checks is the promise:
- * `off` before anything is read, the key before any host is named, and the
- * model only after both.
+ * Wrap a model answer: empty stays a failure, and an answer that touches
+ * self-harm carries the app's crisis block — the prompt already asked the
+ * model to direct to help, and the numbers are appended HERE so the
+ * direction never depends on the model having obeyed.
  */
-export async function generateWeeklySummary(
-  entries: Entry[],
-  options: AiCallOptions = {},
+function finish(text: string): AiResult {
+  const clean = text.trim();
+  if (clean === "") return { ok: false, reason: "bad-response" };
+  return {
+    ok: true,
+    text: hasCrisisSignal(clean) ? `${clean}\n\n${crisisReply()}` : clean,
+  };
+}
+
+/**
+ * The shared transport: on-device first, BYOK second, both through `finish`.
+ * One copy of the message array, the status ladder and the timeout — the
+ * summary and the question differ ONLY in the user turn they send.
+ */
+async function askModel(
+  config: AiConfig,
+  user: string,
+  options: AiCallOptions,
 ): Promise<AiResult> {
-  const config = getAiConfig();
-  if (config.mode === "off") return { ok: false, reason: "off" };
-
-  const facts = weeklyFacts(entries);
-  if (facts.length === 0) return { ok: false, reason: "bad-response" };
-
-  const user = [t("ai.promptQuestion"), ...facts].join("\n");
-
   if (config.mode === "on-device") {
     try {
-      const mlc = await ensureEngine();
+      const mlc = await ensureEngine(config.model);
       const response = await mlc.chat.completions.create({
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
@@ -469,9 +571,7 @@ export async function generateWeeklySummary(
         temperature: 0.7,
         max_tokens: 400,
       });
-      const text = response.choices?.[0]?.message?.content ?? "";
-      if (text.trim() === "") return { ok: false, reason: "bad-response" };
-      return { ok: true, text: text.trim() };
+      return finish(response.choices?.[0]?.message?.content ?? "");
     } catch {
       return { ok: false, reason: "model" };
     }
@@ -520,9 +620,63 @@ export async function generateWeeklySummary(
   } catch {
     return { ok: false, reason: "bad-response" };
   }
-  const text = payload.choices?.[0]?.message?.content?.trim() ?? "";
   // A refusal, an empty answer or a truncated one is a failure, never a blank
   // paragraph the card would render as a summary that says nothing.
-  if (text === "") return { ok: false, reason: "bad-response" };
-  return { ok: true, text };
+  return finish(payload.choices?.[0]?.message?.content ?? "");
+}
+
+/**
+ * Summarise one week, in whichever mode the reader chose.
+ *
+ * `entries` are the caller's CURRENT WEEK and nothing else — the card passes
+ * the week it is showing, so the prompt cannot grow to include the whole
+ * journal by accident. The order of the checks is the promise: `off` before
+ * anything is read, the crisis gate before any key, host or model is named,
+ * and the transport only after all three.
+ */
+export async function generateWeeklySummary(
+  entries: Entry[],
+  options: AiCallOptions = {},
+): Promise<AiResult> {
+  const config = getAiConfig();
+  if (config.mode === "off") return { ok: false, reason: "off" };
+
+  const facts = weeklyFacts(entries);
+  if (facts.length === 0) return { ok: false, reason: "bad-response" };
+
+  // THE CRISIS GATE, before the key, the host and the model: the week's own
+  // notes may carry a self-harm signal, and that sentence must be answered
+  // even with the key cleared, the network down or 939 MB still downloading.
+  if (hasCrisisSignal(facts.join("\n"))) return { ok: true, text: crisisReply() };
+
+  const user = [t("ai.promptQuestion"), ...facts].join("\n");
+  return askModel(config, user, options);
+}
+
+/**
+ * Answer ONE question about the week — "Kérdezz a hetedről" — with the same
+ * three modes, the same prompt and the same guard as the summary.
+ *
+ * The question travels INSIDE the user turn, after the facts, so the model
+ * reads the week and the question as one instruction; nothing else about the
+ * contract changes (same 400-token ceiling, same 45 s, same injectable
+ * fetch). `entries` is still the caller's current week only.
+ */
+export async function askAboutWeek(
+  question: string,
+  entries: readonly Entry[],
+  options: AiCallOptions = {},
+): Promise<AiResult> {
+  const config = getAiConfig();
+  if (config.mode === "off") return { ok: false, reason: "off" };
+  const trimmed = question.trim();
+  if (trimmed === "") return { ok: false, reason: "bad-response" };
+  const facts = weeklyFacts([...entries]);
+  if (facts.length === 0) return { ok: false, reason: "bad-response" };
+  // The question AND the week are scanned: either half can carry the signal.
+  if (hasCrisisSignal(trimmed) || hasCrisisSignal(facts.join("\n"))) {
+    return { ok: true, text: crisisReply() };
+  }
+  const user = [t("ai.chatContext"), ...facts, "", trimmed].join("\n");
+  return askModel(config, user, options);
 }

@@ -25,7 +25,7 @@ is also outside it. That is the shape of the rule, not an oversight in it.
 | --- | --- |
 | raw literals still to sweep | **40** |
 | files holding them | **7** |
-| `t()` call sites this walk saw | 292 |
+| `t()` call sites this walk saw | 293 |
 | rounds | 25 (21 measurable, 7 with work left) |
 
 ## The rounds

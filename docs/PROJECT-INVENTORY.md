@@ -20,20 +20,20 @@ claims has two possible anchors and no way to tell which one went stale.
 
 ```json
 {
-    "srcTsFiles": 184,
-    "srcTsLines": 49001,
+    "srcTsFiles": 185,
+    "srcTsLines": 49398,
     "srcCssFiles": 1,
     "srcCssLines": 5511,
-    "libFiles": 94,
-    "libLines": 30179,
+    "libFiles": 95,
+    "libLines": 30461,
     "componentFiles": 74,
-    "componentLines": 13714,
+    "componentLines": 13829,
     "viewFiles": 6,
     "viewLines": 2860,
     "stateFiles": 5,
     "stateLines": 1272,
-    "testFiles": 129,
-    "testLines": 50150,
+    "testFiles": 131,
+    "testLines": 50545,
     "scriptFiles": 6,
     "publicFontWoff2": 24,
     "publicFontLicences": 10,
@@ -749,7 +749,7 @@ entries / 9.42 MB before this rule).
 
 ## 10. The test suite
 
-**129 files, 50 081 lines, 3 767 tests.** `bun test` — no test framework in the
+**131 files, 50 476 lines, 3 814 tests.** `bun test` — no test framework in the
 dependency block; the runner is bun's own. This table is the second half of the
 document's proof: its file count, its total and the five group sums are all
 recomputed from the rows below, so a file that lands without a row, a row whose
@@ -826,10 +826,12 @@ a fourth ground.
 | `tests/phase4.test.ts` | 7 | onboarding state and reminder scheduling |
 | `tests/stuck-worker.test.ts` | 17 | the stuck service worker: the detector (a controller url without this build's hash, conservative about every unknown), the escape address (`resetUrl` + taking the stamp back out), the `SKIP_WAITING` message on both sides, the immediate reload for a swap the page asked for, the banner's markup and its solid amber rail, and the reader's devtools guide |
 
-**`tests/lib/` — one file per library module** — 53 files, 984 tests
+**`tests/lib/` — one file per library module** — 55 files, 1 031 tests
 
 | File | Tests | Pins |
 | --- | --- | --- |
+| `tests/lib/ai-chat.test.ts` | 15 | the model sizes (both prebuilt ids, their measured megabytes, the default, the legacy no-`model` config and the unknown-size fallback), the crisis gate's order on both calls (off → facts → crisis → key — with the on-device crisis path asserted to answer without ever reaching the engine), and the question path's transport (system prompt carries the crisis obligation, the user turn carries context header → facts → question in order, the helpline block is appended by the engine not the model, empty answers refused) |
+| `tests/lib/crisis-guard.test.ts` | 32 | the keyword list itself: the Hungarian stems and English phrases that must fire, the grief/plot/decoy phrases that must not, the accepted `öngyilk` stem tradeoff pinned as a match so it stays deliberate, and the reply that opens with the catalogue sentence, names every phone number RESOURCES carries and stays a sentence plus bullet lines |
 | `tests/lib/storage-keys.test.ts` | 8 | the registry as a whole set read out of the tree: every `belso-iranytu*` literal in `src/` is a wipe key or a named non-storage name, the lists are disjoint and namespaced, the eighteen keys the old chain left are in the wipe, and the wipe removes all of them from both storages and nothing else |
 | `tests/lib/image-background.test.ts` | 54 | the background layer: scrim, blur, tint, the fit (including the soft fill's recipe) and the card fade, and its own key and cap |
 | `tests/lib/backupStorage.test.ts` | 34 | that the storage-key list and the available wraps are pinned sets, and nothing outside the allow-list is read |

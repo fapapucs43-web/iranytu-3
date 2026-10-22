@@ -1,6 +1,9 @@
 /**
  * Phase 4 — the AI's Settings card: the three modes, the BYOK key, and the
- * model download.
+ * model download — both of them: the picker inside `on-device` offers the
+ * 0.6B and the 1.7B prebuilt sizes with their measured megabytes in the
+ * label, and every state on this card (ready, cached, delete) belongs to the
+ * SELECTED size, not to the slot.
  *
  * THE MODE PICKER IS THE CONSENT, AND IT IS A RADIO TRIO
  * Not a toggle, because these are three named states rather than on/off — the
@@ -28,10 +31,11 @@ import {
   AI_HOSTS,
   AI_MODES,
   AI_PROVIDERS,
-  ON_DEVICE_MODEL,
-  ON_DEVICE_MODEL_MB,
+  DEVICE_MODEL_SIZES,
   clearAiKey,
   deleteOnDeviceModel,
+  deviceModelId,
+  deviceModelMb,
   downloadOnDeviceModel,
   getAiConfig,
   hasAiKey,
@@ -43,6 +47,7 @@ import {
   type AiConfig,
   type AiMode,
   type AiProvider,
+  type DeviceModelSize,
 } from "../lib/ai";
 
 const MODE_LABEL: Record<AiMode, string> = {
@@ -68,24 +73,33 @@ export default function AiSettingsCard() {
   const [stored, setStored] = useState(hasAiKey());
   const [downloading, setDownloading] = useState(false);
   const [percent, setPercent] = useState<number | null>(null);
-  const [ready, setReady] = useState(isModelReady());
+  const [ready, setReady] = useState(isModelReady(config.model));
   const [failed, setFailed] = useState(false);
-  // On disk, not in memory: the delete button is about the 335 MB in Cache
-  // Storage, which outlives the tab. Checked once on mount, because the only
-  // other writer is this card's own download and delete.
+  // On disk, not in memory: the delete button is about the selected size's
+  // megabytes in Cache Storage, which outlive the tab. Re-checked whenever
+  // the picker changes size, because the only other writer is this card's own
+  // download and delete.
   const [cached, setCached] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteState, setDeleteState] = useState<"idle" | "ok" | "error">("idle");
 
+  // Every per-size state re-reads on a size change: ready is a module read,
+  // cached is the slow Cache Storage probe, and the progress / error / delete
+  // messages belong to the size that produced them — a leftover "deleted"
+  // from the small model would be a lie under the large one.
   useEffect(() => {
     let alive = true;
-    void isModelCached().then((v) => {
+    setReady(isModelReady(config.model));
+    setPercent(null);
+    setFailed(false);
+    setDeleteState("idle");
+    void isModelCached(config.model).then((v) => {
       if (alive) setCached(v);
     });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [config.model]);
 
   function patch(next: Partial<AiConfig>) {
     setConfig(setAiConfig(next));
@@ -97,8 +111,9 @@ export default function AiSettingsCard() {
     setFailed(false);
     setDeleteState("idle");
     setPercent(0);
-    const result = await downloadOnDeviceModel((fraction) =>
-      setPercent(Math.round(fraction * 100)),
+    const result = await downloadOnDeviceModel(
+      (fraction) => setPercent(Math.round(fraction * 100)),
+      config.model,
     );
     setDownloading(false);
     setPercent(null);
@@ -113,16 +128,16 @@ export default function AiSettingsCard() {
   async function removeModel() {
     if (deleting) return;
     // The one destructive action in this card gets the reader's word first —
-    // the next use is a fresh 335 MB download, and no undo exists.
+    // the next use is a fresh download of the same size, and no undo exists.
     if (!window.confirm(t("ai.deleteConfirm"))) return;
     setDeleting(true);
     setDeleteState("idle");
-    const result = await deleteOnDeviceModel();
+    const result = await deleteOnDeviceModel(config.model);
     setDeleting(false);
     if (result.ok) {
       // All three states go back together: memory, disk and the button — a
       // half-reset card would offer "delete" for a model that is gone or
-      // "download" while 335 MB still sits in the cache.
+      // "download" while its megabytes still sit in the cache.
       setReady(false);
       setCached(false);
       setPercent(null);
@@ -217,10 +232,25 @@ export default function AiSettingsCard() {
 
       {config.mode === "on-device" && (
         <>
+          <div className="field-label" id="ai-model-group">
+            {t("ai.modelLabel")}
+          </div>
+          <Segmented<DeviceModelSize>
+            ariaLabel={t("ai.modelLabel")}
+            options={DEVICE_MODEL_SIZES.map((size) => ({
+              value: size,
+              label: `${size === "small" ? t("ai.modelSmall") : t("ai.modelLarge")} (${deviceModelMb(size)} MB)`,
+            }))}
+            value={config.model}
+            onChange={(model) => patch({ model })}
+          />
+          <p className="muted-note" role="status">
+            {config.model === "small" ? t("ai.modelSmallHint") : t("ai.modelLargeHint")}
+          </p>
           {!downloading && !modelPresent && (
             <div className="weather-try">
               <button type="button" className="btn" onClick={() => void startDownload()}>
-                {t("ai.download", { mb: ON_DEVICE_MODEL_MB })}
+                {t("ai.download", { mb: deviceModelMb(config.model) })}
               </button>
             </div>
           )}
@@ -235,7 +265,7 @@ export default function AiSettingsCard() {
                 {t("ai.delete")}
               </button>
               <small className="muted-note" role="status">
-                {ready ? t("ai.modelReady") : t("ai.download", { mb: ON_DEVICE_MODEL_MB })}
+                {ready ? t("ai.modelReady") : t("ai.download", { mb: deviceModelMb(config.model) })}
               </small>
             </div>
           )}
@@ -255,7 +285,7 @@ export default function AiSettingsCard() {
             </p>
           )}
           <p className="muted-note">
-            <code>{ON_DEVICE_MODEL}</code>
+            <code>{deviceModelId(config.model)}</code>
           </p>
         </>
       )}

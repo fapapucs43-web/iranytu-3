@@ -2455,6 +2455,16 @@ const HU = {
   "ai.promptGround":
     "Csak a megadott adatokból dolgozz, ne találj ki részletet, és jelezd, ha kevés az adat.",
   "ai.promptQuestion": "Írd meg a heti összefoglalót ezekből az adatokból:",
+  "ai.promptCrisis":
+    "Ha a szöveg öngyilkosságot, önártást vagy krízist érint, a válaszod végén ajánld a 116-123-as segélyvonalat (éjjel-nappal, ingyenes), vészhelyzetben a 112-t és a Kék Vonal 116-111 számát — röviden, ítélkezés nélkül.",
+  "ai.chatContext": "A hét adatai, majd egy kérdés ugyanarról a hétről:",
+  "ai.crisisReply":
+    "Krízisben kérj segítséget — ezek a számok ingyenesek, névtelenek és mindig elérhetők:",
+  "ai.modelLabel": "Modell mérete",
+  "ai.modelSmall": "Qwen3-0.6B",
+  "ai.modelLarge": "Qwen3-1.7B",
+  "ai.modelSmallHint": "Kicsi és gyors — alapértelmezés, a mindennapi kérdésekhez elég.",
+  "ai.modelLargeHint": "Nagyobb és lassabb, de jobban érti a szöveget; a letöltés több helyet kér a tárolóban.",
   "wall.title": "Bátorítások",
   "wall.summaryOff": "Kikapcsolva — csak ezen az eszközön tartja az üzeneteket.",
   "wall.summaryCount": "{count} üzenet, csak ezen az eszközön.",
@@ -2482,6 +2492,10 @@ const HU = {
   "insights.ai.empty": "Erre a hétre nincs egyetlen bejegyzés sem.",
   "insights.ai.privacyNote": "A modell csak ennek a hétnek az adatait látja.",
   "insights.ai.machineNote": "Gépi szöveg — olvasd el kritikus szemmel.",
+  "insights.ai.chatLabel": "Kérdezz a hetedről",
+  "insights.ai.chatPlaceholder": "Pl.: Mitől volt jobb a hangulatom kedden?",
+  "insights.ai.chatSubmit": "Kérdezés",
+  "insights.ai.chatBusy": "Kérdezés…",
 
 } as const;
 
@@ -3803,6 +3817,16 @@ export const MESSAGES: Record<Locale, Catalogue> = {
     "ai.promptGround":
       "Work only from the data given, invent no detail, and say when the data is thin.",
     "ai.promptQuestion": "Write the weekly summary from this data:",
+    "ai.promptCrisis":
+      "If the text touches suicide, self-harm or a crisis, end your answer by offering the 116-123 helpline (free, 24/7), 112 in an emergency and the Blue Line on 116-111 — briefly and without judgement.",
+    "ai.chatContext": "This week's data, then one question about it:",
+    "ai.crisisReply":
+      "In a crisis, reach out — these numbers are free, anonymous and always open:",
+    "ai.modelLabel": "Model size",
+    "ai.modelSmall": "Qwen3-0.6B",
+    "ai.modelLarge": "Qwen3-1.7B",
+    "ai.modelSmallHint": "Small and fast — the default, enough for everyday questions.",
+    "ai.modelLargeHint": "Larger and slower, but understands text better; the download asks for more storage.",
     "wall.title": "Encouragements",
     "wall.summaryOff": "Off — keeps its notes on this device only.",
     "wall.summaryCount": "{count} notes, on this device only.",
@@ -3830,6 +3854,10 @@ export const MESSAGES: Record<Locale, Catalogue> = {
     "insights.ai.empty": "There is not a single entry for this week.",
     "insights.ai.privacyNote": "The model sees this week's data only.",
     "insights.ai.machineNote": "Machine-written — read it critically.",
+    "insights.ai.chatLabel": "Ask about your week",
+    "insights.ai.chatPlaceholder": "e.g. What lifted my mood on Tuesday?",
+    "insights.ai.chatSubmit": "Ask",
+    "insights.ai.chatBusy": "Asking…",
   },
   de: {
     "meditation.title": "Meditationen",
@@ -5137,6 +5165,16 @@ export const MESSAGES: Record<Locale, Catalogue> = {
     "ai.promptGround":
       "Arbeite nur mit den angegebenen Daten, erfinde keine Details und sag, wenn die Daten zu dünn sind.",
     "ai.promptQuestion": "Schreibe die wöchentliche Zusammenfassung aus diesen Daten:",
+    "ai.promptCrisis":
+      "Berührt der Text Suizid, Selbstverletzung oder eine Krise, schließe deine Antwort mit der Nummer 116-123 (kostenlos, rund um die Uhr), im Notfall 112 und der Blauen Linie 116-111 — kurz und ohne Wertung.",
+    "ai.chatContext": "Die Daten der Woche, dann eine Frage dazu:",
+    "ai.crisisReply":
+      "Im Krise um Hilfe bitten — diese Nummern sind kostenlos, anonym und immer erreichbar:",
+    "ai.modelLabel": "Modellgröße",
+    "ai.modelSmall": "Qwen3-0.6B",
+    "ai.modelLarge": "Qwen3-1.7B",
+    "ai.modelSmallHint": "Klein und schnell — die Voreinstellung, reicht für alltägliche Fragen.",
+    "ai.modelLargeHint": "Größer und langsamer, versteht Text aber besser; der Download braucht mehr Speicherplatz.",
     "wall.title": "Ermutigungen",
     "wall.summaryOff": "Aus — bewahrt seine Notizen nur auf diesem Gerät auf.",
     "wall.summaryCount": "{count} Notizen, nur auf diesem Gerät.",
@@ -5164,6 +5202,10 @@ export const MESSAGES: Record<Locale, Catalogue> = {
     "insights.ai.empty": "Für diese Woche gibt es keinen einzigen Eintrag.",
     "insights.ai.privacyNote": "Das Modell sieht nur die Daten dieser Woche.",
     "insights.ai.machineNote": "Maschinell geschrieben — lies es kritisch.",
+    "insights.ai.chatLabel": "Frag nach deiner Woche",
+    "insights.ai.chatPlaceholder": "z. B. Was hat meine Laune am Dienstag gehoben?",
+    "insights.ai.chatSubmit": "Fragen",
+    "insights.ai.chatBusy": "Frage…",
   },
 };
 
