@@ -21,13 +21,13 @@ claims has two possible anchors and no way to tell which one went stale.
 ```json
 {
     "srcTsFiles": 182,
-    "srcTsLines": 48346,
+    "srcTsLines": 48508,
     "srcCssFiles": 1,
     "srcCssLines": 5480,
     "libFiles": 93,
-    "libLines": 29772,
+    "libLines": 29871,
     "componentFiles": 73,
-    "componentLines": 13471,
+    "componentLines": 13534,
     "viewFiles": 6,
     "viewLines": 2855,
     "stateFiles": 5,

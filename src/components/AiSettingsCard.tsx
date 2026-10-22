@@ -20,7 +20,7 @@
  * form afterwards, and offers one-button clearing. It cannot echo the key back
  * because it never reads it back.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CollapsibleCard, Segmented, TextInput } from "./ui/ui";
 import ContentIcon from "./ContentIcon";
 import { t } from "../lib/i18n";
@@ -31,9 +31,11 @@ import {
   ON_DEVICE_MODEL,
   ON_DEVICE_MODEL_MB,
   clearAiKey,
+  deleteOnDeviceModel,
   downloadOnDeviceModel,
   getAiConfig,
   hasAiKey,
+  isModelCached,
   isModelReady,
   maskedAiKey,
   saveAiKey,
@@ -68,6 +70,22 @@ export default function AiSettingsCard() {
   const [percent, setPercent] = useState<number | null>(null);
   const [ready, setReady] = useState(isModelReady());
   const [failed, setFailed] = useState(false);
+  // On disk, not in memory: the delete button is about the 335 MB in Cache
+  // Storage, which outlives the tab. Checked once on mount, because the only
+  // other writer is this card's own download and delete.
+  const [cached, setCached] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteState, setDeleteState] = useState<"idle" | "ok" | "error">("idle");
+
+  useEffect(() => {
+    let alive = true;
+    void isModelCached().then((v) => {
+      if (alive) setCached(v);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   function patch(next: Partial<AiConfig>) {
     setConfig(setAiConfig(next));
@@ -77,15 +95,48 @@ export default function AiSettingsCard() {
     if (downloading || ready) return;
     setDownloading(true);
     setFailed(false);
+    setDeleteState("idle");
     setPercent(0);
     const result = await downloadOnDeviceModel((fraction) =>
       setPercent(Math.round(fraction * 100)),
     );
     setDownloading(false);
     setPercent(null);
-    if (result.ok) setReady(true);
-    else setFailed(true);
+    if (result.ok) {
+      setReady(true);
+      setCached(true);
+    } else {
+      setFailed(true);
+    }
   }
+
+  async function removeModel() {
+    if (deleting) return;
+    // The one destructive action in this card gets the reader's word first —
+    // the next use is a fresh 335 MB download, and no undo exists.
+    if (!window.confirm(t("ai.deleteConfirm"))) return;
+    setDeleting(true);
+    setDeleteState("idle");
+    const result = await deleteOnDeviceModel();
+    setDeleting(false);
+    if (result.ok) {
+      // All three states go back together: memory, disk and the button — a
+      // half-reset card would offer "delete" for a model that is gone or
+      // "download" while 335 MB still sits in the cache.
+      setReady(false);
+      setCached(false);
+      setPercent(null);
+      setFailed(false);
+      setDeleteState("ok");
+    } else {
+      setDeleteState("error");
+    }
+  }
+
+  // "Download" and "Delete" are the two faces of the same slot: the reader
+  // can only want one of them at a time, and the second button appearing next
+  // to a disabled first would be a question about which one matters.
+  const modelPresent = ready || cached;
 
   return (
     <CollapsibleCard
@@ -166,26 +217,38 @@ export default function AiSettingsCard() {
 
       {config.mode === "on-device" && (
         <>
-          <div className="weather-try">
-            <button
-              type="button"
-              className="btn"
-              disabled={downloading || ready}
-              onClick={() => void startDownload()}
-            >
-              {t("ai.download", { mb: ON_DEVICE_MODEL_MB })}
-            </button>
-            {downloading && percent !== null && (
+          {!downloading && !modelPresent && (
+            <div className="weather-try">
+              <button type="button" className="btn" onClick={() => void startDownload()}>
+                {t("ai.download", { mb: ON_DEVICE_MODEL_MB })}
+              </button>
+            </div>
+          )}
+          {downloading && percent !== null && (
+            <p className="muted-note" role="status">
+              {t("ai.downloading", { percent })}
+            </p>
+          )}
+          {!downloading && modelPresent && (
+            <div className="weather-try">
+              <button type="button" className="btn" disabled={deleting} onClick={() => void removeModel()}>
+                {t("ai.delete")}
+              </button>
               <small className="muted-note" role="status">
-                {t("ai.downloading", { percent })}
+                {ready ? t("ai.modelReady") : t("ai.download", { mb: ON_DEVICE_MODEL_MB })}
               </small>
-            )}
-            {ready && !downloading && (
-              <small className="muted-note" role="status">
-                {t("ai.modelReady")}
-              </small>
-            )}
-          </div>
+            </div>
+          )}
+          {deleteState === "ok" && (
+            <p className="muted-note" role="status">
+              {t("ai.deleted")}
+            </p>
+          )}
+          {deleteState === "error" && (
+            <p className="muted-note" role="alert">
+              {t("ai.deleteError")}
+            </p>
+          )}
           {failed && (
             <p className="muted-note" role="alert">
               {t("ai.errorModel")}

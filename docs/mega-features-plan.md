@@ -91,6 +91,16 @@ type AiProvider = "openai" | "deepseek";
 * BYOK secret key: `belso-iranytu-ai-key` (never in `AppData`/backups).
 * On-device: lazy `import("@mlc-ai/web-llm")`; no download until the reader
   presses the download button or asks for the first summary.
+* On-device model: `Qwen3-0.6B-q4f16_1-MLC`, a PREBUILT entry of web-llm
+  0.2.86 (335.2 MB measured over the 18 files of its repo). The original
+  `dict-xs-mlc-q4f16_1` was not in that list — a HuggingFace repo whose
+  download would have thrown "model not found" — and the same base model is
+  what that repo was finetuned from.
+* Phase 4.1 — delete button: `isModelCached()` / `deleteOnDeviceModel()`
+  in `src/lib/ai.ts`, built on the package's own `hasModelInCache` /
+  `deleteModelAllInfoInCache` exports (v0.2.86, `lib/index.d.ts:7`) and
+  `engine.unload()` first, so the three `webllm/*` caches are removed by the
+  library that wrote them rather than by a hard-coded name.
 * Summary prompt: built only from the current week's entries; no network in
   `off`, no network in `on-device` after the model is cached, and an explicit
   host notice in `byok`.

@@ -73,8 +73,25 @@ const MODELS: Readonly<Record<AiProvider, string>> = {
   deepseek: "deepseek-chat",
 };
 
-/** The on-device model, and what the download button promises before it starts. */
-export const ON_DEVICE_MODEL = "dict-xs-mlc-q4f16_1";
+/**
+ * THE ON-DEVICE MODEL, AND WHY IT IS THIS ONE
+ *
+ * `Qwen3-0.6B-q4f16_1-MLC` is chosen because it is IN the prebuilt model list
+ * of the installed `@mlc-ai/web-llm` (0.2.86): `CreateMLCEngine` resolves it
+ * without any custom `ModelRecord`, and the cache helpers below find it the
+ * same way. The plan originally named `dict-xs-mlc-q4f16_1` — a HuggingFace
+ * repo (`ikhou/dict-xs-mlc-q4f16_1`) that is NOT in that list, so the download
+ * button would have thrown "model not found" on the first press. That repo is
+ * a dictionary/glossing finetune of THIS SAME base model, and its measured
+ * size (340.7 MB) is why the plan says ~335 MB — the official prebuilt repo
+ * measures 335.2 MB over its 18 files, which is the number the card promises.
+ *
+ * 0.2.86 is pinned in package.json: the prebuilt list changes between
+ * versions, and an id that exists today can be renamed away. If the dependency
+ * is ever bumped, re-check `node_modules/@mlc-ai/web-llm/lib/index.js` for
+ * this id before shipping.
+ */
+export const ON_DEVICE_MODEL = "Qwen3-0.6B-q4f16_1-MLC";
 export const ON_DEVICE_MODEL_MB = 335;
 
 const CONFIG_KEY = "belso-iranytu-ai-config";
@@ -316,6 +333,74 @@ async function ensureEngine(): Promise<MLCEngine> {
 /** Whether the model is already in memory (the button's "ready" state). */
 export function isModelReady(): boolean {
   return engine !== null;
+}
+
+/* --------------------------- the model on disk -------------------------- */
+
+/**
+ * Whether the model's 335 MB is already in the browser's cache.
+ *
+ * THE CACHE IS NOT SOMETHING THIS FILE GUESSES AT. `@mlc-ai/web-llm` 0.2.86
+ * exports the machinery from its own entry point (`lib/index.d.ts:7` re-exports
+ * `./cache_util`):
+ *
+ *   hasModelInCache(modelId, appConfig?)         → boolean
+ *   deleteModelAllInfoInCache(modelId, appConfig?) → void
+ *
+ * both defaulting `appConfig` to `prebuiltAppConfig`, which is exactly where
+ * `ON_DEVICE_MODEL` lives. Under the hood they resolve the model record's URL
+ * and reach three Cache Storage entries named by the package's own `CacheScope`
+ * type: `webllm/model` (the param shards), `webllm/config` (mlc-chat-config)
+ * and `webllm/wasm` (the runtime). Those names are version-pinned facts of
+ * 0.2.86, read from `cache_util.d.ts` — NOT hand-written here, because a
+ * hard-coded cache name is the one part of this feature that would rot
+ * silently: the button would "succeed" while the megabytes stayed on disk.
+ *
+ * Everything is behind a dynamic import for the same reason `ensureEngine` is:
+ * this module must not pull the runtime into the bundle to ask a question.
+ */
+export async function isModelCached(): Promise<boolean> {
+  try {
+    const { hasModelInCache } = await import("@mlc-ai/web-llm");
+    return await hasModelInCache(ON_DEVICE_MODEL);
+  } catch {
+    // No Cache Storage (private mode, a browser that blocks it): the honest
+    // answer is "not cached", which keeps the delete button hidden rather
+    // than offering a delete that cannot succeed.
+    return false;
+  }
+}
+
+/**
+ * Free the model: memory first, then the megabytes on disk.
+ *
+ * The order matters. `unload()` (engine.d.ts:75 in 0.2.86 — "explicitly
+ * unload the currently loaded model(s) and release the related resources")
+ * drops the WebGPU buffers, but the shards stay in Cache Storage; deleting the
+ * caches under a live engine would leave a running model pointing at entries
+ * that no longer exist. So: unload and null the module refs (a fresh
+ * `CreateMLCEngine` on the next download), then `deleteModelAllInfoInCache`,
+ * which removes model + wasm + chat config in one call.
+ */
+export async function deleteOnDeviceModel(): Promise<{ ok: boolean }> {
+  try {
+    if (engine) {
+      try {
+        await engine.unload();
+      } catch {
+        // An engine that refuses to unload must still not block the delete:
+        // the refs are dropped either way and the cache removal below is what
+        // actually frees the 335 MB.
+      }
+      engine = null;
+      enginePending = null;
+    }
+    const { deleteModelAllInfoInCache } = await import("@mlc-ai/web-llm");
+    await deleteModelAllInfoInCache(ON_DEVICE_MODEL);
+    return { ok: true };
+  } catch {
+    return { ok: false };
+  }
 }
 
 /**
