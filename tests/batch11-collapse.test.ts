@@ -740,10 +740,12 @@ describe("Batch 13, commit 3 — the strong cards (twenty since this batch)", ()
     // trackers, med times) and the custom-ACTIVITY manager the 2026-10
     // completion converted beside its twin, the tracker manager. The two
     // transparency cards left for the toolbox and are covered by the ToolsView
-    // assertion below. The last two of the twenty-six are the data/voice
+    // assertion below. Two of the twenty-six are the data/voice
     // drawers fix/card-state-and-full-audit converted from the session-local
-    // `Collapsible` — with the meds module off, as here.
-    expect((html.match(/collapsible-card-head/g) ?? []).length).toBe(26);
+    // `Collapsible` — with the meds module off, as here. The twenty-seventh is
+    // Phase 4's AI settings card, which joins the count the same way every
+    // card before it did: it is a CollapsibleCard on this page.
+    expect((html.match(/collapsible-card-head/g) ?? []).length).toBe(27);
     for (const [id, title, summary] of SETTINGS_CARDS) {
       expect(html, id).toContain(`aria-controls="card-body-${id}"`);
       expect(isCollapsed(html, id), `${id} must be collapsed by default`).toBe(true);

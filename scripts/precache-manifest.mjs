@@ -33,6 +33,15 @@
  *
  * AND NOT `/sw.js` ITSELF. Caching the worker inside the worker is pointless
  * and confusing, and the registration URL already carries the bundle hash.
+ *
+ * AND NOT THE AI RUNTIME. `vite.config.ts` gives `@mlc-ai/web-llm` a chunk
+ * named `webllm-runtime`, and this file refuses that name. The runtime is
+ * ~6 MB, it serves only a feature that is off by default, and it is useless
+ * without its model — a 335 MB download that happens on a button press and is
+ * never precached. So caching the runtime at install would spend every
+ * reader's bandwidth, including the readers who will never turn AI on, on
+ * bytes that cannot do anything offline. The size guard below is what turns
+ * a broken name rule from a silent 6 MB install back into a failed build.
  */
 import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
@@ -42,6 +51,20 @@ import { fileURLToPath } from "node:url";
 /** Markers the template in `public/sw.js` carries around the empty list. */
 export const START = "/* PRECACHE_MANIFEST_START */";
 export const END = "/* PRECACHE_MANIFEST_END */";
+
+/**
+ * The chunk name `vite.config.ts` pins the AI runtime to, and the largest
+ * precache entry the build may produce.
+ *
+ * The size ceiling is not arbitrary: the biggest thing that legitimately
+ * belongs in the install is `fluent-artwork` (~570 kB) and the app's own entry
+ * chunk (~860 kB). A megabyte of headroom over the current largest keeps real
+ * future assets in, and catches the one failure this file cannot see on its
+ * own — the name rule below quietly stopping matching while a 6 MB chunk
+ * keeps shipping under an `index-*.js` name.
+ */
+export const AI_RUNTIME_PREFIX = "/assets/webllm-runtime-";
+export const MAX_PRECACHE_BYTES = 1_000_000;
 
 /** Markers the template carries around the build id baked into the worker. */
 export const VERSION_START = "/* BUILD_VERSION_START */";
@@ -56,6 +79,10 @@ export const VERSION_END = "/* BUILD_VERSION_END */";
  */
 export function shouldPrecache(path) {
   if (path === "/sw.js") return false;
+  // The AI runtime, and only it — see the header. Excluded before the
+  // positive `/assets/` rule so that no future change to that rule can
+  // quietly re-admit it.
+  if (path.startsWith(AI_RUNTIME_PREFIX)) return false;
   if (path === "/index.html") return true;
   if (path === "/manifest.webmanifest") return true;
   if (path.startsWith("/assets/")) return true;
@@ -166,6 +193,31 @@ export function verifyPrecacheList(list, distDir) {
   return list;
 }
 
+/**
+ * Refuse any precache entry larger than the ceiling, whatever it is called.
+ *
+ * This is the backstop for the one rule the walk cannot check: the AI runtime
+ * is excluded BY NAME, so if `vite.config.ts` ever stops naming its chunk
+ * `webllm-runtime`, the exclusion stops matching and the ~6 MB runtime comes
+ * straight back into the install — as an `index-*.js` file that looks exactly
+ * like the app's own code. Size is the one property that rule cannot fake,
+ * so a slipped chunk fails the build here with its name and its size instead
+ * of silently costing every reader the download.
+ */
+export function verifyPrecacheSizes(list, distDir, maxBytes = MAX_PRECACHE_BYTES) {
+  const oversized = list
+    .map((p) => ({ path: p, size: statSync(join(distDir, p)).size }))
+    .filter((f) => f.size > maxBytes);
+  if (oversized.length) {
+    throw new Error(
+      `precache entry over ${maxBytes} B — a chunk this large belongs behind a ` +
+        `button, not in every install:\n` +
+        oversized.map((f) => `  ${f.path} (${f.size} B)`).join("\n"),
+    );
+  }
+  return list;
+}
+
 /** Every file under `dir`, as a `/`-rooted relative path. */
 function walk(dir, base, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -186,7 +238,7 @@ function main() {
   }
 
   const built = walk(dist, dist);
-  const list = verifyPrecacheList(buildPrecacheList(built), dist);
+  const list = verifyPrecacheSizes(verifyPrecacheList(buildPrecacheList(built), dist), dist);
   const id = buildId(dist);
 
   // The version first, then the list: both write into the same file, and doing

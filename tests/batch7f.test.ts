@@ -636,7 +636,13 @@ describe("every content icon follows the chosen set", () => {
     // Phase 3 added two more: the sleep log and the sleep × mood card, both
     // `Bed` (the registry's 😴, which is the sleep tracker's own glyph) rather
     // than the chrome `Moon` this batch first reached for. 58 + 2 = 60.
-    expect(sites.length).toBe(60);
+    //
+    // Phase 4 added the AI pair: the settings card draws `Laptop` (💻, the
+    // device the on-device mode runs on) and the weekly summary draws `Brain`
+    // (🧠, already the micro-lesson card's head). Two names already in the
+    // registry, two new call SITES — this count is about sites, so it moves
+    // even when no icon is new. 60 + 2 = 62.
+    expect(sites.length).toBe(62);
     for (const name of sites) {
       expect(
         isChromeIcon(name),

@@ -158,6 +158,12 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
 
   test("the id vocabulary is the pinned one — a rename is a decision, not a refactor", () => {
     expect(IDS).toEqual([
+      // Phase 4 — the AI pair. `ai-settings` keeps the `food-ai-settings`
+      // spelling rather than the `settings-` one, and that is a decision: the
+      // prefix is the vocabulary of the state key, and the twenty-seven cards
+      // carrying it are counted a few blocks below, where this id would have
+      // made the number a coin-flip between two readings of the same card.
+      "ai-settings",
       "fitness-plans",
       "food-ai-settings",
       "food-photo",
@@ -168,6 +174,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       "health-training",
       "insights-achievements",
       "insights-activity-correlation",
+      "insights-ai-summary",
       "insights-correlation",
       "insights-emotion-context",
       "insights-lag",
@@ -271,6 +278,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
     for (const m of MOUNTS) perFile.set(m.file, (perFile.get(m.file) ?? 0) + 1);
     expect([...perFile].sort()).toEqual([
       ["src/components/AchievementsCard.tsx", 1],
+      ["src/components/AiSettingsCard.tsx", 1],
       ["src/components/AllergySettingsCard.tsx", 1],
       ["src/components/AppUpdateCard.tsx", 1],
       ["src/components/AssessmentModule.tsx", 1],
@@ -314,6 +322,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       // `tracker-${head.id}` the groups expand to.
       ["src/components/TrackerInputs.tsx", 2],
       ["src/components/WeatherApiCard.tsx", 1],
+      ["src/components/WeeklyAiSummaryCard.tsx", 1],
       ["src/components/WeeklyReflectionCard.tsx", 1],
       ["src/components/WorkoutPrograms.tsx", 1],
       ["src/components/YearInPixels.tsx", 1],

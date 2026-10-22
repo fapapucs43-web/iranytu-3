@@ -64,6 +64,7 @@ import AssessmentConsent from "../components/AssessmentConsent";
 import WeatherApiCard from "../components/WeatherApiCard";
 import FoodAiSettingsCard from "../components/FoodAiSettingsCard";
 import HealthImportCard from "../components/HealthImportCard";
+import AiSettingsCard from "../components/AiSettingsCard";
 import CrisisCard from "../components/CrisisCard";
 import { clearAssessments, importAssessments, listAssessments } from "../lib/assessmentStore";
 import { DISCLAIMER } from "../lib/assessments";
@@ -763,6 +764,12 @@ export default function SettingsView({
               same place the weather consent does: one card, warnings permanent,
               the feature invisible until the toggle says yes. */}
           <FoodAiSettingsCard />
+
+          {/* Phase 4 — the general AI's three modes, beside the food AI's one
+              toggle: same room, same shape, and `off` first. The key it takes
+              is session-scoped in `lib/ai`, so this card can promise in copy
+              what the storage layer actually does. */}
+          <AiSettingsCard />
 
           {/* Batch 9 — the smartwatch import. Preview before apply, fill-only
               merge; the two new trackers are switched on from this card too. */}

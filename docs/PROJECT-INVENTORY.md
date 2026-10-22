@@ -20,26 +20,26 @@ claims has two possible anchors and no way to tell which one went stale.
 
 ```json
 {
-    "srcTsFiles": 179,
-    "srcTsLines": 47415,
+    "srcTsFiles": 182,
+    "srcTsLines": 48346,
     "srcCssFiles": 1,
     "srcCssLines": 5480,
-    "libFiles": 92,
-    "libLines": 29158,
-    "componentFiles": 71,
-    "componentLines": 13177,
+    "libFiles": 93,
+    "libLines": 29772,
+    "componentFiles": 73,
+    "componentLines": 13471,
     "viewFiles": 6,
-    "viewLines": 2832,
+    "viewLines": 2855,
     "stateFiles": 5,
     "stateLines": 1272,
     "testFiles": 128,
-    "testLines": 49777,
+    "testLines": 49833,
     "scriptFiles": 6,
     "publicFontWoff2": 24,
     "publicFontLicences": 10,
     "publicPdfFontFiles": 3,
     "publicIconFiles": 3,
-    "storageKeys": 42,
+    "storageKeys": 44,
     "fontFamilies": 12,
     "fontFiles": 24,
     "iconSets": 3,
@@ -69,9 +69,9 @@ claims has two possible anchors and no way to tell which one went stale.
 
 ## 2. Build, run, and the shipped shell
 
-- Dev server host is fixed in config, not in a flag: `vite.config.ts:8` — `"0.0.0.0",`
-- The port comes from the environment: `vite.config.ts:9` — `port: Number(process.env.PORT) || 3000,`
-- One warning threshold, raised deliberately: `vite.config.ts:13` — `chunkSizeWarningLimit: 900,`
+- Dev server host is fixed in config, not in a flag: `vite.config.ts:30` — `"0.0.0.0",`
+- The port comes from the environment: `vite.config.ts:31` — `port: Number(process.env.PORT) || 3000,`
+- One warning threshold, raised deliberately: `vite.config.ts:35` — `chunkSizeWarningLimit: 900,`
 - HMR is off on this host and the config says so: `vite.config.ts:4` — `// NOTE: Freebuff requires HMR to stay disabled — do not add hmr settings here.`
 
 - The mount point is the only element in `<body>`: `index.html:55` — `<div id="root"></div>`
@@ -109,7 +109,7 @@ fresh under the policy of the deploy that stored it.
 - A swap the page asked for reloads at once; a deploy that arrives quietly keeps its deferral: `src/lib/pwa.ts:394` — `if (skipRequested) {`
 - The banner that says the page is not the deploy, and offers the same six steps: `src/components/StaleWorkerNotice.tsx:37` — `export function StaleWorkerBanner({`
 - Mounted in the shell, above the content: `src/App.tsx:356` — `<StaleWorkerNotice />`
-- Both marker names are in the wipe, because the older button wrote the older key: `src/lib/storageKeys.ts:128` — `"belso-iranytu-force-reset",`
+- Both marker names are in the wipe, because the older button wrote the older key: `src/lib/storageKeys.ts:133` — `"belso-iranytu-force-reset",`
 - The devtools route that always works, written for the reader: `docs/stuck-service-worker.md:1` — `# Beragadt service worker — a végső útmutató`
 
 - The workflow needs history to work at all: `.github/workflows/ci.yml:55` — `fetch-depth: 0`
@@ -144,8 +144,8 @@ fresh under the policy of the deploy that stored it.
 | Felfedezés | `src/views/ToolsView.tsx:178` — `export default function ToolsView() {` | the tools the day does not need, in four drawers — see `docs/tools-tab.md` |
 | Egészség | `src/views/HealthView.tsx:167` — `export default function HealthView() {` | the body's records: food, workouts, vitals, habits and the check-ins, in three sections |
 | Napló | `src/views/JournalView.tsx:25` — `export default function JournalView({ onGoToday }` | calendar, real streak, search, entry edit and delete |
-| Elemzés | `src/views/InsightsView.tsx:59` — `export default function InsightsView({ onGoToday }` | correlations, lag analysis, exports, monthly/yearly stats, achievements, pattern insights |
-| Beállítások | `src/views/SettingsView.tsx:232` — `export default function SettingsView({` | every preference, the data section, and the two integrations |
+| Elemzés | `src/views/InsightsView.tsx:61` — `export default function InsightsView({ onGoToday }` | correlations, lag analysis, exports, monthly/yearly stats, achievements, pattern insights |
+| Beállítások | `src/views/SettingsView.tsx:233` — `export default function SettingsView({` | every preference, the data section, and the two integrations |
 
 - `src/components/CorrelationGrid.tsx:20` — `export default function CorrelationGrid() {`
 - `src/components/LagAnalysisCard.tsx:12` — `export default function LagAnalysisCard() {`
@@ -153,7 +153,7 @@ fresh under the policy of the deploy that stored it.
 - `src/components/MonthlyYearlyStats.tsx:29` — `export default function MonthlyYearlyStats() {`
 - `src/components/AchievementsCard.tsx:25` — `export default function AchievementsCard() {`
 
-- The last of the five, in the view's own JSX: `src/views/InsightsView.tsx:311` — `<CorrelationGrid />`
+- The last of the five, in the view's own JSX: `src/views/InsightsView.tsx:327` — `<CorrelationGrid />`
 
 ## 5. State and persistence
 
@@ -373,7 +373,7 @@ fresh under the policy of the deploy that stored it.
 
 | # | Mount | Renders when |
 | --- | --- | --- |
-| 1 | `src/views/SettingsView.tsx:859` — `<CrisisCard />` | always, above even the profile card |
+| 1 | `src/views/SettingsView.tsx:866` — `<CrisisCard />` | always, above even the profile card |
 | 2 | `src/components/AssessmentResult.tsx:84` — `{needsSupport && <CrisisStrip />}` | only when the run needs support, hoisted above the score |
 | 3 | `src/components/AssessmentConsent.tsx:45` — `<CrisisCard />` | whenever the consent dialog is open |
 | 4 | `src/components/EntryDetail.tsx:236` — `<CrisisStrip />` | on every open entry, outside the editing ternary |
@@ -536,7 +536,7 @@ written for Hungarian (`ő`, `ű`), and a language with letters no face carries 
 a font problem that shows up there, not an i18n problem.
 
 - The registry the first four steps edit: `src/lib/i18n.ts:55` — `export const SUPPORTED_LOCALES = ["hu", "en", "de"] as const;`
-- The picker that needs no edit for a fourth language: `src/views/SettingsView.tsx:155` — `const LOCALES: readonly { value: Locale; label: string }[] = SUPPORTED_LOCALES.map((code) => ({`
+- The picker that needs no edit for a fourth language: `src/views/SettingsView.tsx:156` — `const LOCALES: readonly { value: Locale; label: string }[] = SUPPORTED_LOCALES.map((code) => ({`
 
 ### The backup card, and why it is deliberately not collapsible
 
@@ -564,6 +564,18 @@ a font problem that shows up there, not an i18n problem.
 - The lazy binding, at module scope: `src/App.tsx:73` — `const InsightsView = lazy(() => import("./views/InsightsView"));`
 - The mount, inside both boundaries: `src/App.tsx:337` — `{tab === "insights" && (`
 - The two placeholder states: `src/styles.css:3210` — `.view-loading,`
+
+And the same worker had to learn to say no to Phase 4's AI runtime. The WebLLM
+runtime is ~6 MB, it serves a feature that is off by default, and its model —
+335 MB, fetched on a button press — is never precached, so the runtime alone
+would be useless offline. Precaching it would have spent every reader's
+install bandwidth, including the readers who never turn AI on. The install is
+now 39 entries / 3.28 MB, of which the AI runtime is exactly none (it was 40
+entries / 9.42 MB before this rule).
+
+- The exclusion, applied before the positive `/assets/` rule that would otherwise sweep the chunk in: `scripts/precache-manifest.mjs:85` — `if (path.startsWith(AI_RUNTIME_PREFIX)) return false;`
+- The chunk name that rule reads — the only reason it can be a name and not a byte-sniff: `vite.config.ts:38` — `manualChunks(id: string) {`
+- The backstop that fails the build if that name ever stops matching: `scripts/precache-manifest.mjs:207` — `export function verifyPrecacheSizes(list, distDir, maxBytes = MAX_PRECACHE_BYTES) {`
 
 ### The artwork split, and what it cost to do honestly
 
@@ -737,7 +749,7 @@ a font problem that shows up there, not an i18n problem.
 
 ## 10. The test suite
 
-**128 files, 49 777 lines, 3 750 tests.** `bun test` — no test framework in the
+**128 files, 49 814 lines, 3 752 tests.** `bun test` — no test framework in the
 dependency block; the runner is bun's own. This table is the second half of the
 document's proof: its file count, its total and the five group sums are all
 recomputed from the rows below, so a file that lands without a row, a row whose
@@ -814,7 +826,7 @@ a fourth ground.
 | `tests/phase4.test.ts` | 7 | onboarding state and reminder scheduling |
 | `tests/stuck-worker.test.ts` | 17 | the stuck service worker: the detector (a controller url without this build's hash, conservative about every unknown), the escape address (`resetUrl` + taking the stamp back out), the `SKIP_WAITING` message on both sides, the immediate reload for a swap the page asked for, the banner's markup and its solid amber rail, and the reader's devtools guide |
 
-**`tests/lib/` — one file per library module** — 52 files, 967 tests
+**`tests/lib/` — one file per library module** — 52 files, 969 tests
 
 | File | Tests | Pins |
 | --- | --- | --- |
@@ -848,7 +860,7 @@ a fourth ground.
 | `tests/lib/feature-flags.test.ts` | 20 | the remembered flags behind the three badges that leave no residue |
 | `tests/lib/dynamic-ink.test.ts` | 50 | that the ink the app picks for a picture clears AA across the whole band — 21 veils × 21 fades × 14 palettes × 2 pictures — that the decision survives the WORST REGION of a picture the average cannot describe, and that the reader still passes the measured ground, not a widened one |
 | `tests/lib/backupCrypto.test.ts` | 19 | that the key hierarchy is real HKDF and that a passphrase cannot be brute-forced silently |
-| `tests/lib/precache.test.ts` | 19 | what goes in the precache, the marker contract with the generator, and a build-time guard that really refuses |
+| `tests/lib/precache.test.ts` | 21 | what goes in the precache — including the AI runtime's exclusion and the size backstop — the marker contract with the generator, and a build-time guard that really refuses |
 | `tests/lib/breathing-consolidation.test.ts` | 26 | that the 4-4-4 survived the merge, the duplicate stayed deleted, and `engineStarted` tells a started session from a fresh one |
 | `tests/lib/crisis-card.test.tsx` | 18 | that the help is reachable from four places and rests on one list |
 | `tests/lib/ring-tokens.test.ts` | 18 | that the ring aliases are read, defaulted, and that no palette survives in JS |

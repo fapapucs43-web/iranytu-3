@@ -104,6 +104,11 @@ export const WIPE_KEYS = [
   "belso-iranytu-companion",
   "belso-iranytu-program",
   "belso-iranytu-sleep-log",
+  // Phase 4 — the AI's mode and provider. A preference rather than a record,
+  // and it is here for the reason the locale mirror is: "delete everything"
+  // promises the reader's own choices back to the defaults, and an engine left
+  // switched on after a wipe would keep answering with a journal that is gone.
+  "belso-iranytu-ai-config",
   // Device state: what this device has shown, chosen or been told not to show.
   "belso-iranytu:cardStates",
   "belso-iranytu-background",
@@ -130,6 +135,11 @@ export const WIPE_KEYS = [
   "belso-iranytu-backup-state",
   // Secrets and locks.
   "belso-iranytu:openai-key",
+  // The Phase 4 AI key. In `sessionStorage` rather than `localStorage` — see
+  // `lib/ai.ts`'s header — which is why this list has to be the one the wipe
+  // reads for BOTH storages: a secret the reader pasted must not survive the
+  // button that says it removes everything.
+  "belso-iranytu-ai-key",
   "belso-iranytu-app-lock",
   "belso-iranytu-app-lock-session",
   // Caches.
