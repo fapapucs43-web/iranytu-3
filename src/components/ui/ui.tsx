@@ -503,7 +503,14 @@ export function Segmented<T extends string>({
   ariaLabel,
 }: {
   options: readonly { value: T; label: string }[];
-  value: T;
+  /**
+   * `""` is "nothing chosen yet", and it became part of the type with the
+   * seek-help guide: that control starts unanswered, and forcing a default
+   * would put an answer in the reader's mouth on the one screen where a wrong
+   * pre-selection could send them down the wrong branch. No existing caller
+   * passes it, so their markup is unchanged.
+   */
+  value: T | "";
   onChange: (v: T) => void;
   ariaLabel?: string;
 }) {

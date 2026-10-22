@@ -21,6 +21,11 @@ import type { TrackerValue } from "../../types";
 /** The tracker each parsed series writes to. Sleep/steps are pre-existing ids. */
 export const SERIES_TRACKER = {
   hr: "smartwatch-hr",
+  // SDNN, averaged per day. Like hr/spo2 it is a value the import writes
+  // WITHOUT registering a tracker: the registry drives Settings rows, the daily
+  // form and the grid, and a new registry row would appear on every reader's
+  // screen as a side effect of reading a watch file.
+  hrv: "smartwatch-hrv",
   spo2: "smartwatch-spo2",
   sleep: "sleep",
   steps: "steps",
@@ -43,6 +48,10 @@ export type TrackerCell = TrackerValue;
  */
 const SERIES_LIST: ReadonlyArray<readonly [SeriesId, string]> = [
   ["hr", t("healthImport.seriesHr")],
+  // `HRV` and `ms` are the same in every locale the app supports, so this row
+  // needs no catalogue key — and adding one would have made a fourth language
+  // inherit an untranslated label for a unit.
+  ["hrv", "HRV (ms)"],
   ["spo2", t("healthImport.seriesSpo2")],
   ["sleep", t("healthImport.seriesSleep")],
   ["steps", t("healthImport.seriesSteps")],
@@ -55,7 +64,10 @@ function seriesAsDays(result: HealthImportResult, series: SeriesId): Map<string,
     // The parser accumulates minutes; the app's sleep tracker is hours.
     return new Map(Object.entries(result.sleep).map(([d, min]) => [d, Math.round((min / 60) * 10) / 10]));
   }
-  const raw = series === "hr" ? result.hr : result.spo2;
+  // `?? []` on the HRV lane: a result parsed before this series existed has no
+  // `hrv` array, and an import must not throw on a file it read yesterday.
+  const raw =
+    (series === "hr" ? result.hr : series === "hrv" ? result.hrv : result.spo2) ?? [];
   const m = new Map<string, number>();
   for (const sample of raw) {
     const cur = m.get(sample.day);
@@ -71,6 +83,7 @@ function trackerCell(series: SeriesId, value: number): TrackerCell {
     case "steps":
       return { kind: "number", value };
     case "hr":
+    case "hrv":
     case "spo2":
       return { kind: "number", value };
   }

@@ -887,17 +887,25 @@ describe("Batch 7 touches a known, enumerated set of files and nothing else", ()
     // Batch 7's work. Guarding against that list would prove nothing, so the
     // guard stands down; on any normally-built history this block is inert.
     try {
-      execSync(`git rev-parse --verify --quiet ${base}^`, {
+      // `execFileSync`, not `execSync`: a Windows `execSync` runs through
+      // cmd.exe, where `^` is the escape character and is stripped before git
+      // sees it. The premise check then resolves `base` itself and passes, and
+      // the guard diffs the whole working tree as if it were Batch 7's work.
+      // Spawning git directly makes `base^` mean the same thing on every OS.
+      const { execFileSync } = require("node:child_process") as typeof import("node:child_process");
+      execFileSync("git", ["rev-parse", "--verify", "--quiet", `${base}^`], {
         stdio: ["ignore", "ignore", "ignore"],
       });
-      execSync(`git cat-file -e ${base}^:src/index.tsx`, {
+      execFileSync("git", ["cat-file", "-e", `${base}^:src/index.tsx`], {
         stdio: ["ignore", "ignore", "ignore"],
       });
     } catch {
       return;
     }
-    const changed = execSync(
-      `git diff --name-only ${base}^ -- src tests public scripts`,
+    const { execFileSync } = require("node:child_process") as typeof import("node:child_process");
+    const changed = execFileSync(
+      "git",
+      ["diff", "--name-only", `${base}^`, "--", "src", "tests", "public", "scripts"],
       { encoding: "utf8" },
     )
       .split("\n")

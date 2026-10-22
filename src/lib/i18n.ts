@@ -2395,6 +2395,94 @@ const HU = {
   "stale.body":
     "Egy háttérfolyamat (service worker) egy korábbi verziót szolgál ki. Ez a gomb minden gyorsítótárat töröl, és egy új címre tölti be az oldalt.",
 
+  // ---- Phase 4 — the AI engine and its weekly summary. ----
+  //
+  // Three owners: `components/AiSettingsCard.tsx` reads the settings half,
+  // `components/WeeklyAiSummaryCard.tsx` the summary half, and `lib/ai.ts` the
+  // prompt and the failure lines. The shaping rules are the ones the file's
+  // header states — no value starts or ends with a space, placeholders rather
+  // than concatenation — plus one that belongs to this block alone:
+  //
+  // THE PROMPT'S LANGUAGE LINE IS CATALOGUE COPY. `ai.promptIntro` is the
+  // sentence a model reads first, and it names the language the answer has to
+  // be written in. It sits here rather than in `lib/ai.ts` so the switch
+  // actually reaches the one screen that writes its own prose: the Hungarian
+  // value asks for Hungarian, the English for English. An English prompt
+  // hard-coded in the module would summarise every reader's week in English
+  // whatever language they chose.
+  //
+  // The failure lines (`ai.error*`) are the engine's own, so a reader is told
+  // WHICH half failed — switched off, no key, no network — rather than handed a
+  // generic "nem sikerült".
+  "ai.title": "AI-asszisztens",
+  "ai.summary": "Heti összefoglaló saját kulccsal vagy helyben futó modellel",
+  "ai.modeGroup": "Hogyan működjön?",
+  "ai.modeOff": "Kikapcsolva",
+  "ai.modeOffHint": "Nincs letöltés és nincs hálózati kérés: az app nem küld sehova semmit.",
+  "ai.modeOnDevice": "Eszközön fut",
+  "ai.modeOnDeviceHint":
+    "Egy kis nyelvi modell a böngésződben dolgozik. Egyszer le kell tölteni, utána hálózat nélkül is működik.",
+  "ai.modeByok": "Saját kulccsal",
+  "ai.modeByokHint":
+    "A saját kulcsoddal egy külső szolgáltatónál kérünk szöveget, csak a hét bejegyzéseiből.",
+  "ai.providerGroup": "Szolgáltató",
+  "ai.providerOpenai": "OpenAI",
+  "ai.providerDeepseek": "DeepSeek",
+  "ai.hostNotice": "A kérés a {host} címre megy, és csak a hét adatait viszi.",
+  "ai.keyLabel": "API-kulcs",
+  "ai.saveKey": "Kulcs mentése",
+  "ai.clearKey": "Kulcs törlése",
+  "ai.keySaved": "Mentve: {masked}",
+  "ai.keySessionNote":
+    "A kulcs csak addig marad meg, amíg ez a lap nyitva van — nem kerül a naplódba, a mentésbe, és nem írjuk ki sehova.",
+  "ai.download": "Modell letöltése ({mb} MB)",
+  "ai.downloading": "Letöltés: {percent}%",
+  "ai.modelReady": "A modell kész, helyben fut.",
+  "ai.delete": "Modell törlése",
+  "ai.deleteConfirm": "Biztosan törlöd a letöltött modellt? Ez felszabadítja a helyet, de a következő használathoz újra le kell tölteni.",
+  "ai.deleted": "Modell törölve.",
+  "ai.deleteError": "A modell törlése nem sikerült.",
+  "ai.errorOff": "Az AI ki van kapcsolva. A Beállítások → Egyéb lapon kapcsolhatod be.",
+  "ai.errorNoKey": "Nincs mentett API-kulcs.",
+  "ai.errorInvalidKey": "A kulcsot a szolgáltató elutasította.",
+  "ai.errorRateLimited": "Túl sok kérés érkezett — próbáld újra kicsit múlva.",
+  "ai.errorNetwork": "Hálózati hiba, most nem sikerült.",
+  "ai.errorTimeout": "Időtúllépés: a kérés túl sokáig tartott.",
+  "ai.errorBadResponse": "A válasz nem volt használható.",
+  "ai.errorModel": "A helyi modell nem tölthető be.",
+  "ai.promptIntro": "A te naplód heti összefoglalóját írod, magyarul.",
+  "ai.promptStyle": "Írj 3–5 rövid mondatot, baráti hangon, egyetlen bekezdésben.",
+  "ai.promptGround":
+    "Csak a megadott adatokból dolgozz, ne találj ki részletet, és jelezd, ha kevés az adat.",
+  "ai.promptQuestion": "Írd meg a heti összefoglalót ezekből az adatokból:",
+  "wall.title": "Bátorítások",
+  "wall.summaryOff": "Kikapcsolva — csak ezen az eszközön tartja az üzeneteket.",
+  "wall.summaryCount": "{count} üzenet, csak ezen az eszközön.",
+  "wall.off":
+    "Ki van kapcsolva. A bátorítások helyben, csak a te eszközödön maradnak: nincs hálózat, nincs megosztás, nincs moderálás.",
+  "wall.enable": "Bekapcsolás",
+  "wall.disable": "Kikapcsolás",
+  "wall.placeholder": "Írj magadnak egy rövid, pozitív üzenetet…",
+  "wall.add": "Hozzáadás",
+  "wall.added": "Hozzáadva.",
+  "wall.empty": "Még nincs üzenet.",
+  "wall.pin": "Rögzítés",
+  "wall.unpin": "Feloldás",
+  "wall.delete": "Törlés",
+  "wall.tooLong": "280 karakternél hosszabb — rövidítsd le.",
+  "wall.full": "Mind a 200 hely rögzített üzenet. Oldj fel vagy törölj egyet, mielőtt újat írsz.",
+  "wall.localNote": "A fal csak a te eszközödön van: hálózat nélkül, megosztás és moderálás nélkül.",
+  "insights.ai.section": "Heti AI-összefoglaló",
+  "insights.ai.title": "Heti AI-összefoglaló",
+  "insights.ai.summary": "A hét bejegyzéseiből ír egy rövid szöveget",
+  "insights.ai.generate": "Összefoglaló készítése",
+  "insights.ai.busy": "Gondolkozik…",
+  "insights.ai.off":
+    "Az AI ki van kapcsolva. A Beállítások → Egyéb lapon kapcsolhatod be, ha kérsz egy szöveget a hétről.",
+  "insights.ai.empty": "Erre a hétre nincs egyetlen bejegyzés sem.",
+  "insights.ai.privacyNote": "A modell csak ennek a hétnek az adatait látja.",
+  "insights.ai.machineNote": "Gépi szöveg — olvasd el kritikus szemmel.",
+
 } as const;
 
 export type TranslationKey = keyof typeof HU;
@@ -3673,6 +3761,75 @@ export const MESSAGES: Record<Locale, Catalogue> = {
     "stale.title": "This page is running an old version",
     "stale.body":
       "A background worker is serving an earlier version. This button clears every cache and loads the page at a fresh address.",
+    "ai.title": "AI assistant",
+    "ai.summary": "Weekly summary on-device or with your own key",
+    "ai.modeGroup": "How should it work?",
+    "ai.modeOff": "Off",
+    "ai.modeOffHint": "No download and no network request: the app sends nothing anywhere.",
+    "ai.modeOnDevice": "Runs on this device",
+    "ai.modeOnDeviceHint":
+      "A small language model runs in your browser. Download it once and it works without a network afterwards.",
+    "ai.modeByok": "With your own key",
+    "ai.modeByokHint":
+      "Your own key asks an external provider for text, using only this week's entries.",
+    "ai.providerGroup": "Provider",
+    "ai.providerOpenai": "OpenAI",
+    "ai.providerDeepseek": "DeepSeek",
+    "ai.hostNotice": "The request goes to {host} and carries this week's data only.",
+    "ai.keyLabel": "API key",
+    "ai.saveKey": "Save key",
+    "ai.clearKey": "Delete key",
+    "ai.keySaved": "Saved: {masked}",
+    "ai.keySessionNote":
+      "The key lasts only as long as this tab is open — it never enters your journal or your backup, and it is never written anywhere else.",
+    "ai.download": "Download the model ({mb} MB)",
+    "ai.downloading": "Downloading: {percent}%",
+    "ai.modelReady": "The model is ready and runs on this device.",
+    "ai.delete": "Delete the model",
+    "ai.deleteConfirm":
+      "Delete the downloaded model? This frees the space, but you will have to download it again before the next use.",
+    "ai.deleted": "Model deleted.",
+    "ai.deleteError": "The model could not be deleted.",
+    "ai.errorOff": "AI is off. You can switch it on under Settings → Other.",
+    "ai.errorNoKey": "No API key saved.",
+    "ai.errorInvalidKey": "The provider rejected the key.",
+    "ai.errorRateLimited": "Too many requests — try again in a moment.",
+    "ai.errorNetwork": "Network error, it did not work this time.",
+    "ai.errorTimeout": "Timed out: the request took too long.",
+    "ai.errorBadResponse": "The answer was not usable.",
+    "ai.errorModel": "The local model could not be loaded.",
+    "ai.promptIntro": "You are writing the weekly summary of the reader's own journal, in English.",
+    "ai.promptStyle": "Write 3–5 short sentences, in a friendly tone, as a single paragraph.",
+    "ai.promptGround":
+      "Work only from the data given, invent no detail, and say when the data is thin.",
+    "ai.promptQuestion": "Write the weekly summary from this data:",
+    "wall.title": "Encouragements",
+    "wall.summaryOff": "Off — keeps its notes on this device only.",
+    "wall.summaryCount": "{count} notes, on this device only.",
+    "wall.off":
+      "Off. Encouragements stay on this device alone: no network, no sharing, no moderation.",
+    "wall.enable": "Turn on",
+    "wall.disable": "Turn off",
+    "wall.placeholder": "Write yourself a short, positive note…",
+    "wall.add": "Add",
+    "wall.added": "Added.",
+    "wall.empty": "No notes yet.",
+    "wall.pin": "Pin",
+    "wall.unpin": "Unpin",
+    "wall.delete": "Delete",
+    "wall.tooLong": "Longer than 280 characters — make it shorter.",
+    "wall.full": "All 200 slots are pinned. Unpin or delete one before writing another.",
+    "wall.localNote": "The wall lives on your device only: no network, no sharing, no moderation.",
+    "insights.ai.section": "Weekly AI summary",
+    "insights.ai.title": "Weekly AI summary",
+    "insights.ai.summary": "Writes a short text from this week's entries",
+    "insights.ai.generate": "Write the summary",
+    "insights.ai.busy": "Thinking…",
+    "insights.ai.off":
+      "AI is off. Switch it on under Settings → Other if you want a text about this week.",
+    "insights.ai.empty": "There is not a single entry for this week.",
+    "insights.ai.privacyNote": "The model sees this week's data only.",
+    "insights.ai.machineNote": "Machine-written — read it critically.",
   },
   de: {
     "meditation.title": "Meditationen",
@@ -4938,6 +5095,75 @@ export const MESSAGES: Record<Locale, Catalogue> = {
     "stale.title": "Diese Seite läuft mit einer alten Version",
     "stale.body":
       "Ein Hintergrundprozess liefert eine frühere Version aus. Dieser Knopf löscht alle Caches und lädt die Seite unter einer frischen Adresse.",
+    "ai.title": "KI-Assistent",
+    "ai.summary": "Wöchentliche Zusammenfassung auf dem Gerät oder mit eigenem Schlüssel",
+    "ai.modeGroup": "Wie soll er arbeiten?",
+    "ai.modeOff": "Aus",
+    "ai.modeOffHint": "Kein Download und keine Netzwerkanfrage: Die App sendet nichts nirgendhin.",
+    "ai.modeOnDevice": "Läuft auf dem Gerät",
+    "ai.modeOnDeviceHint":
+      "Ein kleines Sprachmodell läuft in deinem Browser. Einmal herunterladen, danach funktioniert es auch ohne Netzwerk.",
+    "ai.modeByok": "Mit eigenem Schlüssel",
+    "ai.modeByokHint":
+      "Dein eigener Schlüssel fragt bei einem externen Anbieter Text an, nur mit den Einträgen dieser Woche.",
+    "ai.providerGroup": "Anbieter",
+    "ai.providerOpenai": "OpenAI",
+    "ai.providerDeepseek": "DeepSeek",
+    "ai.hostNotice": "Die Anfrage geht an {host} und enthält nur die Daten dieser Woche.",
+    "ai.keyLabel": "API-Schlüssel",
+    "ai.saveKey": "Schlüssel speichern",
+    "ai.clearKey": "Schlüssel löschen",
+    "ai.keySaved": "Gespeichert: {masked}",
+    "ai.keySessionNote":
+      "Der Schlüssel lebt nur, solange dieser Tab offen ist — er kommt nicht in dein Journal, nicht in deine Sicherung und wird nirgends sonst notiert.",
+    "ai.download": "Modell herunterladen ({mb} MB)",
+    "ai.downloading": "Download: {percent}%",
+    "ai.modelReady": "Das Modell ist bereit und läuft auf dem Gerät.",
+    "ai.delete": "Modell löschen",
+    "ai.deleteConfirm":
+      "Heruntergeladenes Modell wirklich löschen? Das gibt den Speicher frei, aber du musst es vor der nächsten Nutzung erneut herunterladen.",
+    "ai.deleted": "Modell gelöscht.",
+    "ai.deleteError": "Das Modell konnte nicht gelöscht werden.",
+    "ai.errorOff": "Die KI ist aus. Du schaltest sie unter Einstellungen → Sonstiges ein.",
+    "ai.errorNoKey": "Kein API-Schlüssel gespeichert.",
+    "ai.errorInvalidKey": "Der Anbieter hat den Schlüssel abgelehnt.",
+    "ai.errorRateLimited": "Zu viele Anfragen — versuche es gleich noch einmal.",
+    "ai.errorNetwork": "Netzwerkfehler, diesmal hat es nicht geklappt.",
+    "ai.errorTimeout": "Zeitüberschreitung: Die Anfrage hat zu lange gedauert.",
+    "ai.errorBadResponse": "Die Antwort war nicht verwendbar.",
+    "ai.errorModel": "Das lokale Modell konnte nicht geladen werden.",
+    "ai.promptIntro": "Du schreibst die wöchentliche Zusammenfassung des eigenen Journals, auf Deutsch.",
+    "ai.promptStyle": "Schreibe 3–5 kurze Sätze in freundlichem Ton als einen Absatz.",
+    "ai.promptGround":
+      "Arbeite nur mit den angegebenen Daten, erfinde keine Details und sag, wenn die Daten zu dünn sind.",
+    "ai.promptQuestion": "Schreibe die wöchentliche Zusammenfassung aus diesen Daten:",
+    "wall.title": "Ermutigungen",
+    "wall.summaryOff": "Aus — bewahrt seine Notizen nur auf diesem Gerät auf.",
+    "wall.summaryCount": "{count} Notizen, nur auf diesem Gerät.",
+    "wall.off":
+      "Aus. Ermutigungen bleiben nur auf diesem Gerät: kein Netzwerk, keine Freigabe, keine Moderation.",
+    "wall.enable": "Einschalten",
+    "wall.disable": "Ausschalten",
+    "wall.placeholder": "Schreibe dir selbst eine kurze, positive Notiz …",
+    "wall.add": "Hinzufügen",
+    "wall.added": "Hinzugefügt.",
+    "wall.empty": "Noch keine Notizen.",
+    "wall.pin": "Anheften",
+    "wall.unpin": "Lösen",
+    "wall.delete": "Löschen",
+    "wall.tooLong": "Länger als 280 Zeichen — kürze sie ab.",
+    "wall.full": "Alle 200 Plätze sind angeheftet. Löse oder lösche eine Notiz, bevor du eine neue schreibst.",
+    "wall.localNote": "Die Wand lebt nur auf deinem Gerät: kein Netzwerk, keine Freigabe, keine Moderation.",
+    "insights.ai.section": "Wöchentliche KI-Zusammenfassung",
+    "insights.ai.title": "Wöchentliche KI-Zusammenfassung",
+    "insights.ai.summary": "Schreibt einen kurzen Text aus den Einträgen dieser Woche",
+    "insights.ai.generate": "Zusammenfassung schreiben",
+    "insights.ai.busy": "Denkt nach…",
+    "insights.ai.off":
+      "Die KI ist aus. Schalte sie unter Einstellungen → Sonstiges ein, wenn du einen Text über diese Woche möchtest.",
+    "insights.ai.empty": "Für diese Woche gibt es keinen einzigen Eintrag.",
+    "insights.ai.privacyNote": "Das Modell sieht nur die Daten dieser Woche.",
+    "insights.ai.machineNote": "Maschinell geschrieben — lies es kritisch.",
   },
 };
 

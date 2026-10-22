@@ -14,7 +14,17 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildPrecacheList, injectManifest, shouldPrecache, verifyPrecacheList, END, START } from "../../scripts/precache-manifest.mjs";
+import {
+  AI_RUNTIME_PREFIX,
+  MAX_PRECACHE_BYTES,
+  buildPrecacheList,
+  injectManifest,
+  shouldPrecache,
+  verifyPrecacheList,
+  verifyPrecacheSizes,
+  END,
+  START,
+} from "../../scripts/precache-manifest.mjs";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const SW = readFileSync(join(ROOT, "public/sw.js"), "utf8");
@@ -44,6 +54,30 @@ describe("what goes in the precache", () => {
     expect(shouldPrecache("/assets/anything-changed-name.mjs")).toBe(true);
   });
 
+  test("the AI runtime is the one asset that stays out, by its pinned name", () => {
+    // ~6 MB of WebLLM runtime, for a feature that is off by default and whose
+    // 335 MB model is never precached — so the runtime would be useless
+    // offline anyway. `vite.config.ts` names the chunk; this is the rule that
+    // reads the name, and both halves fail loudly without the other.
+    expect(shouldPrecache(`${AI_RUNTIME_PREFIX}-B3f9xQ2a.js`)).toBe(false);
+    expect(shouldPrecache("/assets/webllm-runtime-Ab12Cd34.js")).toBe(false);
+    // …and the exclusion is the PREFIX and nothing else: an asset that merely
+    // mentions the runtime in its name is not the runtime.
+    expect(shouldPrecache("/assets/index-webllm-helper.js")).toBe(true);
+    expect(AI_RUNTIME_PREFIX).toBe("/assets/webllm-runtime-");
+  });
+
+  test("a precache entry over the ceiling is refused, by size", () => {
+    // The backstop: if the name rule ever stops matching, the chunk comes
+    // back as `index-*.js` — indistinguishable from the app's own code by
+    // path. Size is the property a renamed chunk cannot fake.
+    const PUBLIC = join(ROOT, "public");
+    const real = ["/manifest.webmanifest"];
+    expect(verifyPrecacheSizes(real, PUBLIC, MAX_PRECACHE_BYTES)).toEqual(real);
+    expect(() => verifyPrecacheSizes(real, PUBLIC, 0)).toThrow(/manifest\.webmanifest/);
+    expect(() => verifyPrecacheSizes(real, PUBLIC, 0)).toThrow(/behind a/);
+  });
+
   test("licence and documentation files are out, and only those", () => {
     expect(shouldPrecache("/fonts/OFL-inter.txt")).toBe(false);
     expect(shouldPrecache("/pdf-fonts/OFL-noto-sans.txt")).toBe(false);
@@ -66,6 +100,7 @@ describe("what goes in the precache", () => {
 describe("the list the rules produce", () => {
   const BUILT = [
     "/assets/index-abc.js",
+    "/assets/webllm-runtime-9zY8xW7v.js",
     "/assets/index-def.css",
     "/fonts/inter-latin.woff2",
     "/fonts/OFL-inter.txt",
@@ -92,6 +127,8 @@ describe("the list the rules produce", () => {
     expect(list.every((p) => !p.includes("OFL"))).toBe(true);
     expect(list.every((p) => !p.includes("LICENSES"))).toBe(true);
     expect(list).not.toContain("/sw.js");
+    // The AI runtime was in the tree above and is not in the list.
+    expect(list.some((p) => p.startsWith(AI_RUNTIME_PREFIX))).toBe(false);
   });
 
   test("the same tree twice gives the same list, so a rebuild is not a change", () => {

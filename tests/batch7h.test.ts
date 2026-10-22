@@ -42,7 +42,7 @@
  * it is the NORMAL path.
  */
 import { describe, expect, mock, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -176,12 +176,25 @@ function drawInRealPdf(text: string): string {
     for (const b of bytes) pdf += String.fromCharCode(b);
     process.stdout.write(pdf.includes("\\u0001") ? "CORRUPT" : "CLEAN");
   `;
-  const proc = Bun.spawnSync(["bun", "-e", script], { cwd: ROOT });
-  const out = proc.stdout.toString().trim();
-  if (proc.exitCode !== 0) {
-    throw new Error(`the jsPDF probe failed: ${proc.stderr.toString().slice(0, 400)}`);
+  // A temp script file, not `-e`: on Windows `bun` resolves to a `.cmd` shim,
+  // and Bun refuses to hand it an argument carrying cmd.exe metacharacters —
+  // this script is several lines of quotes and newlines, which is exactly the
+  // shape that check rejects. The directory is created under ROOT so the ESM
+  // resolver still finds `node_modules`, is named for `.gitignore`, and is
+  // removed in a `finally` so a failed probe leaves nothing behind.
+  const dir = mkdtempSync(join(ROOT, ".tmp-pdf-"));
+  try {
+    const file = join(dir, "probe.mjs");
+    writeFileSync(file, script, "utf8");
+    const proc = Bun.spawnSync(["bun", file], { cwd: ROOT });
+    const out = proc.stdout.toString().trim();
+    if (proc.exitCode !== 0) {
+      throw new Error(`the jsPDF probe failed: ${proc.stderr.toString().slice(0, 400)}`);
+    }
+    return out;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
-  return out;
 }
 
 /** The first argument of every `doc.text(` in the source, comments stripped. */

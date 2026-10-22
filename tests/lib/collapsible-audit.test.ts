@@ -158,15 +158,23 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
 
   test("the id vocabulary is the pinned one — a rename is a decision, not a refactor", () => {
     expect(IDS).toEqual([
+      // Phase 4 — the AI pair. `ai-settings` keeps the `food-ai-settings`
+      // spelling rather than the `settings-` one, and that is a decision: the
+      // prefix is the vocabulary of the state key, and the twenty-seven cards
+      // carrying it are counted a few blocks below, where this id would have
+      // made the number a coin-flip between two readings of the same card.
+      "ai-settings",
       "fitness-plans",
       "food-ai-settings",
       "food-photo",
       "health-general",
       "health-import",
       "health-nutrition",
+      "health-sleep-log",
       "health-training",
       "insights-achievements",
       "insights-activity-correlation",
+      "insights-ai-summary",
       "insights-correlation",
       "insights-emotion-context",
       "insights-lag",
@@ -174,6 +182,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       "insights-patterns",
       "insights-quadrant-sleep",
       "insights-report-export",
+      "insights-sleep-mood",
       "insights-trend",
       "insights-week",
       "insights-year",
@@ -184,6 +193,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       "settings-allergies",
       "settings-background",
       "settings-backup",
+      "settings-companion",
       "settings-custom-activities",
       "settings-custom-theme",
       "settings-custom-trackers",
@@ -208,6 +218,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       "settings-voice",
       "today-activities",
       "today-balance",
+      "today-companion",
       "today-daily-goals",
       "today-lesson",
       "today-mood",
@@ -222,8 +233,16 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       "tools-library",
       "tools-meditation",
       "tools-meds",
+      "tools-programs",
       "tools-question",
       "tools-reflection",
+      "tools-seek-help",
+      // Phase 5 — the support wall. It joins the vocabulary as `tools-` (it
+      // lives on the toolbox tab) rather than a `settings-` prefix, because it
+      // is not a setting: the toggle it carries is its OWN `enabled` flag in
+      // its own blob, not a switch in Settings that a reader would look for
+      // under a different heading.
+      "tools-support-wall",
       "tools-vitals",
       "tools-weekly-nutrition",
       "tools-workouts",
@@ -265,12 +284,15 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
     for (const m of MOUNTS) perFile.set(m.file, (perFile.get(m.file) ?? 0) + 1);
     expect([...perFile].sort()).toEqual([
       ["src/components/AchievementsCard.tsx", 1],
+      ["src/components/AiSettingsCard.tsx", 1],
       ["src/components/AllergySettingsCard.tsx", 1],
       ["src/components/AppUpdateCard.tsx", 1],
       ["src/components/AssessmentModule.tsx", 1],
       ["src/components/BackupSettingsCard.tsx", 1],
       ["src/components/BreathingExercise.tsx", 1],
       ["src/components/CbtForm.tsx", 1],
+      ["src/components/CompanionCard.tsx", 1],
+      ["src/components/CompanionSettingsCard.tsx", 1],
       ["src/components/CorrelationGrid.tsx", 1],
       ["src/components/CustomActivityManager.tsx", 1],
       ["src/components/CustomThemeEditor.tsx", 1],
@@ -295,13 +317,19 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       ["src/components/NutritionCard.tsx", 1],
       ["src/components/PatternInsightsCard.tsx", 1],
       ["src/components/PinLockSettings.tsx", 1],
+      ["src/components/ProgramCard.tsx", 1],
       ["src/components/QuadrantInsightCards.tsx", 2],
       ["src/components/ReminderCard.tsx", 1],
       ["src/components/ReportExport.tsx", 1],
+      ["src/components/SeekHelpCard.tsx", 1],
+      ["src/components/SleepLogCard.tsx", 1],
+      ["src/components/SleepMoodCard.tsx", 1],
+      ["src/components/SupportWallCard.tsx", 1],
       // Two mounts, not one: the frame itself, plus the dynamic
       // `tracker-${head.id}` the groups expand to.
       ["src/components/TrackerInputs.tsx", 2],
       ["src/components/WeatherApiCard.tsx", 1],
+      ["src/components/WeeklyAiSummaryCard.tsx", 1],
       ["src/components/WeeklyReflectionCard.tsx", 1],
       ["src/components/WorkoutPrograms.tsx", 1],
       ["src/components/YearInPixels.tsx", 1],
@@ -332,7 +360,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
     // session-local `Collapsible`s (settings-data, settings-voice), whose
     // whole point of joining the vocabulary is that their state now
     // survives a reload.
-    expect(MOUNTS.filter((m) => m.raw.startsWith("settings-")).length).toBe(26);
+    expect(MOUNTS.filter((m) => m.raw.startsWith("settings-")).length).toBe(27);
   });
 
   test("only the cards that promise to remember use the remembering primitive", () => {
@@ -509,13 +537,16 @@ describe("Minden adat törlése really means every record", () => {
       "clearAssessments",
       "resetCardStates",
       "resetCbtRecords",
+      "resetCompanion",
       "resetCustomActivities",
       "resetCustomTrackers",
       "resetGratitude",
       "resetHabits",
+      "resetPrograms",
       "resetReminderMessage",
       "resetSeenBadges",
       "resetSeenLessons",
+      "resetSleepLog",
       "resetWeeklyAnswers",
       "resetWeeklySkips",
     ]);

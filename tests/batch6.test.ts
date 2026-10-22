@@ -19,6 +19,7 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 /**
  * Every file under `src/` that contains `needle`, with how many times.
@@ -29,7 +30,7 @@ import { join } from "node:path";
  * knows about today's five cannot see the sixth.
  */
 function countInSrc(needle: string): Map<string, number> {
-  const root = new URL("../src/", import.meta.url).pathname;
+  const root = fileURLToPath(new URL("../src/", import.meta.url));
   const found = new Map<string, number>();
   const walk = (dir: string, rel: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -794,7 +795,7 @@ describe("Batch 6 Commit 1 touches no existing behaviour", () => {
       // is the point.
       if (/^public\/iconsets\/[a-z0-9-]+\/[a-z0-9-]+\.svg$/.test(f)) {
         const { existsSync } = require("node:fs") as typeof import("node:fs");
-        if (!existsSync(new URL(`../${f}`, import.meta.url).pathname)) continue;
+        if (!existsSync(fileURLToPath(new URL(`../${f}`, import.meta.url)))) continue;
       }
       // Vendored typefaces, same argument: 12 woff2 files and 5 OFL texts whose
       // names are derived from `src/lib/fonts.ts`, and which
@@ -890,12 +891,12 @@ describe("Batch 6 Commit 1 touches no existing behaviour", () => {
     for (const r of withdrawn) {
       // Whatever went away is gone from disk, at both names a rename touches.
       expect(
-        existsSync(new URL(r.old, root).pathname),
+        existsSync(fileURLToPath(new URL(r.old, root))),
         `${r.old} still exists after being withdrawn`,
       ).toBe(false);
       if (r.status.startsWith("R")) {
         // ...and what replaced it is really there and really registered.
-        expect(existsSync(new URL(r.now, root).pathname), `${r.now} is missing`).toBe(true);
+        expect(existsSync(fileURLToPath(new URL(r.now, root))), `${r.now} is missing`).toBe(true);
         if (r.now.startsWith("public/fonts/") && r.now.endsWith(".woff2")) {
           const file = r.now.replace("public/fonts/", "");
           expect(
@@ -918,7 +919,7 @@ describe("Batch 6 Commit 1 touches no existing behaviour", () => {
     // text for a withdrawn family survives a withdrawal, which is exactly the
     // thing the loop above exists to catch.
     const dir = new URL("../public/fonts/", import.meta.url);
-    const ofl = require("node:fs").readdirSync(dir.pathname) as string[];
+    const ofl = require("node:fs").readdirSync(fileURLToPath(dir)) as string[];
     expect(ofl.filter((n) => n.toUpperCase().includes("OFL")).length).toBe(
       [...fonts.FONTS, ...fonts.HAND_FONTS].filter((f) => f.family !== null).length,
     );

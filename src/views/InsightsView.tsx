@@ -30,6 +30,8 @@ import MonthlyYearlyStats from "../components/MonthlyYearlyStats";
 import AchievementsCard from "../components/AchievementsCard";
 import { GlyphIcon } from "../state/IconSetContext";
 import CorrelationGrid from "../components/CorrelationGrid";
+import SleepMoodCard from "../components/SleepMoodCard";
+import WeeklyAiSummaryCard from "../components/WeeklyAiSummaryCard";
 import QuadrantInsightCards from "../components/QuadrantInsightCards";
 import PatternInsightsCard from "../components/PatternInsightsCard";
 import { BarChart, Lightbulb, Link } from "../lib/icons";
@@ -40,6 +42,7 @@ type Range = "week" | "month" | "all";
 
 export const INSIGHTS_SECTION_IDS = [
   "week",
+  "ai",
   "year",
   "trend",
   "correlation",
@@ -148,6 +151,20 @@ export default function InsightsView({ onGoToday }: { onGoToday?: () => void }) 
               </div>
             </div>
           </CollapsibleCard>
+      </>
+    ) },
+    /*
+     * Phase 4 — the weekly AI summary, second and not last. It reads exactly
+     * the set the week's card above it counts, so the two sit together: the
+     * numbers a reader can check, and the paragraph written from them. The
+     * section id is declared whether or not the AI is on, because the reorder
+     * panel must not offer a row that can disappear — the CARD decides what to
+     * draw, and with the engine off it draws the sentence that says where the
+     * switch is.
+     */
+    { id: "ai" as InsightsSectionId, label: t("insights.ai.section"), render: () => (
+      <>
+          <WeeklyAiSummaryCard entries={weekEntries} />
       </>
     ) },
     { id: "year" as InsightsSectionId, label: t("settings.sections.year"), render: () => (
@@ -272,6 +289,9 @@ export default function InsightsView({ onGoToday }: { onGoToday?: () => void }) 
               </ul>
             )}
           </CollapsibleCard>
+          {/* Phase 3's sleep log, beside the activity correlations: same days,
+              same sample floor, same "együtt járás" wording. */}
+          <SleepMoodCard />
       </>
     ) },
     { id: "lag" as InsightsSectionId, label: t("settings.sections.lag"), render: () => (

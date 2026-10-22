@@ -1,5 +1,5 @@
 /**
- * The orchestration's tests: the scope is exactly the eighteen keys, a
+ * The orchestration's tests: the scope is exactly the nineteen keys, a
  * restore puts each of them back through the door its owner accepts, rotation
  * is a proof before it is a new file, and the device state is mundane by
  * design.
@@ -136,7 +136,7 @@ async function recoveryKek(): Promise<CryptoKey> {
 }
 
 describe("the scope", () => {
-  test("the eighteen included keys are pinned, in order", () => {
+  test("the nineteen included keys are pinned, in order", () => {
     expect([...BACKUP_INCLUDED_KEYS]).toEqual([
       "belso-iranytu-data-v2",
       "belso-iranytu-emotion-vocab",
@@ -156,6 +156,10 @@ describe("the scope", () => {
       "belso-iranytu-custom-foods-v1",
       "belso-iranytu-fitness-v1",
       "belso-iranytu-diet-v1",
+      // Phase 5's support wall — the nineteenth, and the reason the name
+      // above changed: it is the reader's own writing, which is the rule
+      // this side of the line exists to protect.
+      "belso-iranytu-support-wall",
     ]);
   });
 

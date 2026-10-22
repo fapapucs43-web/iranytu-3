@@ -242,6 +242,7 @@ function appleResult(): HealthImportResult {
     source: "apple",
     recordsSeen: 4,
     hr: [{ day: "2026-03-01", value: 62 }, { day: "2026-03-01", value: 71 }],
+    hrv: [],
     spo2: [{ day: "2026-03-01", value: 97.2 }],
     steps: { "2026-03-01": 6421 },
     sleep: { "2026-03-01": 390 },

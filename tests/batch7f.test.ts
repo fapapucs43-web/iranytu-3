@@ -627,7 +627,26 @@ describe("every content icon follows the chosen set", () => {
     // module directly (they are chrome, exactly like the toolbox header), and
     // the two transparency cards kept their two sites when they moved file.
     // 55 − 1 = 54.
-    expect(sites.length).toBe(54);
+    //
+    // The mega batch added four: the companion card and its Settings picker
+    // (`Sprout`), the six-week program (`Compass`) and the seek-help guide
+    // (`Users`) — all four names already in the registry, all four content
+    // rather than chrome. 54 + 4 = 58.
+    //
+    // Phase 3 added two more: the sleep log and the sleep × mood card, both
+    // `Bed` (the registry's 😴, which is the sleep tracker's own glyph) rather
+    // than the chrome `Moon` this batch first reached for. 58 + 2 = 60.
+    //
+    // Phase 4 added the AI pair: the settings card draws `Laptop` (💻, the
+    // device the on-device mode runs on) and the weekly summary draws `Brain`
+    // (🧠, already the micro-lesson card's head). Two names already in the
+    // registry, two new call SITES — this count is about sites, so it moves
+    // even when no icon is new. 60 + 2 = 62.
+    //
+    // Phase 5 added one more: the support wall's card head draws `Award`
+    // (🏅 — praise, already in the registry as an achievement badge). One
+    // name already present, one new call site. 62 + 1 = 63.
+    expect(sites.length).toBe(63);
     for (const name of sites) {
       expect(
         isChromeIcon(name),

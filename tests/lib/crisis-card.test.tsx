@@ -208,11 +208,13 @@ describe("mount point 1 — Settings, above everything else", () => {
     // eight more settings tiles collapsible, twenty-three when the 2026-10
     // completion converted the custom-ACTIVITY manager beside its twin, the
     // tracker manager, and twenty-five when fix/card-state-and-full-audit
-    // converted the two data/voice drawers. The point of this assertion is
-    // UNCHANGED by any of them: whatever the number is, a crisis card must
-    // not be one of them.
+    // converted the two data/voice drawers, twenty-six once the mega
+    // batch added the companion card, and twenty-seven with Phase 4's AI
+    // settings card in the Egyéb group. The point of this assertion is
+    // UNCHANGED by any of them: whatever the number is, a crisis card must not
+    // be one of them.
     const html = fullStack(createElement(SettingsView));
-    expect((html.match(/collapsible-card-head/g) ?? []).length).toBe(25);
+    expect((html.match(/collapsible-card-head/g) ?? []).length).toBe(27);
   });
 });
 

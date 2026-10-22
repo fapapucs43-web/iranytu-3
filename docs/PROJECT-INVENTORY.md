@@ -20,26 +20,26 @@ claims has two possible anchors and no way to tell which one went stale.
 
 ```json
 {
-    "srcTsFiles": 169,
-    "srcTsLines": 45607,
+    "srcTsFiles": 184,
+    "srcTsLines": 48963,
     "srcCssFiles": 1,
-    "srcCssLines": 5184,
-    "libFiles": 88,
-    "libLines": 28065,
-    "componentFiles": 65,
-    "componentLines": 12490,
+    "srcCssLines": 5511,
+    "libFiles": 94,
+    "libLines": 30141,
+    "componentFiles": 74,
+    "componentLines": 13714,
     "viewFiles": 6,
-    "viewLines": 2804,
+    "viewLines": 2860,
     "stateFiles": 5,
     "stateLines": 1272,
-    "testFiles": 123,
-    "testLines": 48940,
+    "testFiles": 129,
+    "testLines": 50100,
     "scriptFiles": 6,
     "publicFontWoff2": 24,
     "publicFontLicences": 10,
     "publicPdfFontFiles": 3,
     "publicIconFiles": 3,
-    "storageKeys": 39,
+    "storageKeys": 45,
     "fontFamilies": 12,
     "fontFiles": 24,
     "iconSets": 3,
@@ -69,9 +69,9 @@ claims has two possible anchors and no way to tell which one went stale.
 
 ## 2. Build, run, and the shipped shell
 
-- Dev server host is fixed in config, not in a flag: `vite.config.ts:8` — `"0.0.0.0",`
-- The port comes from the environment: `vite.config.ts:9` — `port: Number(process.env.PORT) || 3000,`
-- One warning threshold, raised deliberately: `vite.config.ts:13` — `chunkSizeWarningLimit: 900,`
+- Dev server host is fixed in config, not in a flag: `vite.config.ts:30` — `"0.0.0.0",`
+- The port comes from the environment: `vite.config.ts:31` — `port: Number(process.env.PORT) || 3000,`
+- One warning threshold, raised deliberately: `vite.config.ts:35` — `chunkSizeWarningLimit: 900,`
 - HMR is off on this host and the config says so: `vite.config.ts:4` — `// NOTE: Freebuff requires HMR to stay disabled — do not add hmr settings here.`
 
 - The mount point is the only element in `<body>`: `index.html:55` — `<div id="root"></div>`
@@ -109,7 +109,7 @@ fresh under the policy of the deploy that stored it.
 - A swap the page asked for reloads at once; a deploy that arrives quietly keeps its deferral: `src/lib/pwa.ts:394` — `if (skipRequested) {`
 - The banner that says the page is not the deploy, and offers the same six steps: `src/components/StaleWorkerNotice.tsx:37` — `export function StaleWorkerBanner({`
 - Mounted in the shell, above the content: `src/App.tsx:356` — `<StaleWorkerNotice />`
-- Both marker names are in the wipe, because the older button wrote the older key: `src/lib/storageKeys.ts:122` — `"belso-iranytu-force-reset",`
+- Both marker names are in the wipe, because the older button wrote the older key: `src/lib/storageKeys.ts:133` — `"belso-iranytu-force-reset",`
 - The devtools route that always works, written for the reader: `docs/stuck-service-worker.md:1` — `# Beragadt service worker — a végső útmutató`
 
 - The workflow needs history to work at all: `.github/workflows/ci.yml:55` — `fetch-depth: 0`
@@ -140,12 +140,12 @@ fresh under the policy of the deploy that stored it.
 
 | View | File | What it is |
 | --- | --- | --- |
-| Ma | `src/views/TodayView.tsx:50` — `export default function TodayView() {` | the entry form: mood, trackers, activities, goals, the week's reflection |
-| Felfedezés | `src/views/ToolsView.tsx:170` — `export default function ToolsView() {` | the tools the day does not need, in four drawers — see `docs/tools-tab.md` |
-| Egészség | `src/views/HealthView.tsx:163` — `export default function HealthView() {` | the body's records: food, workouts, vitals, habits and the check-ins, in three sections |
+| Ma | `src/views/TodayView.tsx:52` — `export default function TodayView() {` | the entry form: mood, trackers, activities, goals, the week's reflection |
+| Felfedezés | `src/views/ToolsView.tsx:183` — `export default function ToolsView() {` | the tools the day does not need, in four drawers — see `docs/tools-tab.md` |
+| Egészség | `src/views/HealthView.tsx:167` — `export default function HealthView() {` | the body's records: food, workouts, vitals, habits and the check-ins, in three sections |
 | Napló | `src/views/JournalView.tsx:25` — `export default function JournalView({ onGoToday }` | calendar, real streak, search, entry edit and delete |
-| Elemzés | `src/views/InsightsView.tsx:58` — `export default function InsightsView({ onGoToday }` | correlations, lag analysis, exports, monthly/yearly stats, achievements, pattern insights |
-| Beállítások | `src/views/SettingsView.tsx:231` — `export default function SettingsView({` | every preference, the data section, and the two integrations |
+| Elemzés | `src/views/InsightsView.tsx:61` — `export default function InsightsView({ onGoToday }` | correlations, lag analysis, exports, monthly/yearly stats, achievements, pattern insights |
+| Beállítások | `src/views/SettingsView.tsx:233` — `export default function SettingsView({` | every preference, the data section, and the two integrations |
 
 - `src/components/CorrelationGrid.tsx:20` — `export default function CorrelationGrid() {`
 - `src/components/LagAnalysisCard.tsx:12` — `export default function LagAnalysisCard() {`
@@ -153,7 +153,7 @@ fresh under the policy of the deploy that stored it.
 - `src/components/MonthlyYearlyStats.tsx:29` — `export default function MonthlyYearlyStats() {`
 - `src/components/AchievementsCard.tsx:25` — `export default function AchievementsCard() {`
 
-- The last of the five, in the view's own JSX: `src/views/InsightsView.tsx:307` — `<CorrelationGrid />`
+- The last of the five, in the view's own JSX: `src/views/InsightsView.tsx:327` — `<CorrelationGrid />`
 
 ## 5. State and persistence
 
@@ -219,7 +219,7 @@ fresh under the policy of the deploy that stored it.
 ### The encrypted backup: scope, keys, and the way back
 
 - `src/lib/backup.ts:97` — `export const BACKUP_INCLUDED_KEYS = [`
-- `src/lib/backup.ts:122` — `export const BACKUP_EXCLUDED_KEYS = [`
+- `src/lib/backup.ts:127` — `export const BACKUP_EXCLUDED_KEYS = [`
 
 - `src/lib/backupKey.ts:51` — `export const PASSKEY_INFO = "iranytu-backup/passkey/v1";`
 - `src/lib/backupKey.ts:52` — `export const PASSWORD_INFO = "iranytu-backup/password/v1";`
@@ -349,7 +349,7 @@ fresh under the policy of the deploy that stored it.
 | `Collapsible` | `src/components/ui/ui.tsx:304` — `export function Collapsible({` | session-local, closed by default |
 | `CollapsibleCard` | `src/components/ui/ui.tsx:392` — `export function CollapsibleCard({` | collapsible, and it REMEMBERS |
 | `Segmented` | `src/components/ui/ui.tsx:499` — `export function Segmented<T extends string>({` | the radio-as-buttons control |
-| `TextInput` | `src/components/ui/ui.tsx:529` — `export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {` | the one text field |
+| `TextInput` | `src/components/ui/ui.tsx:536` — `export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {` | the one text field |
 
 ### The four collapsible generations
 
@@ -373,7 +373,7 @@ fresh under the policy of the deploy that stored it.
 
 | # | Mount | Renders when |
 | --- | --- | --- |
-| 1 | `src/views/SettingsView.tsx:856` — `<CrisisCard />` | always, above even the profile card |
+| 1 | `src/views/SettingsView.tsx:866` — `<CrisisCard />` | always, above even the profile card |
 | 2 | `src/components/AssessmentResult.tsx:84` — `{needsSupport && <CrisisStrip />}` | only when the run needs support, hoisted above the score |
 | 3 | `src/components/AssessmentConsent.tsx:45` — `<CrisisCard />` | whenever the consent dialog is open |
 | 4 | `src/components/EntryDetail.tsx:236` — `<CrisisStrip />` | on every open entry, outside the editing ternary |
@@ -536,7 +536,7 @@ written for Hungarian (`ő`, `ű`), and a language with letters no face carries 
 a font problem that shows up there, not an i18n problem.
 
 - The registry the first four steps edit: `src/lib/i18n.ts:55` — `export const SUPPORTED_LOCALES = ["hu", "en", "de"] as const;`
-- The picker that needs no edit for a fourth language: `src/views/SettingsView.tsx:154` — `const LOCALES: readonly { value: Locale; label: string }[] = SUPPORTED_LOCALES.map((code) => ({`
+- The picker that needs no edit for a fourth language: `src/views/SettingsView.tsx:156` — `const LOCALES: readonly { value: Locale; label: string }[] = SUPPORTED_LOCALES.map((code) => ({`
 
 ### The backup card, and why it is deliberately not collapsible
 
@@ -564,6 +564,18 @@ a font problem that shows up there, not an i18n problem.
 - The lazy binding, at module scope: `src/App.tsx:73` — `const InsightsView = lazy(() => import("./views/InsightsView"));`
 - The mount, inside both boundaries: `src/App.tsx:337` — `{tab === "insights" && (`
 - The two placeholder states: `src/styles.css:3210` — `.view-loading,`
+
+And the same worker had to learn to say no to Phase 4's AI runtime. The WebLLM
+runtime is ~6 MB, it serves a feature that is off by default, and its model —
+335 MB, fetched on a button press — is never precached, so the runtime alone
+would be useless offline. Precaching it would have spent every reader's
+install bandwidth, including the readers who never turn AI on. The install is
+now 39 entries / 3.28 MB, of which the AI runtime is exactly none (it was 40
+entries / 9.42 MB before this rule).
+
+- The exclusion, applied before the positive `/assets/` rule that would otherwise sweep the chunk in: `scripts/precache-manifest.mjs:85` — `if (path.startsWith(AI_RUNTIME_PREFIX)) return false;`
+- The chunk name that rule reads — the only reason it can be a name and not a byte-sniff: `vite.config.ts:38` — `manualChunks(id: string) {`
+- The backstop that fails the build if that name ever stops matching: `scripts/precache-manifest.mjs:207` — `export function verifyPrecacheSizes(list, distDir, maxBytes = MAX_PRECACHE_BYTES) {`
 
 ### The artwork split, and what it cost to do honestly
 
@@ -737,7 +749,7 @@ a font problem that shows up there, not an i18n problem.
 
 ## 10. The test suite
 
-**123 files, 48 898 lines, 3 692 tests.** `bun test` — no test framework in the
+**129 files, 50 081 lines, 3 767 tests.** `bun test` — no test framework in the
 dependency block; the runner is bun's own. This table is the second half of the
 document's proof: its file count, its total and the five group sums are all
 recomputed from the rows below, so a file that lands without a row, a row whose
@@ -814,7 +826,7 @@ a fourth ground.
 | `tests/phase4.test.ts` | 7 | onboarding state and reminder scheduling |
 | `tests/stuck-worker.test.ts` | 17 | the stuck service worker: the detector (a controller url without this build's hash, conservative about every unknown), the escape address (`resetUrl` + taking the stamp back out), the `SKIP_WAITING` message on both sides, the immediate reload for a swap the page asked for, the banner's markup and its solid amber rail, and the reader's devtools guide |
 
-**`tests/lib/` — one file per library module** — 47 files, 909 tests
+**`tests/lib/` — one file per library module** — 53 files, 984 tests
 
 | File | Tests | Pins |
 | --- | --- | --- |
@@ -834,7 +846,13 @@ a fourth ground.
 | `tests/lib/nutrition.test.ts` | 38 | that the food registry's calories agree with its own macros, that the allergen rule is a substring match over the NAME (silent when unmarked, stable in registry order), that the totals add up, that a corrupt blob loads as a usable log, and that a food the reader typed is a NAME — counted as an item, contributing no invented numbers, kept across a reload when it has one and dropped when it does not |
 | `tests/lib/custom-foods.test.ts` | 10 | the reader's own foods: a name survives a reload, blanks and case-insensitive duplicates are refused, order is newest-first, matching is a substring over the name (and over a caller's snapshot when one is passed), removal is by id, and a corrupt blob loads as a usable list |
 | `tests/lib/diets.test.ts` | 13 | the twelve diet ids in the order the picker shows them (the audit's gluten-free, lactose-free and pescatarian between high-protein and "other"), the one sentence a chosen diet may say about itself — a real professional to ask, no diagnosis, and no note on "other" — the narrowing guard accepting exactly the registry, and one stored choice: it survives a reload, clearing removes the key rather than storing a sentinel, an unknown id is refused, a subscriber hears every change, and a foreign blob loads as no choice at all |
-| `tests/lib/collapsible-audit.test.ts` | 13 | the Phase 5 state audit: the 27 remembering mounts and their 33 ids read out of the tree with no duplicate and no missing summary, the frozen id vocabulary, the six session-local drawers pinned as a set, collapse state's one key and its place in the backup's exclusions, the production reset against the test seam, and the rule that every non-test `reset` export in `src/lib` is called by the wipe — from the delete-all chain or from `RESET_FUNCTIONS` in the key registry |
+| `tests/lib/collapsible-audit.test.ts` | 13 | the Phase 5 state audit: the 81 remembering mounts and their 87 ids read out of the tree with no duplicate and no missing summary, the frozen id vocabulary, the six session-local drawers pinned as a set, collapse state's one key and its place in the backup's exclusions, the production reset against the test seam, and the rule that every non-test `reset` export in `src/lib` is called by the wipe — from the delete-all chain or from `RESET_FUNCTIONS` in the key registry |
+| `tests/lib/companion.test.ts` | 12 | the forgiving companion: the five shapes and five colours as total registries, XP and level derived rather than remembered, the streak's three cases (same day, exactly yesterday, any longer gap), and the one rule the module exists for — a gap dims the avatar and resets nothing else, with the state surviving a reload, a corrupt blob repaired, and the wipe clearing the key |
+| `tests/lib/programs.test.ts` | 13 | the six-week program's state machine: a fresh install has none, a start writes only its own key, each press finishes exactly one week, a gap between weeks changes nothing, the last week finishes the program and finishing again is a no-op, restarting cannot lose the reader's place, and a stored gap or junk in the completed list is repaired rather than rendered |
+| `tests/lib/seek-help.test.ts` | 10 | the non-diagnostic guide: three questions, an answer about self-harm reaching the urgent branch across every duration/impact combination, the two conservative thresholds, every branch carrying a title, a body and a next step, no condition named or cure promised in any of the twelve results, and no phone number written into the tree |
+| `tests/lib/sleep-log.test.ts` | 15 | the sleep log: a night that crosses midnight is one duration, equal times are ambiguous rather than zero, junk times are refused, one record per day newest-first with a re-save replacing, a corrupt blob loads as a usable list, deletion is exact, subscribers hear a save and the reset clears the key — plus the correlation's floor, its band averages, a coefficient of 1 on a perfect relationship, no divide-by-zero on a flat mood column, and a sentence that never claims cause |
+| `tests/lib/health-hrv.test.ts` | 8 | the wearable half of phase 3: SDNN parsed into its own series and never into bpm, a zero and a sub-millisecond reading dropped, the merge writing `smartwatch-hrv` only behind the reader's own toggle, an HRV preview row that counts the days it could fill, the id staying out of the tracker registry, and a neutral grid column that appears only once a sample exists |
+| `tests/lib/support-wall.test.ts` | 15 | the Phase 5 wall: the 280-character cap accepted and refused at its edges, the 200-note cap spending the OLDEST UNPINNED note and refusing outright when every slot is pinned, pinned-before-newest display that leaves the stored order alone, delete and pin round-trips, off as the default, and a corrupt or wrong-typed blob repaired rather than thrown |
 | `tests/lib/weekly-menus.test.ts` | 12 | the composed week: the eleven named diets get seven days and `other` gets none, every item is a registry row in that diet's pool, no meal repeats a food, the same diet composes the same week, no diet prints one day seven times, every exclusion names a real food, and a day's total is the sum of its own rows |
 | `tests/lib/fitness.test.ts` | 47 | that adopting a template COPIES it, that the caps hold, that the log is a record a later plan edit cannot change, that progression is computed by name — including the repeated-weight rule that becomes 2.5 kg and its bodyweight twin, one more rep or five more seconds — that the dose string says whether a number is reps or seconds, that the chart series is the progression as points, and, from Phase 3's third commit, that the twelve templates each carry one of the six movement types and that a rest day keeps its exercises while dropping out of the rotation |
 | `tests/lib/backup.test.ts` | 24 | that the orchestration refuses rather than answers, and a restore is a merge |
@@ -843,7 +861,7 @@ a fourth ground.
 | `tests/lib/feature-flags.test.ts` | 20 | the remembered flags behind the three badges that leave no residue |
 | `tests/lib/dynamic-ink.test.ts` | 50 | that the ink the app picks for a picture clears AA across the whole band — 21 veils × 21 fades × 14 palettes × 2 pictures — that the decision survives the WORST REGION of a picture the average cannot describe, and that the reader still passes the measured ground, not a widened one |
 | `tests/lib/backupCrypto.test.ts` | 19 | that the key hierarchy is real HKDF and that a passphrase cannot be brute-forced silently |
-| `tests/lib/precache.test.ts` | 19 | what goes in the precache, the marker contract with the generator, and a build-time guard that really refuses |
+| `tests/lib/precache.test.ts` | 21 | what goes in the precache — including the AI runtime's exclusion and the size backstop — the marker contract with the generator, and a build-time guard that really refuses |
 | `tests/lib/breathing-consolidation.test.ts` | 26 | that the 4-4-4 survived the merge, the duplicate stayed deleted, and `engineStarted` tells a started session from a fresh one |
 | `tests/lib/crisis-card.test.tsx` | 18 | that the help is reachable from four places and rests on one list |
 | `tests/lib/ring-tokens.test.ts` | 18 | that the ring aliases are read, defaulted, and that no palette survives in JS |

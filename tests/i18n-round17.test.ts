@@ -184,12 +184,19 @@ describe("round 17 — what the modules export is what the catalogue holds", () 
     ]);
   });
 
-  test("the health preview prints the catalogue's four series names", () => {
+  test("the health preview prints the catalogue's series names, in order", () => {
     // `[]` for entries and for enabled trackers: the labels exist before any
     // data does, which is exactly when a reader reads them.
+    //
+    // The HRV row joined in phase 3 and is the one label here that is NOT a
+    // catalogue value: `HRV` and `ms` are the same in every supported
+    // language, and minting a key would have handed a fourth language an
+    // untranslated unit. It sits second, after pulse, because that is the
+    // order of the watch series the import writes.
     const rows = previewImport(bareResult, [], []).rows;
     expect(rows.map((r) => r.label)).toEqual([
       t("healthImport.seriesHr"),
+      "HRV (ms)",
       t("healthImport.seriesSpo2"),
       t("healthImport.seriesSleep"),
       t("healthImport.seriesSteps"),

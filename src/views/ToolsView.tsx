@@ -58,6 +58,9 @@ import ExperimentCard from "../components/ExperimentCard";
 import EducationLibraryCard from "../components/EducationLibraryCard";
 import BreathingExercise from "../components/BreathingExercise";
 import MeditationPicker from "../components/MeditationPicker";
+import ProgramCard from "../components/ProgramCard";
+import SeekHelpCard from "../components/SeekHelpCard";
+import SupportWallCard from "../components/SupportWallCard";
 import GratitudeJournal from "../components/GratitudeJournal";
 import ContentIcon from "../components/ContentIcon";
 import { Briefcase, MessageCircle } from "../lib/icons";
@@ -106,6 +109,12 @@ export function defaultToolSections(
           <BreathingExercise />
           <MeditationPicker />
           <CbtForm />
+          {/* The structured practice, then the guide that says when the tools
+              above are not the answer. The guide is last on purpose: a reader
+              scrolling this drawer meets the things they can do before the
+              question of whether they need something else. */}
+          <ProgramCard />
+          <SeekHelpCard />
         </ToolDrawer>
       ),
     },
@@ -117,6 +126,10 @@ export function defaultToolSections(
           {flags.reflectionModule && <MiniReflection />}
           <GratitudeJournal />
           <DailyQuestionCard />
+          {/* Phase 5's wall: last in the drawer, and OFF until the reader
+              turns it on — see the card's own header for why it explains
+              itself instead of not being here. */}
+          <SupportWallCard />
         </ToolDrawer>
       ),
     },

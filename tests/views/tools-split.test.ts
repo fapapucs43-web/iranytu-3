@@ -89,7 +89,10 @@ const SECTION_KEYS: Record<ToolsSectionId, string> = {
 /**
  * Every card the tab mounts, and the drawer it belongs to.
  *
- * The eight that stayed when the health drawer moved out. `MiniReflection` and
+ * The eight that stayed when the health drawer moved out, plus Phase 5's
+ * support wall — a NINTH card, which is why this table rather than a count:
+ * the wall arrived a phase after the split and its drawer is a row here, not
+ * a surprise in someone else's assertion. `MiniReflection` and
  * `DailyQuestionCard` are defined further down this same file, which is why
  * they are named as components and not as files.
  */
@@ -100,6 +103,7 @@ const CARDS: readonly (readonly [string, ToolsSectionId])[] = [
   ["<MiniReflection />", "self"],
   ["<GratitudeJournal />", "self"],
   ["<DailyQuestionCard />", "self"],
+  ["<SupportWallCard />", "self"],
   ["<ExperimentCard />", "experiments"],
   ["<EducationLibraryCard />", "education"],
 ];

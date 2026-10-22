@@ -145,10 +145,22 @@ export default function HealthImportCard() {
         hint={t("healthImport.hrHint")}
         checked={hrOn}
         onChange={(v) => {
+          // One toggle for the whole watch series: heart rate, SDNN and SpO2
+          // are the same consent — "read these numbers off my watch" — and
+          // splitting it into three switches would ask the same question three
+          // times. HRV joined the group in phase 3; an entry imported before it
+          // existed simply gains nothing until the reader re-runs the import.
           const kept = enabledTrackers.filter(
-            (id) => id !== SERIES_TRACKER.hr && id !== SERIES_TRACKER.spo2,
+            (id) =>
+              id !== SERIES_TRACKER.hr &&
+              id !== SERIES_TRACKER.hrv &&
+              id !== SERIES_TRACKER.spo2,
           );
-          patch({ enabledTrackers: v ? [...kept, SERIES_TRACKER.hr, SERIES_TRACKER.spo2] : kept });
+          patch({
+            enabledTrackers: v
+              ? [...kept, SERIES_TRACKER.hr, SERIES_TRACKER.hrv, SERIES_TRACKER.spo2]
+              : kept,
+          });
         }}
       />
 

@@ -595,6 +595,9 @@ describe("the nested menus fade with the card they sit in", () => {
     ".detail-note": "--app-surface-2",
     ".empty-state": "--app-surface-2",
     ".toolbox-item": "--app-surface-2",
+    // Phase 5's wall notes: the same surface a toolbox row sits on, so the
+    // note fades with its card instead of staying solid underneath it.
+    ".wall-note": "--app-surface-2",
     ".goal-row": "--app-surface-2",
     ".entry-row": "--app-surface",
     ".corr-row": "--app-surface-2",
@@ -617,6 +620,26 @@ describe("the nested menus fade with the card they sit in", () => {
     // The meal log's suggestion popup: it hangs over the card it belongs to, and
     // a list that stayed solid would be the one opaque rectangle on a picture.
     ".autocomplete-list": "--app-surface",
+    // Phase 1's companion: the card's own ground, the avatar disc and XP track
+    // inside it, and the type picker in Settings. Each is a panel on top of the
+    // sheet, so each fades with it; the avatar's ring and the XP fill are
+    // `--companion-color`, an accent rather than a ground, and stay solid for
+    // the same reason the slider thumb does.
+    ".companion-card": "--app-soft-surface",
+    ".companion-avatar": "--app-surface-2",
+    ".companion-xp": "--app-surface-2",
+    ".companion-type-btn": "--app-surface-2",
+    // Phase 2's two therapy cards: the week's practice and prompt panels, the
+    // seek-help result panel, and its urgent variant. All four are grounds
+    // inside a card, so all four fade; the urgent border is `--danger`, an
+    // accent, and stays.
+    ".program-practice": "--app-surface-2",
+    ".program-prompt": "--app-soft-surface",
+    // Phase 3's sleep log: the quality picker and each logged night's row.
+    ".sleep-quality-btn": "--app-surface-2",
+    ".sleep-log-row": "--app-surface-2",
+    ".seek-help-result": "--app-surface-2",
+    ".seek-help-urgent": "--app-soft-surface",
   };
 
   /**
@@ -651,6 +674,11 @@ describe("the nested menus fade with the card they sit in", () => {
     ".iconset-badge": "var(--surface-2)",
     ".badge-cell": "var(--surface-2)",
     ".progress-track": "var(--bg-soft)",
+    // The program's six dots are a progress bar in pieces: a faded track would
+    // stop showing how far along the six weeks are, which is the only thing
+    // they say.
+    ".program-dot": "var(--bg-soft)",
+    ".program-dot-done": "var(--brand)",
     ".slider::-webkit-slider-runnable-track": "var(--bg-soft)",
     ".slider::-moz-range-track": "var(--bg-soft)",
     ".corr-matrix thead th": "var(--surface-2)",
