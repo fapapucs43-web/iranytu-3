@@ -34,6 +34,11 @@
  * AND NOT `/sw.js` ITSELF. Caching the worker inside the worker is pointless
  * and confusing, and the registration URL already carries the bundle hash.
  *
+ * SECOND DUTY: THE SPA FALLBACK. The generator also writes `dist/404.html`
+ * as a copy of the BUILT index — GitHub Pages serves 404.html for any path it
+ * does not have, and only the built index knows the hashed asset names. The
+ * reasoning lives next to the write in `main()`.
+ *
  * AND NOT THE AI RUNTIME. `vite.config.ts` gives `@mlc-ai/web-llm` a chunk
  * named `webllm-runtime`, and this file refuses that name. The runtime is
  * ~6 MB, it serves only a feature that is off by default, and it is useless
@@ -246,6 +251,23 @@ function main() {
   // reported against a file that still has the other's markers intact.
   const versioned = injectBuildVersion(readFileSync(swPath, "utf8"), id);
   writeFileSync(swPath, injectManifest(versioned, list));
+
+  // GITHUB PAGES' SPA FALLBACK — and the reason it is written HERE rather
+  // than shipped as a file in `public/`.
+  //
+  // Pages serves `404.html` for any path of a project site it does not have
+  // on disk, which is what makes a refresh on a deep link survivable. But a
+  // `public/404.html` cannot be a copy of index.html: the URLs a reader needs
+  // are the HASHED ones (`assets/index-<hash>.js`, under the `base` in
+  // vite.config.ts), and those names do not exist until this build has run —
+  // a static copy would point at names that stopped existing with the build
+  // before it. So the fallback is the built index, copied after it exists:
+  // same bytes, same bundle, and the app's own tab state takes over from the
+  // route it lands on. Written AFTER the precache list is computed on
+  // purpose: `/404.html` is not a file the worker should cache (the positive
+  // list in `shouldPrecache` already refuses it), and this order means it
+  // cannot sneak into the list by being present during the walk.
+  writeFileSync(join(dist, "404.html"), readFileSync(join(dist, "index.html")));
 
   const bytes = list.reduce((n, p) => n + statSync(join(dist, p)).size, 0);
   const skipped = built.filter((p) => !list.includes(p));

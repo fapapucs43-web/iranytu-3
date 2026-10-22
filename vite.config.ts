@@ -41,4 +41,16 @@ export default defineConfig({
       },
     },
   },
+  /**
+   * GitHub Pages serves this repo's project site from `/iranytu-3/`, and the
+   * built `index.html` roots every asset URL — without this base the deploy
+   * would 404 on its own bundle on its own domain. The dev server is
+   * unaffected (Vite serves the app at `/` in dev regardless), and the
+   * precache generator walks dist/ FILE paths, which the base does not move.
+   *
+   * This is a Pages-specific pin: a root-domain deploy (the PWA's own host,
+   * where `/sw.js` resolves) wants `base: "/"` again — one line, with this
+   * comment as the reminder of why the two cannot be the same value.
+   */
+  base: "/iranytu-3/",
 });

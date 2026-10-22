@@ -1,0 +1,64 @@
+name: Deploy to GitHub Pages
+
+# The online-test deploy: push to main, build, publish dist/ to Pages.
+#
+# The build is the SAME command CI runs (`npm ci` + `npm run build`, with the
+# generator that writes sw.js and the 404 fallback into dist), so what Pages
+# serves is byte-for-byte what the verify workflow just checked. Everything
+# pinned here follows ci.yml's reasoning: the runner image is ubuntu-24.04
+# rather than the rolling label, the toolchain is Node 22 (the version every
+# green run exercised), and checkout/setup-node are @v5 so no job runs on the
+# deprecated Node 20 action runtime.
+#
+# Pages serves a PROJECT site from /iranytu-3/, which is what `base` in
+# vite.config.ts is set to; a root-domain deploy needs that one line changed
+# back to "/" before this workflow would serve the right URLs.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# The two permissions Pages' own docs require: the artifact upload, and the
+# OIDC token the deploy step authenticates with. `contents: read` is the whole
+# access the build itself needs — it never pushes.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time, and never cancel an in-flight one: a cancelled Pages
+# deploy leaves the previous version live while the run reads "cancelled",
+# which is the same "did it go live?" ambiguity the runner pin removes.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        # Default depth is enough here — unlike CI, this job runs no tests,
+        # so nothing needs the history the batch scope guards diff against.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Production build
+        run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
