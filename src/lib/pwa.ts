@@ -57,6 +57,35 @@ export function bundleVersion(): string {
 }
 
 /**
+ * THE DEPLOYMENT'S OWN DIRECTORY — the one fact both the registration and the
+ * scope need, in one shape.
+ *
+ * `import.meta.env.BASE_URL` is Vite's build-time answer to "where does this
+ * app live": `/` on a root domain, `/iranytu-3/` on a project site. The value
+ * always carries both slashes when Vite writes it; the normalisation is for
+ * hand-passed bases (and for the test that passes both forms) so the two
+ * callers below cannot disagree about it.
+ */
+export function deployBase(base: string): string {
+  const path = base.endsWith("/") ? base : `${base}/`;
+  return path || "/";
+}
+
+/**
+ * THE WORKER'S URL, joined to the deployment's base — exported so a test can
+ * call the join instead of pinning its spelling.
+ *
+ * WHY THE JOIN MATTERS. A project site serves every file under its path, so a
+ * root-relative `/sw.js` answers 404 there — and a registration that 404s
+ * fails into the `.catch` below, silently: the app still loads, and only the
+ * offline copy never installs. That is the exact bug this fixes (GitHub
+ * Pages `/iranytu-3/`), and it is invisible in any build that deploys to `/`.
+ */
+export function serviceWorkerUrl(base: string, version: string): string {
+  return `${deployBase(base)}sw.js?v=${encodeURIComponent(version)}`;
+}
+
+/**
  * True once this page has asked to be moved onto a newer worker.
  *
  * Module-level rather than local to the listener, because `controllerchange`
@@ -405,8 +434,17 @@ export function registerPwa(): void {
   // page's other answers turn out to be.
   const forced = consumeForceReset();
 
+  const base = deployBase(import.meta.env.BASE_URL || "/");
   navigator.serviceWorker
-    .register(`/sw.js?v=${encodeURIComponent(bundleVersion())}`, { updateViaCache: "none" })
+    .register(serviceWorkerUrl(base, bundleVersion()), {
+      updateViaCache: "none",
+      // THE SCOPE IS THE BASE, stated rather than left to the default. A
+      // worker may only scope its own directory or below, and the base IS
+      // that directory — so the default would resolve to the same path, but
+      // naming it makes the contract explicit: the app's caches, and every
+      // fetch this worker may answer, live under the deployment's path.
+      scope: base,
+    })
     .then((registration) => {
       // A worker left waiting by an earlier visit is the stuck case, and asking
       // it to skip is what moves the reader onto the deploy.

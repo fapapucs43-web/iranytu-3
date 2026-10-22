@@ -21,11 +21,11 @@ claims has two possible anchors and no way to tell which one went stale.
 ```json
 {
     "srcTsFiles": 184,
-    "srcTsLines": 48963,
+    "srcTsLines": 49001,
     "srcCssFiles": 1,
     "srcCssLines": 5511,
     "libFiles": 94,
-    "libLines": 30141,
+    "libLines": 30179,
     "componentFiles": 74,
     "componentLines": 13714,
     "viewFiles": 6,
@@ -33,7 +33,7 @@ claims has two possible anchors and no way to tell which one went stale.
     "stateFiles": 5,
     "stateLines": 1272,
     "testFiles": 129,
-    "testLines": 50100,
+    "testLines": 50150,
     "scriptFiles": 6,
     "publicFontWoff2": 24,
     "publicFontLicences": 10,
@@ -78,14 +78,14 @@ claims has two possible anchors and no way to tell which one went stale.
 - The script tag is the app, module-loaded: `index.html:56` — `<script type="module" src="/src/index.tsx"></script>`
 - The icon is inline SVG data, not a request: `index.html:51` — `<link rel="icon" href="data:image/svg+xml,`
 
-- The cache filter is a prefix allow-list: `public/sw.js:101` — `.filter((n) => n.startsWith("belso-iranytu-") && n !== CACHE)`
+- The cache filter is a prefix allow-list: `public/sw.js:127` — `.filter((n) => n.startsWith("belso-iranytu-") && n !== CACHE)`
 
 - The list is generated, never authored: `scripts/precache-manifest.mjs:52` — `export function shouldPrecache(path) {`
-- It is injected between two markers that must appear exactly once: `public/sw.js:59` — `const PRECACHE = [];`
+- It is injected between two markers that must appear exactly once: `public/sw.js:82` — `const PRECACHE = [];`
 - The build runs it: `package.json:8` — `"build": "vite build && node scripts/precache-manifest.mjs",`
 
-- The fill, and the guard that follows it: `public/sw.js:89` — `await cache.addAll(PRECACHE);`
-- `skipWaiting` is inside the same `waitUntil`, after the fill: `public/sw.js:90` — `await self.skipWaiting();`
+- The fill, and the guard that follows it: `public/sw.js:115` — `await cache.addAll(PRECACHE.map(under));`
+- `skipWaiting` is inside the same `waitUntil`, after the fill: `public/sw.js:116` — `await self.skipWaiting();`
 
 ### The stuck worker: the address no cache can answer
 
@@ -95,18 +95,18 @@ from an earlier build in charge of the page — `reload()` re-requests the very 
 its precache and the HTTP cache are keyed by, and a stored document can still be
 fresh under the policy of the deploy that stored it.
 
-- The reset, six steps in this order: `src/lib/pwa.ts:199` — `export async function forceAppUpdate(): Promise<boolean> {`
-- Unregister first, so a live worker cannot rebuild what it just lost: `src/lib/pwa.ts:204` — `for (const registration of registrations) await registration.unregister();`
-- Then every cache: `src/lib/pwa.ts:213` — `for (const name of names) await caches.delete(name);`
-- The marker for the load that follows: `src/lib/pwa.ts:92` — `export function consumeForceReset(): boolean {`
-- THE STEP THAT FIXES IT — a url nobody has ever requested, so neither the precache nor the HTTP cache can answer it from storage: `src/lib/pwa.ts:126` — `export function resetUrl(pathname: string, stamp: number): string {`
-- Navigated, not reloaded, and `replace` so Back cannot return to the stuck page: `src/lib/pwa.ts:242` — `window.location.replace(resetUrl(window.location.pathname, Date.now()));`
-- The stamp comes back out of the bar once the fresh document is up: `src/lib/pwa.ts:140` — `export function cleanResetParam(): void {`
+- The reset, six steps in this order: `src/lib/pwa.ts:228` — `export async function forceAppUpdate(): Promise<boolean> {`
+- Unregister first, so a live worker cannot rebuild what it just lost: `src/lib/pwa.ts:233` — `for (const registration of registrations) await registration.unregister();`
+- Then every cache: `src/lib/pwa.ts:242` — `for (const name of names) await caches.delete(name);`
+- The marker for the load that follows: `src/lib/pwa.ts:121` — `export function consumeForceReset(): boolean {`
+- THE STEP THAT FIXES IT — a url nobody has ever requested, so neither the precache nor the HTTP cache can answer it from storage: `src/lib/pwa.ts:155` — `export function resetUrl(pathname: string, stamp: number): string {`
+- Navigated, not reloaded, and `replace` so Back cannot return to the stuck page: `src/lib/pwa.ts:271` — `window.location.replace(resetUrl(window.location.pathname, Date.now()));`
+- The stamp comes back out of the bar once the fresh document is up: `src/lib/pwa.ts:169` — `export function cleanResetParam(): void {`
 - Called on mount, so no bookmark carries it: `src/App.tsx:137` — `cleanResetParam();`
-- The detector: the controller's own `scriptURL` against this bundle's hash: `src/lib/pwa.ts:266` — `export function controllerIsStale(`
-- A `waiting` worker is asked to take over, which is what ends the stuck state: `src/lib/pwa.ts:332` — `function askWaitingToSkip(registration: ServiceWorkerRegistration): void {`
-- The worker side of that message, and the only verb it accepts: `public/sw.js:128` — `if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();`
-- A swap the page asked for reloads at once; a deploy that arrives quietly keeps its deferral: `src/lib/pwa.ts:394` — `if (skipRequested) {`
+- The detector: the controller's own `scriptURL` against this bundle's hash: `src/lib/pwa.ts:295` — `export function controllerIsStale(`
+- A `waiting` worker is asked to take over, which is what ends the stuck state: `src/lib/pwa.ts:361` — `function askWaitingToSkip(registration: ServiceWorkerRegistration): void {`
+- The worker side of that message, and the only verb it accepts: `public/sw.js:154` — `if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();`
+- A swap the page asked for reloads at once; a deploy that arrives quietly keeps its deferral: `src/lib/pwa.ts:423` — `if (skipRequested) {`
 - The banner that says the page is not the deploy, and offers the same six steps: `src/components/StaleWorkerNotice.tsx:37` — `export function StaleWorkerBanner({`
 - Mounted in the shell, above the content: `src/App.tsx:356` — `<StaleWorkerNotice />`
 - Both marker names are in the wipe, because the older button wrote the older key: `src/lib/storageKeys.ts:133` — `"belso-iranytu-force-reset",`

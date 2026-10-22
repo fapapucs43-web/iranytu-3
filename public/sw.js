@@ -3,8 +3,9 @@
  * src/lib/pwa.ts with `import.meta.env.PROD` guard; never in dev).
  *
  * Stale-bundle prevention:
- * - pwa.ts registers `/sw.js?v=<bundle content hash>`; the cache is NAMED
- *   after that version, so each deploy gets a brand-new cache.
+ * - pwa.ts registers this worker under the deployment's base as
+ *   `<base>sw.js?v=<bundle content hash>`; the cache is NAMED after that
+ *   version, so each deploy gets a brand-new cache.
  * - `install` PRECACHES that cache's whole content list, filled before the old
  *   one is deleted, so a deploy replaces the offline copy atomically instead of
  *   emptying it. The list is generated into the marked block below by
@@ -33,8 +34,8 @@
 /*
  * THE VERSION, from TWO sources, because one of them can go missing at runtime.
  *
- * `pwa.ts` registers this worker as `/sw.js?v=<bundle hash>`, and that query
- * string is the first source. It is not the only one: a worker can also be
+ * `pwa.ts` registers this worker as `<base>sw.js?v=<bundle hash>`, and that
+ * query string is the first source. It is not the only one: a worker can also be
  * fetched by the browser's own update check with no query string at all (the
  * spec's implied script URL comparison, a redirected request, a hand-registered
  * worker in someone's devtools), and the old fallback for that case was the
@@ -54,6 +55,28 @@ const BUILD_VERSION = "dev";
 /* BUILD_VERSION_END */
 const VERSION = QUERY_VERSION || BUILD_VERSION;
 const CACHE = `belso-iranytu-${VERSION}`;
+
+/*
+ * THE DEPLOYMENT'S OWN PATH — read from the one place that knows it AT
+ * RUNTIME, because nothing in the built file can.
+ *
+ * This worker has to work at an origin root (`/`) and under a project site
+ * (`/iranytu-3/` on GitHub Pages). `public/sw.js` is copied verbatim before
+ * the build knows its own base, and a second marker block for the base would
+ * be a second template to keep in step — so the base is derived instead:
+ * `pwa.ts` registers this worker with `scope` set to the deployment's base,
+ * and a service worker's scope is always a directory. The scope's pathname
+ * therefore IS the base, and every path in this file stays written
+ * root-style (`/index.html`, `/assets/…`), rebased against it below.
+ *
+ * Trailing slash stripped, so `under("/x")` is a plain concatenation: root
+ * gives `/x`, a project site gives `/iranytu-3/x` — the same url the reader's
+ * page actually asked for, and the same key `cache.addAll` stores it under.
+ */
+const BASE = new URL(self.registration.scope).pathname.replace(/\/+$/, "");
+
+/** A root-style path as this deployment's own url. */
+const under = (p) => BASE + p;
 
 /* PRECACHE_MANIFEST_START */
 const PRECACHE = [];
@@ -86,7 +109,10 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE);
-      await cache.addAll(PRECACHE);
+      // Rebased through `under`: the list is written root-style by the
+      // generator, and a project site's copy of every file lives under the
+      // base. `addAll` is all-or-nothing either way — see above.
+      await cache.addAll(PRECACHE.map(under));
       await self.skipWaiting();
     })(),
   );
@@ -134,16 +160,29 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
+  // REBASE `url` to the deployment, so every rule below is written
+  // root-style and stays true at any base. The scope already guarantees the
+  // pathname starts with the base — this only removes it again; `url` is the
+  // rule's INPUT and nothing below ever fetches it (requests go by `req`).
+  if (BASE && url.pathname.startsWith(`${BASE}/`)) {
+    url.pathname = url.pathname.slice(BASE.length) || "/";
+  }
+
   // Navigations: network-first so a deploy is picked up immediately.
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req)
         .then((res) => {
           const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put("/index.html", copy));
+          // Keyed under the base, matching what the precache stored — a
+          // project site's document is `/iranytu-3/index.html`, not the
+          // origin root's.
+          caches.open(CACHE).then((c) => c.put(under("/index.html"), copy));
           return res;
         })
-        .catch(() => caches.match("/index.html").then((r) => r || caches.match(req))),
+        .catch(() =>
+          caches.match(under("/index.html")).then((r) => r || caches.match(req)),
+        ),
     );
     return;
   }

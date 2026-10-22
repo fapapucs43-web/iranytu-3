@@ -33,7 +33,7 @@ import { buildId, injectBuildVersion, VERSION_END, VERSION_START } from "../scri
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import AppUpdateCard from "../src/components/AppUpdateCard";
-import { FORCE_RESET_KEY, consumeForceReset, forceAppUpdate } from "../src/lib/pwa";
+import { FORCE_RESET_KEY, consumeForceReset, deployBase, forceAppUpdate, serviceWorkerUrl } from "../src/lib/pwa";
 import { MESSAGES, SUPPORTED_LOCALES, type TranslationKey } from "../src/lib/i18n";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -207,14 +207,64 @@ describe("the worker's cache name is this build's, and never the word \"stable\"
 
 describe("the registration asks for the worker by version, out of the HTTP cache", () => {
   test("the URL carries the bundle hash and the script is not answered from cache", () => {
-    expect(PWA).toContain("/sw.js?v=${encodeURIComponent(bundleVersion())}");
+    // The URL is JOINED to the deployment's base rather than written
+    // root-relative: a root `/sw.js` 404s under a project site
+    // (GitHub Pages `/iranytu-3/`), and a registration that 404s fails
+    // into the catch — silently, with the app still loading and only the
+    // offline copy never installing. The functional half of that promise is
+    // the next test; this pins that the registration still uses the helper.
+    expect(PWA).toContain("deployBase(import.meta.env.BASE_URL");
+    expect(PWA).toContain("serviceWorkerUrl(base, bundleVersion())");
     expect(PWA).toContain('updateViaCache: "none"');
+    // The scope travels with the URL: the worker owns exactly the
+    // deployment's directory, which is also what sw.js reads its own base
+    // from at runtime.
+    expect(PWA).toContain("scope: base");
     // The check is asked for on every open, and NOT on the load a forced reset
     // asked for — there is nothing newer to find there, and asking would put the
     // freshly unregistered worker straight back into an update search.
     expect(PWA).toContain("if (forced) return undefined;");
     expect(PWA).toContain("return registration.update();");
     expect(PWA).not.toContain("(forced ? registration : registration.update())");
+  });
+
+  test("the URL joins to the base, whatever the base is", () => {
+    // Called, not pinned: the two deployments this app ships to. A root
+    // domain gets exactly what it got before the fix; a project site gets
+    // the worker under its own path, which is the only place it exists.
+    expect(serviceWorkerUrl("/", "abc12345")).toBe("/sw.js?v=abc12345");
+    expect(serviceWorkerUrl("/iranytu-3/", "abc12345")).toBe(
+      "/iranytu-3/sw.js?v=abc12345",
+    );
+    // And the normalisation cannot be bypassed by a missing slash.
+    expect(serviceWorkerUrl("/iranytu-3", "abc12345")).toBe(
+      "/iranytu-3/sw.js?v=abc12345",
+    );
+    expect(deployBase("/")).toBe("/");
+    expect(deployBase("/iranytu-3")).toBe("/iranytu-3/");
+    // The version still travels encoded — it is a hash today, and a value
+    // that would break the query string is a value the cache would be named
+    // differently from what the page thinks it asked for.
+    expect(serviceWorkerUrl("/iranytu-3/", "a b&c")).toBe(
+      "/iranytu-3/sw.js?v=a%20b%26c",
+    );
+  });
+
+  test("the worker derives its base from its own scope and rebases every path", () => {
+    // Runtime derivation instead of a baked-in base: the template is copied
+    // before the build knows where it will live, and the registration's
+    // scope — which pwa.ts pins to the base — is the one fact the worker has
+    // at hand for both the precache urls and the cache-first rules.
+    expect(SW).toContain("self.registration.scope");
+    expect(SW).toContain("PRECACHE.map(under)");
+    // The document fallback is keyed under the base, matching what the
+    // precache stored — `/iranytu-3/index.html`, not the origin root's.
+    expect(SW).toContain('under("/index.html")');
+    // The cache-first rules keep their root-style spelling (batch5/batch7
+    // pin them); the rebase above the branch is what makes them true at any
+    // base.
+    expect(SW).toContain('url.pathname.startsWith("/assets/")');
+    expect(SW).toContain('url.pathname.startsWith("/fonts/")');
   });
 });
 
