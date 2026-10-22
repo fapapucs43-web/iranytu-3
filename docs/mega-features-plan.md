@@ -115,13 +115,29 @@ type AiProvider = "openai" | "deepseek";
 type SupportNote = {
   id: string;
   text: string;
-  createdAt: number;
+  createdAt: string;
+  pinned?: boolean;
 };
+
+type SupportWallState = { enabled: boolean; entries: SupportNote[] };
 ```
 
-* Key: `belso-iranytu-support-wall-v1`.
-* Off by default (`settings.supportWallEnabled === true` is the only on).
-* `SupportWallCard` mounts in Felfedezés → Önismeret.
+* Key: `belso-iranytu-support-wall` — no `-v1` suffix: the blob's repair rules
+  (`loadSupportWall`) are the versioning, so a version field would be a second
+  mechanism deciding the same question.
+* Off by default, and the switch lives IN the state (`enabled: false`), not in
+  `settings.*`: a card that explains itself where it sits needs no second
+  switch in Settings for a reader to hunt for.
+* Caps: 280 characters per note with the counter drawn next to the box, 200
+  notes. Overflow spends the OLDEST UNPINNED note; a wall where every slot is
+  pinned REFUSES the add — the pinned promise outranks the cap in both rules.
+* The key is in `WIPE_KEYS` ("Minden adat törlése" takes it) and in
+  `BACKUP_INCLUDED_KEYS` (it is the reader's own writing; nineteen keys travel
+  in a backup since this phase).
+* `SupportWallCard` mounts in Felfedezés → Önismeret, id `tools-support-wall`.
+* Zero network: no client, no fetch, no moderation, no sharing — the engine is
+  `localStorage` plus pure functions, which is also why its rules are tested
+  in `tests/lib/support-wall.test.ts` without jsdom.
 
 ## Wiring rules
 

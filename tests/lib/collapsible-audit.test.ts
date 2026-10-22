@@ -237,6 +237,12 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       "tools-question",
       "tools-reflection",
       "tools-seek-help",
+      // Phase 5 — the support wall. It joins the vocabulary as `tools-` (it
+      // lives on the toolbox tab) rather than a `settings-` prefix, because it
+      // is not a setting: the toggle it carries is its OWN `enabled` flag in
+      // its own blob, not a switch in Settings that a reader would look for
+      // under a different heading.
+      "tools-support-wall",
       "tools-vitals",
       "tools-weekly-nutrition",
       "tools-workouts",
@@ -318,6 +324,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       ["src/components/SeekHelpCard.tsx", 1],
       ["src/components/SleepLogCard.tsx", 1],
       ["src/components/SleepMoodCard.tsx", 1],
+      ["src/components/SupportWallCard.tsx", 1],
       // Two mounts, not one: the frame itself, plus the dynamic
       // `tracker-${head.id}` the groups expand to.
       ["src/components/TrackerInputs.tsx", 2],

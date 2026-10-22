@@ -60,6 +60,7 @@ import BreathingExercise from "../components/BreathingExercise";
 import MeditationPicker from "../components/MeditationPicker";
 import ProgramCard from "../components/ProgramCard";
 import SeekHelpCard from "../components/SeekHelpCard";
+import SupportWallCard from "../components/SupportWallCard";
 import GratitudeJournal from "../components/GratitudeJournal";
 import ContentIcon from "../components/ContentIcon";
 import { Briefcase, MessageCircle } from "../lib/icons";
@@ -125,6 +126,10 @@ export function defaultToolSections(
           {flags.reflectionModule && <MiniReflection />}
           <GratitudeJournal />
           <DailyQuestionCard />
+          {/* Phase 5's wall: last in the drawer, and OFF until the reader
+              turns it on — see the card's own header for why it explains
+              itself instead of not being here. */}
+          <SupportWallCard />
         </ToolDrawer>
       ),
     },

@@ -145,6 +145,10 @@ export const WIPE_KEYS = [
   // Caches.
   "belso-iranytu/weather-cache/v1",
   "belso-iranytu/weather-places/v1",
+  // Phase 5's support wall — the reader's own bátorítások, in localStorage,
+  // with no module-level copy (`lib/supportWall.ts` reads fresh on every
+  // load), so the KEY is the whole record and the wipe's loop is its reset.
+  "belso-iranytu-support-wall",
 ] as const;
 
 /**

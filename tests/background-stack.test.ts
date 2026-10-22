@@ -595,6 +595,9 @@ describe("the nested menus fade with the card they sit in", () => {
     ".detail-note": "--app-surface-2",
     ".empty-state": "--app-surface-2",
     ".toolbox-item": "--app-surface-2",
+    // Phase 5's wall notes: the same surface a toolbox row sits on, so the
+    // note fades with its card instead of staying solid underneath it.
+    ".wall-note": "--app-surface-2",
     ".goal-row": "--app-surface-2",
     ".entry-row": "--app-surface",
     ".corr-row": "--app-surface-2",

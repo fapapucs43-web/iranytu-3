@@ -642,7 +642,11 @@ describe("every content icon follows the chosen set", () => {
     // (🧠, already the micro-lesson card's head). Two names already in the
     // registry, two new call SITES — this count is about sites, so it moves
     // even when no icon is new. 60 + 2 = 62.
-    expect(sites.length).toBe(62);
+    //
+    // Phase 5 added one more: the support wall's card head draws `Award`
+    // (🏅 — praise, already in the registry as an achievement badge). One
+    // name already present, one new call site. 62 + 1 = 63.
+    expect(sites.length).toBe(63);
     for (const name of sites) {
       expect(
         isChromeIcon(name),

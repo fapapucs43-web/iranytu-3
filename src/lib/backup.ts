@@ -5,7 +5,7 @@
  *
  * THE SCOPE IS AN ALLOW-LIST, AND THE LINE IS A RULE
  * Eighteen storage keys travel in a backup; nine named ones never do, and
- * nothing else does either — the collector asks for the eighteen by name and
+ * nothing else does either — the collector asks for the nineteen by name and
  * never enumerates the rest. The rule behind the split: the reader's content,
  * progress and preferences go in; secrets, binaries, and device- or
  * session-scoped state stay out. So the journal, the food log and the
@@ -55,7 +55,7 @@
  * The counter is the one field that may be absent — a state key written
  * before it existed still loads, counting from zero — because a missing
  * counter is a display detail and a missing credential id would be a broken
- * unlock. It is not a secret and deliberately not one of the eighteen — a
+ * unlock. It is not a secret and deliberately not one of the nineteen — a
  * restored device starts with backup OFF until its owner enrolls there, and
  * therefore with a count of zero. No KEK and no DEK ever touches this key or
  * any other.
@@ -89,7 +89,7 @@ const STORE_KEY = "belso-iranytu-data-v2";
 const ASSESSMENTS_KEY = "belso-iranytu-assessments-v1";
 
 /**
- * The eighteen keys a backup carries, in the order the bundle writes them.
+ * The nineteen keys a backup carries, in the order the bundle writes them.
  * Written as literals rather than imports because most owners keep their key
  * private; the few that export one are pinned against these lists by the
  * tests, so the two cannot drift apart quietly.
@@ -116,6 +116,11 @@ export const BACKUP_INCLUDED_KEYS = [
   "belso-iranytu-custom-foods-v1",
   "belso-iranytu-fitness-v1",
   "belso-iranytu-diet-v1",
+  // Phase 5's support wall: the reader's own notes, written to themselves.
+  // Nothing but their words, which is exactly what the side of the line this
+  // list marks is for — a reader restoring a backup expects their own writing
+  // to come back with the rest of it.
+  "belso-iranytu-support-wall",
 ] as const;
 
 /** The nine named exclusions; the rule behind them lives in the docblock. */
