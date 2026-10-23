@@ -18,6 +18,8 @@
  * of duplicate this repository's guards exist to refuse.
  */
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import {
   DEFAULT_SUPPORT_WALL,
   MAX_ENTRIES,
@@ -241,5 +243,39 @@ describe("the blob, including the ones a reader never wrote", () => {
     expect(() => loadSupportWall()).not.toThrow();
     expect(loadSupportWall()).toEqual({ enabled: false, entries: [] });
     expect(() => saveSupportWall(wall([note()]))).not.toThrow();
+  });
+});
+
+/* ----------------------------- zero network --------------------------- */
+
+describe("nothing leaves the device — the promise, asserted on the source", () => {
+  // The wall's one promise to a reader deciding whether to write something
+  // honest is that it stays on this device. The engine's rules are pure and
+  // this file already proves them; this guard covers the half a pure test
+  // cannot see: a future `fetch` added to the ENGINE or the CARD would keep
+  // every rule above passing while the promise quietly stopped being true.
+  // So both files are scanned for the network primitives a browser offers —
+  // a source scan, not a runtime interception, because the suite has no
+  // browser and a stubbed global would only prove the stub works.
+  const ROOT = fileURLToPath(new URL("../..", import.meta.url));
+  const SOURCES = ["src/lib/supportWall.ts", "src/components/SupportWallCard.tsx"];
+  const PRIMITIVES = ["fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "EventSource", "navigator."];
+
+  test("neither the engine nor the card names a network primitive", () => {
+    for (const path of SOURCES) {
+      const source = readFileSync(`${ROOT}/${path}`, "utf8");
+      for (const primitive of PRIMITIVES) {
+        expect(source.includes(primitive), `${path} mentions ${primitive}`).toBe(false);
+      }
+    }
+  });
+
+  test("the scan covers both files — a third surface would need naming here", () => {
+    // Vacuity guard: an empty SOURCES list would make the test above pass on
+    // nothing, which is the failure mode this whole block exists to prevent.
+    expect(SOURCES).toHaveLength(2);
+    for (const path of SOURCES) {
+      expect(readFileSync(`${ROOT}/${path}`, "utf8").length).toBeGreaterThan(500);
+    }
   });
 });
