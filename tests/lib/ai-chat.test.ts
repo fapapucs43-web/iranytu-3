@@ -7,7 +7,7 @@
  * promises (off → facts → crisis → key → transport), the transport is
  * injectable, and the sizes are data. The one call that would reach
  * `@mlc-ai/web-llm` — on-device WITHOUT a crisis — is deliberately not made:
- * a unit suite must not fetch 335 MB. The on-device CRISIS path IS tested,
+ * a unit suite must not fetch the model. The on-device CRISIS path IS tested,
  * precisely because a correct gate returns before the dynamic import runs;
  * if the gate ever regresses, that test hangs into its timeout instead of
  * passing, which is the loud failure this ordering deserves.
@@ -133,9 +133,13 @@ function sentBody(seen: { init?: RequestInit }): {
 
 describe("device model sizes", () => {
   test("the two prebuilt ids carry their measured sizes", () => {
-    expect(deviceModelId("small")).toBe("Qwen3-0.6B-q4f16_1-MLC");
+    // The default is the smallest general model of the prebuilt list, at its
+    // measured MiB (HuggingFace API sum, 2026-10-23) — the header of `lib/ai`
+    // keeps the method and the comparison against the previously shipped
+    // 0.6B, which is what makes "smallest" a measurement rather than a claim.
+    expect(deviceModelId("small")).toBe("Qwen2.5-0.5B-Instruct-q4f16_1-MLC");
     expect(deviceModelId("large")).toBe("Qwen3-1.7B-q4f16_1-MLC");
-    expect(deviceModelMb("small")).toBe(335);
+    expect(deviceModelMb("small")).toBe(276);
     expect(deviceModelMb("large")).toBe(939);
   });
 
@@ -197,7 +201,7 @@ describe("the crisis gate, before key, host and model", () => {
   test("on-device answers a crisis week without loading a model", async () => {
     // The gate runs before `ensureEngine`, so the dynamic import of
     // `@mlc-ai/web-llm` is never reached. A regression here does not fail an
-    // assertion — it starts toward a 335 MB download, and the race below
+    // assertion — it starts toward a 276 MB download, and the race below
     // turns that hang into a named failure instead of a silent stall.
     setAiConfig({ mode: "on-device" });
     const wouldLoadModel = new Promise<never>((_, reject) => {
@@ -376,5 +380,32 @@ describe("the week's facts reach the model within 1500 characters", () => {
     expect(user).toContain("date=2026-10-19");
     expect(user).toContain("Hogy volt kedd?");
     expect(user.length).toBeLessThan(1500);
+  });
+});
+
+/* ========== 6 · the big slot warns, and the card shows the wait ========= */
+
+describe("the picker warns before the big model, the card says it is thinking", () => {
+  test("choosing the large slot is behind a warning in every language", () => {
+    // The hint under the picker is not a description any more — it names the
+    // cost in the reader's language before the megabytes are committed, and
+    // the small slot stays the default beside it.
+    expect(deviceModelMb("small")).toBeLessThan(deviceModelMb("large"));
+    expect(t("ai.modelLargeHint")).toContain("Figyelmeztetés");
+    expect(t("ai.modelLargeHint", undefined, "en")).toContain("Warning");
+    expect(t("ai.modelLargeHint", undefined, "de")).toContain("Warnung");
+  });
+
+  test("while a call is open the card announces the wait", () => {
+    // The first on-device press also downloads the model — minutes where a
+    // disabled button would be the only feedback. The line covers the
+    // summary and the question alike.
+    expect(t("ai.thinking")).toBe("AI gondolkodik…");
+    const card = readFileSync(
+      new URL("../../src/components/WeeklyAiSummaryCard.tsx", import.meta.url),
+      "utf8",
+    );
+    expect(card).toContain('{t("ai.thinking")}');
+    expect(card).toContain('status === "busy" || chatBusy');
   });
 });

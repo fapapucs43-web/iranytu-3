@@ -25,7 +25,7 @@
  *
  * THE MODEL IS NEVER FETCHED BEHIND THE READER'S BACK
  * `@mlc-ai/web-llm` is imported dynamically and only from `ensureEngine()`,
- * so the ~335 MB model is neither in the bundle nor requested at load. The two
+ * so the ~276 MB model is neither in the bundle nor requested at load. The two
  * ways a download starts are the download button and the first press of
  * "generate" in `on-device` mode, both of which the reader asked for.
  *
@@ -82,22 +82,27 @@ const MODELS: Readonly<Record<AiProvider, string>> = {
 /**
  * THE ON-DEVICE MODELS, AND WHY THEY ARE THESE
  *
- * `Qwen3-0.6B-q4f16_1-MLC` (the default) and `Qwen3-1.7B-q4f16_1-MLC` are
- * chosen because they are IN the prebuilt model list of the installed
+ * `Qwen2.5-0.5B-Instruct-q4f16_1-MLC` (the default) and `Qwen3-1.7B-q4f16_1-MLC`
+ * are chosen because they are IN the prebuilt model list of the installed
  * `@mlc-ai/web-llm` (0.2.86): `CreateMLCEngine` resolves them without any
  * custom `ModelRecord`, and the cache helpers below find them the same way.
- * The plan originally named `dict-xs-mlc-q4f16_1` — a HuggingFace repo
- * (`ikhou/dict-xs-mlc-q4f16_1`) that is NOT in that list, so the download
- * button would have thrown "model not found" on the first press. That repo is
- * a dictionary/glossing finetune of THIS SAME base model, and its measured
- * size (340.7 MB) is why the plan says ~335 MB — the official prebuilt repo
- * measures 335.2 MiB over its 18 files, which is the number the card promises.
+ * An id OUTSIDE that list is the failure this pair exists to avoid — the
+ * plan originally named `dict-xs-mlc-q4f16_1`, a HuggingFace repo that is not
+ * in it, so the download button would have thrown "model not found" on the
+ * first press.
  *
- * BOTH SIZES ARE MEASURED, NOT GUESSED, with the same method: the sum of the
- * file sizes the HuggingFace API reports for the model repo (0.6B: 18 files,
- * 335.2 MiB → 335; 1.7B: 39 files, 938.6 MiB → 939), taken 2026-10-22. The
- * 0.6B number matching the long-shipping 335 is what validates the method
- * rather than trusting it.
+ * THE DEFAULT IS THE SMALLEST GENERAL MODEL IN THAT LIST, and the sizes are
+ * MEASURED, not guessed: the sum of the file sizes the HuggingFace API
+ * reports for each repo (0.5B: 17 files, 276.3 MiB → 276; 1.7B: 39 files,
+ * 938.6 MiB → 939), taken 2026-10-23, with the very method that reads
+ * `Qwen3-0.6B-q4f16_1-MLC` at 335.2 MiB — the number this app long shipped,
+ * and the one that validates the method rather than trusting it. The only
+ * 4-bit entry SMALLER is `SmolLM2-360M-Instruct-q4f16_1-MLC` (197.6 MiB),
+ * an English-task line left out on purpose: the one thing this app asks of a
+ * model is a HUNGARIAN answer, and 0.5B-class Qwen is the smallest family in
+ * the list published with multilingual coverage. (SmolLM2-135M ships only
+ * unquantized, so it is not smaller at 4-bit either way.) The default also
+ * sits under the ~400–600 MB band `docs/mega-features-plan.md` allows for it.
  *
  * 0.2.86 is pinned in package.json: the prebuilt list changes between
  * versions, and an id that exists today can be renamed away. If the dependency
@@ -112,7 +117,7 @@ export const DEVICE_MODEL_SIZES: readonly DeviceModelSize[] = ["small", "large"]
 type DeviceModel = { id: string; mb: number };
 
 const DEVICE_MODELS: Readonly<Record<DeviceModelSize, DeviceModel>> = {
-  small: { id: "Qwen3-0.6B-q4f16_1-MLC", mb: 335 },
+  small: { id: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", mb: 276 },
   large: { id: "Qwen3-1.7B-q4f16_1-MLC", mb: 939 },
 };
 
@@ -421,7 +426,7 @@ async function ensureEngine(size: DeviceModelSize = getAiConfig().model): Promis
   if (engine && engineModel === size) return engine;
   if (enginePending && pendingModel === size) return enginePending;
   if (engine) {
-    // Switching sizes frees the old one first: the 335 MB model's WebGPU
+    // Switching sizes frees the old one first: the 276 MB model's WebGPU
     // buffers do not belong beside the 939 MB one's, and CreateMLCEngine on
     // top of a live engine is an undefined state rather than a swap.
     try {
