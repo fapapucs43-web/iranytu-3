@@ -342,3 +342,39 @@ describe("the WebLLM call answers in the reader's language, briefly", () => {
     expect(src).toContain("max_tokens: 250");
   });
 });
+
+/* ================= 5 · the context ceiling ============================= */
+
+describe("the week's facts reach the model within 1500 characters", () => {
+  test("a fat week is clipped — and the reader's question arrives whole", async () => {
+    setAiConfig({ mode: "byok" });
+    saveAiKey("sk-test-123");
+    const { seen, doFetch } = captureFetch("Rövid válasz a hétről.");
+    // Eight 200-character notes: every line is inside the per-entry cap, and
+    // the stack is well past the ceiling — which is exactly the week the
+    // ceiling exists for.
+    const fat = Array.from({ length: 8 }, () => entry("x".repeat(200)));
+    const r = await askAboutWeek("Milyen volt ez a hét?", fat, { doFetch });
+    expect(r.ok).toBe(true);
+
+    // The user turn is `header \n facts \n\n question` — the facts block is
+    // the clipped part, the question after it is not.
+    const user = sentBody(seen).messages[1]!.content;
+    const facts = user.slice(user.indexOf("\n") + 1, user.lastIndexOf("\n\n"));
+    expect(facts.length).toBe(1500);
+    expect(user.endsWith("Milyen volt ez a hét?")).toBe(true);
+  });
+
+  test("a short week is never touched", async () => {
+    // The ceiling only ever shortens: with one quiet day the whole block
+    // travels, question included, exactly as before.
+    setAiConfig({ mode: "byok" });
+    saveAiKey("sk-test-123");
+    const { seen, doFetch } = captureFetch("Rendben volt.");
+    await askAboutWeek("Hogy volt kedd?", NORMAL(), { doFetch });
+    const user = sentBody(seen).messages[1]!.content;
+    expect(user).toContain("date=2026-10-19");
+    expect(user).toContain("Hogy volt kedd?");
+    expect(user.length).toBeLessThan(1500);
+  });
+});

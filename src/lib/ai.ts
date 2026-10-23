@@ -372,6 +372,24 @@ export function weeklyFacts(entries: Entry[]): string[] {
   });
 }
 
+/**
+ * THE CONTEXT CEILING: 1500 characters of the week's facts, whatever the
+ * week grew to.
+ *
+ * A note is already capped per line above, but seven fat days still stack
+ * past what a 0.5B model should spend its prompt budget on — the input is
+ * the part of inference the reader never sees costing time, so the facts
+ * block is clipped HERE, once, for both transports, before either prompt is
+ * composed. The question and the instruction are not context and are never
+ * clipped: a truncated ask is a question the model cannot answer.
+ */
+const CONTEXT_MAX_CHARS = 1500;
+
+function clipContext(lines: readonly string[]): string {
+  const joined = lines.join("\n");
+  return joined.length > CONTEXT_MAX_CHARS ? joined.slice(0, CONTEXT_MAX_CHARS) : joined;
+}
+
 /* ------------------------------ the engine ------------------------------ */
 
 /**
@@ -685,7 +703,7 @@ export async function generateWeeklySummary(
   // even with the key cleared, the network down or 939 MB still downloading.
   if (hasCrisisSignal(facts.join("\n"))) return { ok: true, text: crisisReply() };
 
-  const user = [t("ai.promptQuestion"), ...facts].join("\n");
+  const user = [t("ai.promptQuestion"), clipContext(facts)].join("\n");
   return askModel(config, user, options);
 }
 
@@ -694,9 +712,10 @@ export async function generateWeeklySummary(
  * three modes, the same prompt and the same guard as the summary.
  *
  * The question travels INSIDE the user turn, after the facts, so the model
- * reads the week and the question as one instruction; nothing else about the
- * contract changes (same 400-token ceiling, same 45 s, same injectable
- * fetch). `entries` is still the caller's current week only.
+ * reads the week and the question as one instruction; nothing else about
+ * the contract changes (the clipped context above, the transports' own token
+ * ceilings — 250 on-device, 400 over the wire — the same 45 s, the same
+ * injectable fetch). `entries` is still the caller's current week only.
  */
 export async function askAboutWeek(
   question: string,
@@ -713,6 +732,6 @@ export async function askAboutWeek(
   if (hasCrisisSignal(trimmed) || hasCrisisSignal(facts.join("\n"))) {
     return { ok: true, text: crisisReply() };
   }
-  const user = [t("ai.chatContext"), ...facts, "", trimmed].join("\n");
+  const user = [t("ai.chatContext"), clipContext(facts), "", trimmed].join("\n");
   return askModel(config, user, options);
 }
