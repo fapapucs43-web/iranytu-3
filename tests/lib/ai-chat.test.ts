@@ -13,9 +13,14 @@
  * passing, which is the loud failure this ordering deserves.
  *
  * The storage double is the same shape `tests/lib/support-wall.test.ts`
- * installs: an object over a plain record on `globalThis`, because the suite
- * ships no jsdom and does not want one. Config is read through `localStore()`
- * at call time, so installing it before the calls — not before the import —
+ * installs — an object over a plain record on `globalThis`, because the suite
+ * ships no jsdom and does not want one — and it covers BOTH storages: the
+ * config lives in `localStorage`, the key itself in `sessionStorage`. No
+ * runner provides `sessionStorage` under `bun test`; this file used to pass
+ * only by inheriting another file's leaked double, and file order differs
+ * between machines (it failed on Linux CI with `no-key` while staying green
+ * on Windows), so both doubles are installed here. The storages are read at
+ * call time, so installing them in `beforeEach` — not before the import —
  * is enough.
  */
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
@@ -36,24 +41,28 @@ import type { Entry } from "../../src/types";
 /* --------------------------- the storage double ------------------------ */
 
 const backing: Record<string, string> = {};
-const globals = globalThis as unknown as { localStorage?: unknown };
+const sessionBacking: Record<string, string> = {};
+const globals = globalThis as unknown as { localStorage?: unknown; sessionStorage?: unknown };
 const saved = globalThis.localStorage;
+const savedSession = globalThis.sessionStorage;
 
-function makeStore() {
+function makeStore(b: Record<string, string>) {
   return {
-    getItem: (k: string) => (k in backing ? backing[k]! : null),
+    getItem: (k: string) => (k in b ? b[k]! : null),
     setItem: (k: string, v: string) => {
-      backing[k] = v;
+      b[k] = v;
     },
     removeItem: (k: string) => {
-      delete backing[k];
+      delete b[k];
     },
   };
 }
 
 function clearAll(): void {
   for (const k of Object.keys(backing)) delete backing[k];
-  globals.localStorage = makeStore();
+  for (const k of Object.keys(sessionBacking)) delete sessionBacking[k];
+  globals.localStorage = makeStore(backing);
+  globals.sessionStorage = makeStore(sessionBacking);
 }
 
 beforeEach(clearAll);
@@ -61,6 +70,8 @@ afterAll(() => {
   clearAll();
   if (saved === undefined) delete globals.localStorage;
   else globals.localStorage = saved;
+  if (savedSession === undefined) delete globals.sessionStorage;
+  else globals.sessionStorage = savedSession;
 });
 
 /* ------------------------------- helpers ------------------------------- */
