@@ -21,7 +21,7 @@ claims has two possible anchors and no way to tell which one went stale.
 ```json
 {
     "srcTsFiles": 187,
-    "srcTsLines": 49726,
+    "srcTsLines": 49752,
     "srcCssFiles": 1,
     "srcCssLines": 5523,
     "libFiles": 96,
@@ -29,7 +29,7 @@ claims has two possible anchors and no way to tell which one went stale.
     "componentFiles": 75,
     "componentLines": 13942,
     "viewFiles": 6,
-    "viewLines": 2865,
+    "viewLines": 2891,
     "stateFiles": 5,
     "stateLines": 1272,
     "testFiles": 131,

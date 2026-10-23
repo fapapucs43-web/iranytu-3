@@ -55,7 +55,17 @@ export default function TodayView() {
 
   const [mood, setMood] = useState<MoodLevel | null>(existing?.mood ?? null);
   const [stress, setStress] = useState(existing?.stress ?? 5);
-  const [energy, setEnergy] = useState(existing?.energy ?? 5);
+  // THE ENERGY THE READER SEES, and the number two inputs disagree about.
+  // The flow records its Y axis as `moodEnergy`; every consumer the reader
+  // actually reads — the balance score, the correlation grid, the entry
+  // detail, the PDF, the AI context — reads the legacy `energy` instead, and
+  // until now only the old recorder ever wrote THAT. On a new-flow entry the
+  // two were different numbers with the same name, which is why the field
+  // looked stuck on 5. They are one number from this commit on (the save path
+  // below writes both from the same result), so the coordinate wins the
+  // pre-fill — it is the value the meter last showed — and `energy` answers
+  // for rows the old recorder wrote before `moodEnergy` existed.
+  const [energy, setEnergy] = useState(existing?.moodEnergy ?? existing?.energy ?? 5);
   const [note, setNote] = useState(existing?.note ?? "");
   const [activities, setActivities] = useState<string[]>(existing?.activities ?? []);
   const [attachments, setAttachments] = useState<AttachmentMeta[]>(existing?.attachments ?? []);
@@ -78,7 +88,14 @@ export default function TodayView() {
   function applyFlowResult(result: RecordingResult) {
     saveEntry({
       date: today,
+      // The same number under both names, written together. `moodEnergy` is
+      // the meter's coordinate (the quadrant re-derives from it); `energy`
+      // is the field the analysis, the correlation grid, the entry detail
+      // and the report read. Saving only the coordinate left every one of
+      // those readers on the field's default 5 — the flow's own Energia
+      // slider seemed not to save.
       moodEnergy: result.moodEnergy,
+      energy: result.moodEnergy,
       pleasantness: result.pleasantness,
       quadrant: result.quadrant,
       emotion: result.emotion,
@@ -91,6 +108,10 @@ export default function TodayView() {
       trackerValues,
       source: "manual",
     });
+    // The card's slider shows the value just saved rather than the value it
+    // held before the flow opened — the two are one number, so a stale read
+    // here would be the same bug on screen instead of in storage.
+    setEnergy(result.moodEnergy);
     setFlowOpen(false);
     recordCompanionActivity("journal", today);
     setSaved(true);
@@ -323,14 +344,19 @@ export default function TodayView() {
               initial={
                 existing?.quadrant
                   ? {
-                      moodEnergy: existing.moodEnergy,
+                      // From the CARD's energy state, not `existing.moodEnergy`
+                      // directly: the state already starts as the stored
+                      // coordinate, so a slider the reader moved before
+                      // opening the flow seeds the meter instead of being
+                      // silently dropped by the pre-fill.
+                      moodEnergy: energy,
                       pleasantness: existing.pleasantness,
                       quadrant: existing.quadrant,
                       emotion: existing.emotion,
                       emotionIntensity: existing.emotionIntensity,
                       context: existing.context,
                     }
-                  : undefined
+                  : { moodEnergy: energy }
               }
               announce={notify}
             />
