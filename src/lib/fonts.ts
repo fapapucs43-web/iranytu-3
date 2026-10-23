@@ -678,8 +678,45 @@ export const HAND_FONTS: HandFontDef[] = [
   },
 ];
 
-/** Public base path for the self-hosted binaries. */
-export const FONT_BASE = "/fonts/";
+/**
+ * Where THIS deployment is served from — Vite's build-time `BASE_URL`, read
+ * defensively.
+ *
+ * THE WHOLE POINT IS THAT IT IS NOT ALWAYS `/`. GitHub Pages serves this
+ * repo's project site from `/iranytu-3/`, so a font URL rooted at `/fonts/`
+ * answers 404 there: the woff2 files DO exist — under the base — and the
+ * FontFace load falls through to the fallback stack, which is why every
+ * choice in the picker looks like the default face. The service worker
+ * rebases its own paths from its scope (see `public/sw.js`); a URL built at
+ * RUNTIME in the page cannot read the scope, so it reads the same answer the
+ * bundler was given.
+ *
+ * The guarded read is what lets this module also load outside a bundle — the
+ * vendor scripts run it under Node, the suite under Bun, and in both the
+ * `BASE_URL` is absent, which falls back to `/` exactly as a root deploy
+ * wants. The trailing slash is the same directory normalisation `deployBase`
+ * performs for the worker's own URL (`lib/pwa.ts`): a base is a directory,
+ * so it ends in a slash.
+ */
+export function deploymentBase(): string {
+  const env = import.meta.env as { BASE_URL?: string } | undefined;
+  const base =
+    env && typeof env.BASE_URL === "string" && env.BASE_URL !== "" ? env.BASE_URL : "/";
+  return base.endsWith("/") ? base : `${base}/`;
+}
+
+/**
+ * The font directory under ANY deployment base — a root deploy gives
+ * `/fonts/`, a project site its own path. Exported so the join is tested
+ * directly rather than inferred from this deployment's constant, which the
+ * suite sees as the root fallback.
+ */
+export function fontBase(base: string): string {
+  return `${base.endsWith("/") ? base : `${base}/`}fonts/`;
+}
+
+/** Where the self-hosted binaries are served from, under this deployment. */
+export const FONT_BASE = fontBase(deploymentBase());
 
 /**
  * The families warmed in the background after the app has loaded.

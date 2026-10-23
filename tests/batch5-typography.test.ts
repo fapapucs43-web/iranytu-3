@@ -28,6 +28,8 @@ import {
   FONT_BASE,
   HAND_FONTS,
   SYSTEM_FONT_STACK,
+  deploymentBase,
+  fontBase,
   fontDef,
   fontFaceDescriptors,
   fontStack,
@@ -273,7 +275,17 @@ function code(path: string): string {
 
 describe("fonts are self-hosted — no third-party request is possible", () => {
   test("every font URL is a same-origin /fonts/ path", () => {
+    // The constant is the ROOT FALLBACK, which is what this suite sees: Bun
+    // carries no Vite `BASE_URL`, exactly like the vendor scripts under Node.
+    // What a project site gets is the same join with its own base, pinned
+    // directly below — the `/iranytu-3/` case that used to 404 on GitHub
+    // Pages cannot regress quietly behind a constant this suite reads as `/`.
     expect(FONT_BASE).toBe("/fonts/");
+    expect(deploymentBase()).toBe("/");
+    expect(fontBase("/")).toBe("/fonts/");
+    expect(fontBase("")).toBe("/fonts/");
+    expect(fontBase("/iranytu-3")).toBe("/iranytu-3/fonts/");
+    expect(fontBase("/iranytu-3/")).toBe("/iranytu-3/fonts/");
     for (const f of FONTS) {
       for (const file of f.files) {
         const url = fontUrl(file);

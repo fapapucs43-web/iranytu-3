@@ -40,8 +40,21 @@
  * that cannot be pointed at a stub is verification logic nobody runs. The
  * parameter defaults to the real one, so no caller has to know it exists.
  */
-/** Where the vendored subsets are served from. The service worker caches it. */
-export const PDF_FONT_BASE = "/pdf-fonts/";
+
+import { deploymentBase } from "./fonts";
+
+/** Where the vendored subsets are served from under this deployment. The service worker caches it. */
+export function pdfFontBase(base: string): string {
+  return `${base.endsWith("/") ? base : `${base}/`}pdf-fonts/`;
+}
+
+/**
+ * Same 404 as `FONT_BASE` had, same fix: rooted at `/pdf-fonts/` a project
+ * site (`/iranytu-3/` on GitHub Pages) would 404 on its own subsets, and the
+ * report export would fall back to the folded rendering this module exists
+ * to end. The base is read once, at module load, by the registry module.
+ */
+export const PDF_FONT_BASE = pdfFontBase(deploymentBase());
 
 /**
  * The name jsPDF knows this family by.

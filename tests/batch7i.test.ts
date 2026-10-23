@@ -58,6 +58,7 @@ import {
   PDF_FONT_FAMILY,
   PDF_FONT_FILES,
   loadPdfFonts,
+  pdfFontBase,
   resetPdfFontCacheForTests,
 } from "../src/lib/pdfFonts";
 import { pdfSafe } from "../src/lib/reportPdf";
@@ -390,7 +391,11 @@ describe("the vendored subsets are the bytes the app will accept", () => {
     expect(ui.filter((f) => f.endsWith(".ttf"))).toEqual([]);
     expect(ui.length).toBeGreaterThan(0);
     // The base the loader asks for is the one the directory is served from.
+    // The constant is the suite's root fallback (Bun has no Vite `BASE_URL`);
+    // the project-site join is pinned on its own, like the UI fonts' own test.
     expect(PDF_FONT_BASE).toBe("/pdf-fonts/");
+    expect(pdfFontBase("/iranytu-3/")).toBe("/iranytu-3/pdf-fonts/");
+    expect(pdfFontBase("/iranytu-3")).toBe("/iranytu-3/pdf-fonts/");
     for (const spec of PDF_FONT_FILES) {
       expect(PDF_FONT_BASE + spec.file).toBe(`/pdf-fonts/${spec.file}`);
     }

@@ -21,11 +21,11 @@ claims has two possible anchors and no way to tell which one went stale.
 ```json
 {
     "srcTsFiles": 185,
-    "srcTsLines": 49398,
+    "srcTsLines": 49448,
     "srcCssFiles": 1,
     "srcCssLines": 5511,
     "libFiles": 95,
-    "libLines": 30461,
+    "libLines": 30511,
     "componentFiles": 74,
     "componentLines": 13829,
     "viewFiles": 6,
@@ -33,7 +33,7 @@ claims has two possible anchors and no way to tell which one went stale.
     "stateFiles": 5,
     "stateLines": 1272,
     "testFiles": 131,
-    "testLines": 50556,
+    "testLines": 50573,
     "scriptFiles": 6,
     "publicFontWoff2": 24,
     "publicFontLicences": 10,
@@ -627,7 +627,7 @@ entries / 9.42 MB before this rule).
 - The UI registry: `src/lib/fonts.ts:357` — `export const FONTS: FontDef[] = [`
 - The handwriting registry, separate by construction: `src/lib/fonts.ts:645` — `export const HAND_FONTS: HandFontDef[] = [`
 - Withdrawn families and their successors: `src/lib/fonts.ts:280` — `export const RETIRED_FONTS: readonly string[] = ["manrope", "plus-jakarta-sans"];`
-- Where the app asks for them: `src/lib/fonts.ts:682` — `export const FONT_BASE = "/fonts/";`
+- Where the app asks for them: `src/lib/fonts.ts:719` — `export const FONT_BASE = fontBase(deploymentBase());`
 
 - The two characters that decide it: `src/lib/font-cmap.ts:75` — `export const HUNGARIAN_DIACRITIC_CODEPOINTS: readonly number[] = [0x151, 0x171];`
 
