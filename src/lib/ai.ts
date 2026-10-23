@@ -43,7 +43,7 @@
  * from `lib/crisisGuard` and the shared resources list, offline and instantly,
  * so a failed key or a dead network can never swallow that sentence.
  */
-import { t } from "./i18n";
+import { localeTag, t } from "./i18n";
 import { moodByLevel } from "./mood";
 import { crisisReply, hasCrisisSignal } from "./crisisGuard";
 import type { MLCEngine } from "@mlc-ai/web-llm";
@@ -316,6 +316,37 @@ const SYSTEM_PROMPT = [
 ].join(" ");
 
 /**
+ * THE LANGUAGE ORDER the on-device model is answered in, and why it is its
+ * own message rather than a line of the instruction above.
+ *
+ * The instruction above is built from the CATALOGUE, so its first line names
+ * the language too — but a 0.5B model weights a short, imperative, FIRST
+ * message far more reliably than a clause buried in a paragraph of style
+ * rules, and language drift is the one failure this feature exists to prevent.
+ * So the order is its own system turn, built from `localeTag()` — the one tag
+ * the whole app derives its formatting from, never `navigator.language` — and
+ * it goes at the FRONT of `messages`, ahead of the instruction and ahead of
+ * any conversation history: every turn the model reads comes after the
+ * language it must answer in. The three texts live in the catalogue under
+ * `ai.systemLang.*`, each written in the language it names in EVERY
+ * catalogue, so the key — not the current one — decides the language.
+ */
+export function languageSystemPrompt(): string {
+  // The BASE language, taken from the one tag the app mints for itself.
+  // Deliberately derived here rather than through the tag-matching helper:
+  // that helper has exactly one caller by design — the mirror's own read —
+  // and the locale rounds pin it so.
+  switch (localeTag().split("-")[0]) {
+    case "en":
+      return t("ai.systemLang.en");
+    case "de":
+      return t("ai.systemLang.de");
+    default:
+      return t("ai.systemLang.hu");
+  }
+}
+
+/**
  * One line per entry, in a fixed key=value shape and neutral words on purpose.
  *
  * These are DATA for the model, not copy for a reader, so they need no
@@ -564,12 +595,17 @@ async function askModel(
     try {
       const mlc = await ensureEngine(config.model);
       const response = await mlc.chat.completions.create({
+        // THE ORDER, and it is load-bearing: the language first, the shared
+        // instruction second, then every turn that follows — history would
+        // sit here, after the system prompts, and the reader's question is
+        // the last turn either way.
         messages: [
+          { role: "system", content: languageSystemPrompt() },
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: user },
         ],
-        temperature: 0.7,
-        max_tokens: 400,
+        temperature: 0.3,
+        max_tokens: 250,
       });
       return finish(response.choices?.[0]?.message?.content ?? "");
     } catch {

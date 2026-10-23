@@ -24,6 +24,7 @@
  * is enough.
  */
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import {
   DEVICE_MODEL_SIZES,
   askAboutWeek,
@@ -31,11 +32,12 @@ import {
   deviceModelMb,
   generateWeeklySummary,
   getAiConfig,
+  languageSystemPrompt,
   saveAiKey,
   setAiConfig,
 } from "../../src/lib/ai";
 import { crisisReply, hasCrisisSignal } from "../../src/lib/crisisGuard";
-import { t } from "../../src/lib/i18n";
+import { setActiveLocale, t } from "../../src/lib/i18n";
 import type { Entry } from "../../src/types";
 
 /* --------------------------- the storage double ------------------------ */
@@ -287,5 +289,56 @@ describe("askAboutWeek — question, facts, transport", () => {
     const crisisRun = await generateWeeklySummary(CRISIS_WEEK(), { doFetch });
     expect(crisisRun.ok).toBe(true);
     if (crisisRun.ok) expect(crisisRun.text.startsWith(t("ai.crisisReply"))).toBe(true);
+  });
+});
+
+/* ========== 4 · the language order, and the parameters that follow ====== */
+
+describe("the WebLLM call answers in the reader's language, briefly", () => {
+  test("the three orders live in the catalogue, each written in its own language", () => {
+    // The KEY names the language in every catalogue, so `t()` cannot swap
+    // the text under a language switch — the value for `ai.systemLang.en`
+    // is English whether the reader reads Hungarian or English.
+    expect(t("ai.systemLang.hu")).toBe(
+      "Te egy magyar nyelvű asszisztens vagy. Minden esetben KIZÁRÓLAG magyarul válaszolj. A válaszaid legyenek rövidek, tömörek és segítőkészek.",
+    );
+    expect(t("ai.systemLang.en")).toBe(
+      "You are an English assistant. ALWAYS respond in English. Keep your answers short and helpful.",
+    );
+    expect(t("ai.systemLang.de")).toBe(
+      "Du bist ein deutscher Assistent. Antworte IMMER auf Deutsch. Halte deine Antworten kurz und hilfreich.",
+    );
+  });
+
+  test("the current locale picks one — Hungarian is the default", () => {
+    // The locale is forced rather than assumed: this suite runs beside the
+    // locale-switch rounds, and a leaked `setActiveLocale` from another file
+    // must not turn this assertion into that file's state.
+    setActiveLocale("hu");
+    expect(languageSystemPrompt()).toBe(t("ai.systemLang.hu"));
+  });
+
+  test("the language is the FIRST system turn, the question the last turn", () => {
+    // The on-device branch never runs in this suite (it would fetch the
+    // model), so the array's ORDER is pinned where it is written. Language
+    // first, instruction second, reader's turn last — a history, when the
+    // chat ever grows one, sits between the instructions and the turns.
+    const src = readFileSync(new URL("../../src/lib/ai.ts", import.meta.url), "utf8");
+    const lang = src.indexOf("content: languageSystemPrompt()");
+    const instruction = src.indexOf("content: SYSTEM_PROMPT");
+    const reader = src.indexOf('role: "user", content: user');
+    expect(lang, "the language message exists").toBeGreaterThan(-1);
+    expect(lang).toBeLessThan(instruction);
+    expect(instruction).toBeLessThan(reader);
+  });
+
+  test("the on-device inference answers fast and short", () => {
+    // Both pinned on the source because the call itself is never made here:
+    // a low temperature keeps a 0.5B model on the facts it was given, and a
+    // 250-token ceiling turns "write me an essay" into the 3–5 sentences the
+    // instruction already asks for.
+    const src = readFileSync(new URL("../../src/lib/ai.ts", import.meta.url), "utf8");
+    expect(src).toContain("temperature: 0.3");
+    expect(src).toContain("max_tokens: 250");
   });
 });

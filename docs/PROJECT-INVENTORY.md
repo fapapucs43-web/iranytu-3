@@ -21,11 +21,11 @@ claims has two possible anchors and no way to tell which one went stale.
 ```json
 {
     "srcTsFiles": 187,
-    "srcTsLines": 49752,
+    "srcTsLines": 49797,
     "srcCssFiles": 1,
     "srcCssLines": 5523,
     "libFiles": 96,
-    "libLines": 30671,
+    "libLines": 30716,
     "componentFiles": 75,
     "componentLines": 13942,
     "viewFiles": 6,
@@ -33,7 +33,7 @@ claims has two possible anchors and no way to tell which one went stale.
     "stateFiles": 5,
     "stateLines": 1272,
     "testFiles": 131,
-    "testLines": 50776,
+    "testLines": 50829,
     "scriptFiles": 6,
     "publicFontWoff2": 24,
     "publicFontLicences": 10,

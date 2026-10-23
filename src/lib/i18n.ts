@@ -2459,6 +2459,9 @@ const HU = {
   "ai.promptQuestion": "Írd meg a heti összefoglalót ezekből az adatokból:",
   "ai.promptCrisis":
     "Ha a szöveg öngyilkosságot, önártást vagy krízist érint, a válaszod végén ajánld a 116-123-as segélyvonalat (éjjel-nappal, ingyenes), vészhelyzetben a 112-t és a Kék Vonal 116-111 számát — röviden, ítélkezés nélkül.",
+  "ai.systemLang.hu": "Te egy magyar nyelvű asszisztens vagy. Minden esetben KIZÁRÓLAG magyarul válaszolj. A válaszaid legyenek rövidek, tömörek és segítőkészek.",
+  "ai.systemLang.en": "You are an English assistant. ALWAYS respond in English. Keep your answers short and helpful.",
+  "ai.systemLang.de": "Du bist ein deutscher Assistent. Antworte IMMER auf Deutsch. Halte deine Antworten kurz und hilfreich.",
   "ai.chatContext": "A hét adatai, majd egy kérdés ugyanarról a hétről:",
   "ai.crisisReply":
     "Krízisben kérj segítséget — ezek a számok ingyenesek, névtelenek és mindig elérhetők:",
@@ -3822,6 +3825,9 @@ export const MESSAGES: Record<Locale, Catalogue> = {
     "ai.promptQuestion": "Write the weekly summary from this data:",
     "ai.promptCrisis":
       "If the text touches suicide, self-harm or a crisis, end your answer by offering the 116-123 helpline (free, 24/7), 112 in an emergency and the Blue Line on 116-111 — briefly and without judgement.",
+    "ai.systemLang.hu": "Te egy magyar nyelvű asszisztens vagy. Minden esetben KIZÁRÓLAG magyarul válaszolj. A válaszaid legyenek rövidek, tömörek és segítőkészek.",
+    "ai.systemLang.en": "You are an English assistant. ALWAYS respond in English. Keep your answers short and helpful.",
+    "ai.systemLang.de": "Du bist ein deutscher Assistent. Antworte IMMER auf Deutsch. Halte deine Antworten kurz und hilfreich.",
     "ai.chatContext": "This week's data, then one question about it:",
     "ai.crisisReply":
       "In a crisis, reach out — these numbers are free, anonymous and always open:",
@@ -5171,6 +5177,9 @@ export const MESSAGES: Record<Locale, Catalogue> = {
     "ai.promptQuestion": "Schreibe die wöchentliche Zusammenfassung aus diesen Daten:",
     "ai.promptCrisis":
       "Berührt der Text Suizid, Selbstverletzung oder eine Krise, schließe deine Antwort mit der Nummer 116-123 (kostenlos, rund um die Uhr), im Notfall 112 und der Blauen Linie 116-111 — kurz und ohne Wertung.",
+    "ai.systemLang.hu": "Te egy magyar nyelvű asszisztens vagy. Minden esetben KIZÁRÓLAG magyarul válaszolj. A válaszaid legyenek rövidek, tömörek és segítőkészek.",
+    "ai.systemLang.en": "You are an English assistant. ALWAYS respond in English. Keep your answers short and helpful.",
+    "ai.systemLang.de": "Du bist ein deutscher Assistent. Antworte IMMER auf Deutsch. Halte deine Antworten kurz und hilfreich.",
     "ai.chatContext": "Die Daten der Woche, dann eine Frage dazu:",
     "ai.crisisReply":
       "Im Krise um Hilfe bitten — diese Nummern sind kostenlos, anonym und immer erreichbar:",
