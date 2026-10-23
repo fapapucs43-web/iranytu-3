@@ -180,17 +180,22 @@ describe("reading the instruction from the URL", () => {
 describe("the manifest's four shortcuts are instructions the app honours", () => {
   test("exactly four, each complete, in the order the widget guide lists", () => {
     expect(MANIFEST.shortcuts).toHaveLength(4);
+    // The URLs are RELATIVE to the manifest ("./?quick=…") rather than
+    // root-absolute, for the reason `tests/batch2.test.ts` states: under the
+    // GitHub Pages subpath a "/" URL is the ROOT, outside the app — a dead
+    // launcher button. "./" resolves against the manifest's own location, so
+    // the same file is correct at the root and under any base.
     expect(MANIFEST.shortcuts.map((s) => s.url)).toEqual([
-      "/?quick=mood",
-      "/?quick=entry",
-      "/?quick=breath",
-      "/?quick=meditate",
+      "./?quick=mood",
+      "./?quick=entry",
+      "./?quick=breath",
+      "./?quick=meditate",
     ]);
     for (const shortcut of MANIFEST.shortcuts) {
       expect(shortcut.name.length).toBeGreaterThan(0);
       expect(shortcut.short_name.length).toBeGreaterThan(0);
       expect(shortcut.description.length).toBeGreaterThan(0);
-      expect(shortcut.url.startsWith("/?quick=")).toBe(true);
+      expect(shortcut.url.startsWith("./?quick=")).toBe(true);
     }
   });
 
@@ -199,7 +204,7 @@ describe("the manifest's four shortcuts are instructions the app honours", () =>
     // `/?tab=today`, a parameter NOTHING read. A shortcut whose parameter the
     // app does not know is a dead button in the launcher's long-press menu.
     for (const shortcut of MANIFEST.shortcuts) {
-      const value = shortcut.url.slice("/?quick=".length);
+      const value = shortcut.url.slice("./?quick=".length);
       expect(QUICK_VALUES).toContain(value);
       expect(quickTargetFor(value)).not.toBeNull();
     }
@@ -211,7 +216,11 @@ describe("the manifest's four shortcuts are instructions the app honours", () =>
       for (const icon of shortcut.icons) {
         expect(icon.sizes).toBe("192x192");
         expect(icon.type).toBe("image/png");
-        expect(readFileSync(new URL(`../../public${icon.src}`, import.meta.url))).toBeTruthy();
+        // The src is relative to the manifest; the disk is relative to the
+        // repo, so the leading "./" becomes a "/" before the join.
+        expect(
+          readFileSync(new URL(`../../public${icon.src.replace(/^\.\//, "/")}`, import.meta.url)),
+        ).toBeTruthy();
       }
     }
   });

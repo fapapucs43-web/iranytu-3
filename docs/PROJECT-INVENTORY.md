@@ -33,7 +33,7 @@ claims has two possible anchors and no way to tell which one went stale.
     "stateFiles": 5,
     "stateLines": 1272,
     "testFiles": 131,
-    "testLines": 50754,
+    "testLines": 50776,
     "scriptFiles": 6,
     "publicFontWoff2": 24,
     "publicFontLicences": 10,

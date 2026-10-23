@@ -60,7 +60,10 @@ describe("the three iOS tags are in the document, where Safari looks", () => {
 
 describe("the manifest agrees with the document about the icon and the app", () => {
   test("a 192x192 PNG icon is declared, matching the apple-touch-icon", () => {
-    const icon = MANIFEST.icons.find((i) => i.src === "/icons/icon-192.png");
+    // The manifest's own src is RELATIVE ("./icons/…") so it resolves under
+    // any deployment base; the DOCUMENT's tag is root-absolute in source and
+    // Vite rewrites it with the base at build — two routes to the same file.
+    const icon = MANIFEST.icons.find((i) => i.src === "./icons/icon-192.png");
     expect(icon).toBeDefined();
     expect(icon!.sizes).toBe("192x192");
     // Same file the iOS tag names — one icon, two declarations, no drift.
@@ -70,8 +73,10 @@ describe("the manifest agrees with the document about the icon and the app", () 
   test("the existing manifest shortcut points at the tab the deep link honours", () => {
     // The manifest already advertised `/?tab=today`; the app honours `?quick=`
     // instead, so the shortcut must use the parameter that actually works.
+    // The URL is relative to the manifest so the launcher button stays on the
+    // app's own base instead of jumping to the origin's root.
     const url = MANIFEST.shortcuts?.[0]?.url;
-    expect(url).toBe("/?quick=mood");
+    expect(url).toBe("./?quick=mood");
   });
 });
 

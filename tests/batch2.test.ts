@@ -292,14 +292,22 @@ describe("pwa/sw contract", () => {
     // to four; `tests/lib/quick-start.test.ts` pins the other three and every
     // url's destination, this pins the name and the display field beside it.
     expect(manifest.shortcuts[0].name).toBe("Mai hangulat");
-    expect(manifest.start_url).toBe("/");
+    // RELATIVE, and the reason the install prompt works on GitHub Pages at
+    // all: the app is served from a SUBPATH (/iranytu-3/), and a manifest
+    // full of root-absolute URLs ("/icons/…", start_url "/") resolves them
+    // against the origin — where they 404, taking Chrome's installability
+    // (fetchable 192+ icons, a start_url inside the scope) with them. A
+    // relative manifest URL resolves against the MANIFEST's own location, so
+    // "./" is correct both at the root in dev and under any base in prod.
+    expect(manifest.start_url).toBe("./");
     const iconNames = manifest.icons.map((i: { src: string }) => i.src);
-    expect(iconNames).toContain("/icons/icon-192.png");
-    expect(iconNames).toContain("/icons/icon-512.png");
-    expect(iconNames).toContain("/icons/icon.svg");
-    // committed icon files actually exist
+    expect(iconNames).toContain("./icons/icon-192.png");
+    expect(iconNames).toContain("./icons/icon-512.png");
+    expect(iconNames).toContain("./icons/icon.svg");
+    // committed icon files actually exist (the "./" stripped: the paths are
+    // relative to the manifest, while the disk is relative to the repo)
     for (const src of iconNames) {
-      readFileSync(`public${src}`);
+      readFileSync(`public/${src.replace(/^\.\//, "")}`);
     }
     readFileSync("public/icons/icon.svg");
   });
