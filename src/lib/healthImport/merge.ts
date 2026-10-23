@@ -26,6 +26,11 @@ export const SERIES_TRACKER = {
   // form and the grid, and a new registry row would appear on every reader's
   // screen as a side effect of reading a watch file.
   hrv: "smartwatch-hrv",
+  // Resting bpm, averaged per day — the third spot series, and hidden by the
+  // same rule as the two above: the registry drives Settings rows, the daily
+  // form and the grid, and a new registry row would appear on every reader's
+  // screen as a side effect of reading a watch file.
+  restingHr: "smartwatch-resting-hr",
   spo2: "smartwatch-spo2",
   sleep: "sleep",
   steps: "steps",
@@ -52,6 +57,7 @@ const SERIES_LIST: ReadonlyArray<readonly [SeriesId, string]> = [
   // needs no catalogue key — and adding one would have made a fourth language
   // inherit an untranslated label for a unit.
   ["hrv", "HRV (ms)"],
+  ["restingHr", t("healthImport.seriesRestingHr")],
   ["spo2", t("healthImport.seriesSpo2")],
   ["sleep", t("healthImport.seriesSleep")],
   ["steps", t("healthImport.seriesSteps")],
@@ -67,7 +73,13 @@ function seriesAsDays(result: HealthImportResult, series: SeriesId): Map<string,
   // `?? []` on the HRV lane: a result parsed before this series existed has no
   // `hrv` array, and an import must not throw on a file it read yesterday.
   const raw =
-    (series === "hr" ? result.hr : series === "hrv" ? result.hrv : result.spo2) ?? [];
+    (series === "hr"
+      ? result.hr
+      : series === "hrv"
+        ? result.hrv
+        : series === "restingHr"
+          ? result.restingHr
+          : result.spo2) ?? [];
   const m = new Map<string, number>();
   for (const sample of raw) {
     const cur = m.get(sample.day);
@@ -84,6 +96,7 @@ function trackerCell(series: SeriesId, value: number): TrackerCell {
       return { kind: "number", value };
     case "hr":
     case "hrv":
+    case "restingHr":
     case "spo2":
       return { kind: "number", value };
   }

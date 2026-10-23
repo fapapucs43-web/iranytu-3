@@ -115,6 +115,10 @@ export function parseGoogleFitText(text: string): HealthImportResult {
     // Google Fit's export carries no SDNN series. Empty is the honest answer,
     // and the preview shows the row with a zero count rather than hiding it.
     hrv: [] as HealthImportResult["hrv"],
+    // The same honest empty for resting heart rate: this export shape has no
+    // such series either, and inventing one from the spot-check readings would
+    // conflate two different measurements.
+    restingHr: [] as HealthImportResult["restingHr"],
     steps: {} as Record<string, number>,
     sleep: {} as Record<string, number>,
     workouts: [] as HealthWorkout[],

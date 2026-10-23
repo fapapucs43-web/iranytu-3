@@ -192,11 +192,14 @@ describe("round 17 — what the modules export is what the catalogue holds", () 
     // catalogue value: `HRV` and `ms` are the same in every supported
     // language, and minting a key would have handed a fourth language an
     // untranslated unit. It sits second, after pulse, because that is the
-    // order of the watch series the import writes.
+    // order of the watch series the import writes; resting heart rate joined
+    // the same order in phase 4, between SDNN and SpO2, and it DOES carry a
+    // key — "resting" translates.
     const rows = previewImport(bareResult, [], []).rows;
     expect(rows.map((r) => r.label)).toEqual([
       t("healthImport.seriesHr"),
       "HRV (ms)",
+      t("healthImport.seriesRestingHr"),
       t("healthImport.seriesSpo2"),
       t("healthImport.seriesSleep"),
       t("healthImport.seriesSteps"),

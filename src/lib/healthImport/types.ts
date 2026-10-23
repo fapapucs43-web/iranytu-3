@@ -39,6 +39,16 @@ export type HealthImportResult = {
    * leaves this empty — honestly, rather than inventing it.
    */
   hrv: HealthSample[];
+  /**
+   * Resting heart rate samples in bpm (Apple's RestingHeartRate).
+   *
+   * A third spot series beside hr and hrv: an average heart rate and a
+   * resting heart rate are not the same measurement, and merging them into
+   * one lane would produce a number that means neither. Google Fit's export
+   * carries no resting-HR series, so its parser leaves this empty — the same
+   * honest answer the hrv lane gives.
+   */
+  restingHr: HealthSample[];
   /** Steps, summed per day. */
   steps: HealthDaySummary;
   /** Sleep minutes per day (in-bed-awake excluded). */

@@ -99,3 +99,58 @@ describe("the correlation grid", () => {
     expect(hrv!.higherIsBetter).toBeNull();
   });
 });
+
+describe("resting heart rate — the wearable's second spot series (phase 4)", () => {
+  const RESTING = [
+    `<Record type="HKQuantityTypeIdentifierRestingHeartRate" startDate="2026-03-01 08:00:00 +0100" endDate="2026-03-01 08:00:00 +0100" value="54" unit="count/min"/>`,
+    `<Record type="HKQuantityTypeIdentifierRestingHeartRate" startDate="2026-03-01 20:00:00 +0100" endDate="2026-03-01 20:00:00 +0100" value="58" unit="count/min"/>`,
+    // A failed reading and a value that is not bpm at all. Neither may enter
+    // the day's average — 0 would drag it down, 540 would make it a number
+    // no wrist has measured.
+    `<Record type="HKQuantityTypeIdentifierRestingHeartRate" startDate="2026-03-02 08:00:00 +0100" endDate="2026-03-02 08:00:00 +0100" value="0" unit="count/min"/>`,
+    `<Record type="HKQuantityTypeIdentifierRestingHeartRate" startDate="2026-03-02 09:00:00 +0100" endDate="2026-03-02 09:00:00 +0100" value="540" unit="count/min"/>`,
+  ].join("\n");
+
+  const resting = parseAppleHealthText(RESTING);
+  // Both spot series in one file: reading one must never feed the other.
+  const mixed = parseAppleHealthText([RESTING, RECORDS].join("\n"));
+
+  test("it lands in its own series, never in bpm and never in SDNN", () => {
+    expect(resting.restingHr.map((s) => s.value)).toEqual([54, 58]);
+    expect(resting.restingHr.every((s) => s.day === "2026-03-01")).toBe(true);
+    expect(resting.hr).toEqual([]);
+    expect(resting.hrv).toEqual([]);
+    expect(mixed.hrv).toHaveLength(2);
+    expect(mixed.restingHr).toHaveLength(2);
+    expect(mixed.hr).toEqual([]);
+  });
+
+  test("a zero and an out-of-range value are dropped, not averaged in", () => {
+    expect(resting.restingHr.some((s) => s.value === 0)).toBe(false);
+    expect(resting.restingHr.some((s) => s.value > 150)).toBe(false);
+  });
+
+  test("the merge writes it behind its own id, on a matching day", () => {
+    const entries = [{ date: "2026-03-01", trackerValues: {} }] as unknown as Entry[];
+    const out = applyImport(resting, entries, [SERIES_TRACKER.restingHr], false);
+    expect(out[0]!.trackerValues?.[SERIES_TRACKER.restingHr]).toEqual({
+      kind: "number",
+      value: 56,
+    });
+    // The neighbours stay empty: one toggle group, four independent lanes.
+    expect(out[0]!.trackerValues?.[SERIES_TRACKER.hr]).toBeUndefined();
+    expect(out[0]!.trackerValues?.[SERIES_TRACKER.hrv]).toBeUndefined();
+  });
+
+  test("the preview row counts the days it could fill, under its own label", () => {
+    const entries = [{ date: "2026-03-01", trackerValues: {} }] as unknown as Entry[];
+    const preview = previewImport(resting, entries, [SERIES_TRACKER.restingHr]);
+    const row = preview.rows.find((r) => r.label === "Nyugalmi pulzus")!;
+    expect(row.count).toBe(1);
+    expect(row.applies).toBe(1);
+  });
+
+  test("the id is NOT a registry tracker — it rides on settings only", () => {
+    expect(TRACKERS.map((t) => t.id)).not.toContain(SERIES_TRACKER.restingHr);
+  });
+});

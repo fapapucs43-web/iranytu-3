@@ -21,19 +21,19 @@ claims has two possible anchors and no way to tell which one went stale.
 ```json
 {
     "srcTsFiles": 185,
-    "srcTsLines": 49448,
+    "srcTsLines": 49497,
     "srcCssFiles": 1,
     "srcCssLines": 5511,
     "libFiles": 95,
-    "libLines": 30511,
+    "libLines": 30552,
     "componentFiles": 74,
-    "componentLines": 13829,
+    "componentLines": 13837,
     "viewFiles": 6,
     "viewLines": 2860,
     "stateFiles": 5,
     "stateLines": 1272,
     "testFiles": 131,
-    "testLines": 50573,
+    "testLines": 50631,
     "scriptFiles": 6,
     "publicFontWoff2": 24,
     "publicFontLicences": 10,
@@ -749,7 +749,7 @@ entries / 9.42 MB before this rule).
 
 ## 10. The test suite
 
-**131 files, 50 476 lines, 3 814 tests.** `bun test` — no test framework in the
+**131 files, 50 534 lines, 3 819 tests.** `bun test` — no test framework in the
 dependency block; the runner is bun's own. This table is the second half of the
 document's proof: its file count, its total and the five group sums are all
 recomputed from the rows below, so a file that lands without a row, a row whose
@@ -826,7 +826,7 @@ a fourth ground.
 | `tests/phase4.test.ts` | 7 | onboarding state and reminder scheduling |
 | `tests/stuck-worker.test.ts` | 17 | the stuck service worker: the detector (a controller url without this build's hash, conservative about every unknown), the escape address (`resetUrl` + taking the stamp back out), the `SKIP_WAITING` message on both sides, the immediate reload for a swap the page asked for, the banner's markup and its solid amber rail, and the reader's devtools guide |
 
-**`tests/lib/` — one file per library module** — 55 files, 1 031 tests
+**`tests/lib/` — one file per library module** — 55 files, 1 036 tests
 
 | File | Tests | Pins |
 | --- | --- | --- |
@@ -853,7 +853,7 @@ a fourth ground.
 | `tests/lib/programs.test.ts` | 13 | the six-week program's state machine: a fresh install has none, a start writes only its own key, each press finishes exactly one week, a gap between weeks changes nothing, the last week finishes the program and finishing again is a no-op, restarting cannot lose the reader's place, and a stored gap or junk in the completed list is repaired rather than rendered |
 | `tests/lib/seek-help.test.ts` | 10 | the non-diagnostic guide: three questions, an answer about self-harm reaching the urgent branch across every duration/impact combination, the two conservative thresholds, every branch carrying a title, a body and a next step, no condition named or cure promised in any of the twelve results, and no phone number written into the tree |
 | `tests/lib/sleep-log.test.ts` | 15 | the sleep log: a night that crosses midnight is one duration, equal times are ambiguous rather than zero, junk times are refused, one record per day newest-first with a re-save replacing, a corrupt blob loads as a usable list, deletion is exact, subscribers hear a save and the reset clears the key — plus the correlation's floor, its band averages, a coefficient of 1 on a perfect relationship, no divide-by-zero on a flat mood column, and a sentence that never claims cause |
-| `tests/lib/health-hrv.test.ts` | 8 | the wearable half of phase 3: SDNN parsed into its own series and never into bpm, a zero and a sub-millisecond reading dropped, the merge writing `smartwatch-hrv` only behind the reader's own toggle, an HRV preview row that counts the days it could fill, the id staying out of the tracker registry, and a neutral grid column that appears only once a sample exists |
+| `tests/lib/health-hrv.test.ts` | 13 | the wearable half of phase 3 and the deepening of phase 4: SDNN parsed into its own series and never into bpm, a zero and a sub-millisecond reading dropped, the merge writing `smartwatch-hrv` only behind the reader's own toggle, an HRV preview row that counts the days it could fill, the id staying out of the tracker registry, a neutral grid column that appears only once a sample exists — and the resting-heart-rate series the same way: its own lane (never in bpm, never in SDNN), a 25–150 bpm sanity window, its own merge id and preview row, and the registry free of it too |
 | `tests/lib/support-wall.test.ts` | 15 | the Phase 5 wall: the 280-character cap accepted and refused at its edges, the 200-note cap spending the OLDEST UNPINNED note and refusing outright when every slot is pinned, pinned-before-newest display that leaves the stored order alone, delete and pin round-trips, off as the default, and a corrupt or wrong-typed blob repaired rather than thrown |
 | `tests/lib/weekly-menus.test.ts` | 12 | the composed week: the eleven named diets get seven days and `other` gets none, every item is a registry row in that diet's pool, no meal repeats a food, the same diet composes the same week, no diet prints one day seven times, every exclusion names a real food, and a day's total is the sum of its own rows |
 | `tests/lib/fitness.test.ts` | 47 | that adopting a template COPIES it, that the caps hold, that the log is a record a later plan edit cannot change, that progression is computed by name — including the repeated-weight rule that becomes 2.5 kg and its bodyweight twin, one more rep or five more seconds — that the dose string says whether a number is reps or seconds, that the chart series is the progression as points, and, from Phase 3's third commit, that the twelve templates each carry one of the six movement types and that a rest day keeps its exercises while dropping out of the rotation |

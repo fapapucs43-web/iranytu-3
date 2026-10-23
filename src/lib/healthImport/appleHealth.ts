@@ -32,6 +32,7 @@
  * WHAT IS EXTRACTED, AND WHERE IT LANDS (the caller maps further):
  *   heart rate   HKQuantityTypeIdentifierHeartRate          → bpm samples
  *   HRV (SDNN)   HKQuantityTypeIdentifierHeartRateVariabilitySDNN → ms samples
+ *   resting HR   HKQuantityTypeIdentifierRestingHeartRate   → bpm samples
  *   SpO2         HKQuantityTypeIdentifierOxygenSaturation   → % samples
  *   steps        HKQuantityTypeIdentifierStepCount          → summed per day
  *   sleep        HKCategoryTypeIdentifierSleepAnalysis      → stage durations
@@ -51,6 +52,7 @@ import type {
 
 const HR_TYPE = "HKQuantityTypeIdentifierHeartRate";
 const HRV_TYPE = "HKQuantityTypeIdentifierHeartRateVariabilitySDNN";
+const RESTING_HR_TYPE = "HKQuantityTypeIdentifierRestingHeartRate";
 const SPO2_TYPE = "HKQuantityTypeIdentifierOxygenSaturation";
 const STEP_TYPE = "HKQuantityTypeIdentifierStepCount";
 const SLEEP_TYPE = "HKCategoryTypeIdentifierSleepAnalysis";
@@ -131,6 +133,7 @@ export function appleWorkoutKind(activityType: string): HealthWorkout["kind"] {
 export class HealthAccumulator {
   readonly hr: HealthSample[] = [];
   readonly hrv: HealthSample[] = [];
+  readonly restingHr: HealthSample[] = [];
   readonly spo2: HealthSample[] = [];
   readonly steps: HealthSample[] = [];
   readonly sleep: { day: string; minutes: number; stage: SleepStage }[] = [];
@@ -154,6 +157,12 @@ export class HealthAccumulator {
       // one millisecond is not a reading, and accepting it would drag the
       // day's average to a number no watch ever measured.
       if (Number.isFinite(n) && n >= 1 && n <= 500) this.hrv.push({ day, value: n });
+    } else if (type === RESTING_HR_TYPE && value) {
+      const n = Number(value);
+      // Resting bpm. The window is a sanity range, not physiology: a watch
+      // writes 0 for a failed reading, and a value outside 25–150 is a unit
+      // or export accident, not a resting heart rate any body produces.
+      if (Number.isFinite(n) && n >= 25 && n <= 150) this.restingHr.push({ day, value: n });
     } else if (type === SPO2_TYPE && value) {
       const n = Number(value);
       // Apple writes 0.97 ("count %") or 97 ("%") — normalize both to %.
@@ -247,6 +256,7 @@ function summarize(acc: HealthAccumulator, error?: string): HealthImportResult {
     recordsSeen: acc.recordsSeen,
     hr: acc.hr,
     hrv: acc.hrv,
+    restingHr: acc.restingHr,
     spo2: acc.spo2,
     steps: sumStepsPerDay(acc.steps),
     sleep: sumSleepPerDay(acc.sleep),

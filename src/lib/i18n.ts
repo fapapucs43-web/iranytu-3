@@ -1114,12 +1114,14 @@ const HU = {
   "foodAi.errorNetwork": "Hálózati hiba — most nem sikerült elemezni a képet.",
   "foodAi.errorBadResponse": "Az OpenAI válasza nem volt értelmezhető.",
 
-  // healthImport/merge.ts. Four series names, PRINTED in the preview list beside
+  // healthImport/merge.ts. The series names, PRINTED in the preview list beside
   // the counts. They stay tracker names — the card's own comment says the label
   // is data, not a sentence, and that is still true: the label is resolved once
   // here so the row's shape does not change, and `tests/batch9.test.ts` can keep
-  // asserting on the same strings it always did.
+  // asserting on the same strings it always did. (HRV needs no entry: the label
+  // is "HRV (ms)", and both halves are the same in every supported locale.)
   "healthImport.seriesHr": "Szívritmus",
+  "healthImport.seriesRestingHr": "Nyugalmi pulzus",
   "healthImport.seriesSpo2": "Vértelítettség",
   "healthImport.seriesSleep": "Alvás (óra)",
   "healthImport.seriesSteps": "Lépésszám",
@@ -2939,6 +2941,7 @@ export const MESSAGES: Record<Locale, Catalogue> = {
     "foodAi.errorNetwork": "Network error — couldn't analyse the image just now.",
     "foodAi.errorBadResponse": "OpenAI's answer couldn't be read.",
     "healthImport.seriesHr": "Heart rate",
+    "healthImport.seriesRestingHr": "Resting heart rate",
     "healthImport.seriesSpo2": "Blood oxygen",
     "healthImport.seriesSleep": "Sleep (hours)",
     "healthImport.seriesSteps": "Step count",
@@ -4287,6 +4290,7 @@ export const MESSAGES: Record<Locale, Catalogue> = {
     "foodAi.errorNetwork": "Netzwerkfehler — das Bild konnte gerade nicht analysiert werden.",
     "foodAi.errorBadResponse": "Die Antwort von OpenAI war nicht lesbar.",
     "healthImport.seriesHr": "Herzfrequenz",
+    "healthImport.seriesRestingHr": "Ruhepuls",
     "healthImport.seriesSpo2": "Blutsauerstoff",
     "healthImport.seriesSleep": "Schlaf (Stunden)",
     "healthImport.seriesSteps": "Schrittzahl",
