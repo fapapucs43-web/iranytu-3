@@ -168,6 +168,12 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       "food-ai-settings",
       "food-photo",
       "health-general",
+      // Phase 4's wearable summary. `health-` because it lives on the
+      // Egészség tab beside the sleep log it sits under; `hrv-summary`
+      // rather than a bare `health-hrv` because the card is a description of
+      // imported samples, not a tracker a reader could open to write one.
+      // It sorts before `health-import`: the vocabulary is plain sorted text.
+      "health-hrv-summary",
       "health-import",
       "health-nutrition",
       "health-sleep-log",
@@ -308,6 +314,7 @@ describe("the collapsible cards' inventory, read out of the tree", () => {
       ["src/components/HabitStreaks.tsx", 1],
       ["src/components/HealthImportCard.tsx", 1],
       ["src/components/HealthModules.tsx", 3],
+      ["src/components/HrvSummaryCard.tsx", 1],
       ["src/components/InstallPrompt.tsx", 1],
       ["src/components/LagAnalysisCard.tsx", 1],
       ["src/components/MedicationTimesCard.tsx", 1],

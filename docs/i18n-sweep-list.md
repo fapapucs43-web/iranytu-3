@@ -23,10 +23,10 @@ is also outside it. That is the shape of the rule, not an oversight in it.
 
 | | count |
 | --- | --- |
-| raw literals still to sweep | **40** |
-| files holding them | **7** |
+| raw literals still to sweep | **47** |
+| files holding them | **8** |
 | `t()` call sites this walk saw | 293 |
-| rounds | 25 (21 measurable, 7 with work left) |
+| rounds | 26 (22 measurable, 8 with work left) |
 
 ## The rounds
 
@@ -46,6 +46,7 @@ not an error — it is the end state the sweep is for, and it is listed under **
 | 23 | `components/SeekHelpCard.tsx` | 4 | `components/SeekHelpCard.tsx` (4) |
 | 24 | `components/SleepLogCard.tsx` | 10 | `components/SleepLogCard.tsx` (10) |
 | 25 | `components/SleepMoodCard.tsx` | 3 | `components/SleepMoodCard.tsx` (3) |
+| 26 | `components/HrvSummaryCard.tsx` | 7 | `components/HrvSummaryCard.tsx` (7) |
 
 **Already swept:** round 1, round 2, round 3, round 4, round 5, round 6, round 7, round 8, round 9, round 10, round 11, round 12, round 13, round 14.
 
@@ -132,12 +133,12 @@ string came out of: `jsx-text` is a label, and the rest are the attribute it was
 
 ```
   6 lines
-  79  title          "Táplálkozás"
-  81  summary        "Ételek, italok és tápanyagok"
- 114  title          "Edzés"
- 116  summary        "Mozgás, programok és teljesítmény"
- 143  title          "Egyéb"
- 145  summary        "Vittek, szokások és kérdőívek"
+  80  title          "Táplálkozás"
+  82  summary        "Ételek, italok és tápanyagok"
+ 115  title          "Edzés"
+ 117  summary        "Mozgás, programok és teljesítmény"
+ 144  title          "Egyéb"
+ 146  summary        "Vittek, szokások és kérdőívek"
 ```
 
 ### src/components/CompanionCard.tsx — round 20, 5
@@ -210,7 +211,20 @@ string came out of: `jsx-text` is a label, and the rest are the attribute it was
   66  jsx-text       "Az átlagok 0–100-as hangulatpontok. Az együtt járás nem bizonyíték arra, hogy az alvás okozza a hangulatot — vagy fordítva."
 ```
 
+### src/components/HrvSummaryCard.tsx — round 26, 7
+
+```
+  7 lines
+  66  jsx-text       "A HRV-t az Apple Health-import hozza be (Beállítások → Importálás). Ha a telefonod vagy az órád vezeti, itt látod a saját átlagod és azt, merre halad az utóbbi hetekben."
+  75  jsx-text       "Minden rögzített nap"
+  82  jsx-text       "Az utóbbi legfeljebb 7 nap"
+  83  jsx-text       "átlag"
+  89  jsx-text       "Azt megelőző legfeljebb 7 nap"
+  90  jsx-text       "átlag"
+  97  jsx-text       "A HRV egyik napról a másikra is ingadozik. Amit itt látsz, a saját rögzített mintáid leírása — nem orvosi értelmezés, és nem ok-okozati állítás semmilyen más dologra."
+```
+
 ---
 
-Summed: 40 literals across
-7 files, in 7 rounds.
+Summed: 47 literals across
+8 files, in 8 rounds.

@@ -487,6 +487,11 @@ const ROUNDS = [
   // mechanical catalogue pass, one round each so the diff stays reviewable.
   { n: 24, files: ["src/components/SleepLogCard.tsx"] },
   { n: 25, files: ["src/components/SleepMoodCard.tsx"] },
+  // Phase 4's wearable deepening, queued on the same terms as rounds 19–25:
+  // the HRV summary card ships literal Hungarian so bringing it up could not
+  // fail on a missing key, and moving it into the catalogue is a mechanical
+  // pass of its own.
+  { n: 26, files: ["src/components/HrvSummaryCard.tsx"] },
 ];
 
 /**

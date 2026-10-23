@@ -53,6 +53,7 @@ import WorkoutPrograms from "../components/WorkoutPrograms";
 import FitnessCard from "../components/FitnessCard";
 import HabitStreaks from "../components/HabitStreaks";
 import SleepLogCard from "../components/SleepLogCard";
+import HrvSummaryCard from "../components/HrvSummaryCard";
 import AssessmentModule from "../components/AssessmentModule";
 import Gad7Card from "../components/Gad7Card";
 import { MiniVitals, MiniMeds, WeeklyNutritionCard } from "../components/HealthModules";
@@ -150,6 +151,10 @@ export function defaultHealthSections(flags: HealthFlags): SectionSpec<HealthSec
           {/* The night, next to the habits and above the questionnaires: it is a
               record the reader keeps, not an instrument somebody scores. */}
           <SleepLogCard />
+          {/* HRV rides below the night it describes: the samples arrive through
+              the health import, and the card reads them back as the reader's own
+              averages — neutral, with no verdict, per the wearable-data rule. */}
+          <HrvSummaryCard />
           {flags.assessmentsEnabled && <AssessmentModule />}
           {/* Ungated on purpose, and it is the only health card that is: the
               flag above guards a questionnaire that KEEPS A LOG, and the

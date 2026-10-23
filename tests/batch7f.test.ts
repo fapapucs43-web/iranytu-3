@@ -646,7 +646,12 @@ describe("every content icon follows the chosen set", () => {
     // Phase 5 added one more: the support wall's card head draws `Award`
     // (🏅 — praise, already in the registry as an achievement badge). One
     // name already present, one new call site. 62 + 1 = 63.
-    expect(sites.length).toBe(63);
+    //
+    // Phase 4's wearable deepening added the HRV summary card's head: `Heart`
+    // (❤️, already the health import card's head — the two surfaces read the
+    // same series, one writing it and one reading it back). One name already
+    // present, one new call site. 63 + 1 = 64.
+    expect(sites.length).toBe(64);
     for (const name of sites) {
       expect(
         isChromeIcon(name),

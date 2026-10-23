@@ -10,6 +10,7 @@
 import { describe, expect, test } from "bun:test";
 import { parseAppleHealthText } from "../../src/lib/healthImport/appleHealth";
 import { SERIES_TRACKER, applyImport, previewImport } from "../../src/lib/healthImport/merge";
+import { hrvSummary } from "../../src/lib/hrvSummary";
 import { buildCorrelationGrid } from "../../src/lib/correlationGrid";
 import { TRACKERS } from "../../src/lib/trackers";
 import type { Entry } from "../../src/types";
@@ -152,5 +153,79 @@ describe("resting heart rate — the wearable's second spot series (phase 4)", (
 
   test("the id is NOT a registry tracker — it rides on settings only", () => {
     expect(TRACKERS.map((t) => t.id)).not.toContain(SERIES_TRACKER.restingHr);
+  });
+});
+
+describe("the HRV summary — the Egészség card's engine (phase 4)", () => {
+  /** One entry carrying one HRV sample, the shape the import writes. */
+  const sample = (date: string, value: number) => ({
+    date,
+    trackerValues: { [SERIES_TRACKER.hrv]: { kind: "number" as const, value } },
+  });
+
+  test("no samples means no averages and no direction — not zeroes", () => {
+    expect(hrvSummary([])).toEqual({
+      days: 0,
+      avg: null,
+      recentAvg: null,
+      priorAvg: null,
+      trend: null,
+    });
+  });
+
+  test("a day without a usable numeric cell is absent, never a zero", () => {
+    const entries = [
+      { date: "2026-03-01", trackerValues: {} },
+      { date: "2026-03-02" },
+      { date: "2026-03-03", trackerValues: { [SERIES_TRACKER.hrv]: { kind: "text", value: "50" } } },
+      sample("2026-03-04", 50),
+    ];
+    const summary = hrvSummary(entries);
+    expect(summary.days).toBe(1);
+    expect(summary.avg).toBe(50);
+  });
+
+  test("the average covers every sampled day, rounded once", () => {
+    const summary = hrvSummary([sample("2026-03-01", 45), sample("2026-03-02", 50), sample("2026-03-03", 55)]);
+    expect(summary.days).toBe(3);
+    expect(summary.avg).toBe(50);
+  });
+
+  test("ten rising days split into the last seven and the three before", () => {
+    // 40…49 in date order: the recent window is days 4–10 (43…49, avg 46),
+    // the earlier one days 1–3 (40–42, avg 41). Sorting by VALUE would put
+    // the same seven numbers in the recent window and invent a fourth day
+    // for the earlier one — this test exists so that cannot pass unnoticed.
+    const entries = Array.from({ length: 10 }, (_, i) => sample(`2026-03-${String(i + 1).padStart(2, "0")}`, 40 + i));
+    const summary = hrvSummary(entries);
+    expect(summary.recentAvg).toBe(46);
+    expect(summary.priorAvg).toBe(41);
+    expect(summary.trend).toBe("up");
+  });
+
+  test("a falling series reads as down", () => {
+    const entries = Array.from({ length: 10 }, (_, i) => sample(`2026-03-${String(i + 1).padStart(2, "0")}`, 49 - i));
+    expect(hrvSummary(entries).trend).toBe("down");
+  });
+
+  test("equal windows read as flat, and a shift under the noise floor too", () => {
+    const flat = Array.from({ length: 14 }, (_, i) => sample(`2026-03-${String(i + 1).padStart(2, "0")}`, 50));
+    expect(hrvSummary(flat).trend).toBe("flat");
+    // A one-millisecond gap between the windows is night-to-night noise.
+    const tiny = [
+      ...Array.from({ length: 7 }, (_, i) => sample(`2026-03-${String(i + 1).padStart(2, "0")}`, 50)),
+      ...Array.from({ length: 7 }, (_, i) => sample(`2026-03-${String(i + 8).padStart(2, "0")}`, 51)),
+    ];
+    expect(hrvSummary(tiny).trend).toBe("flat");
+  });
+
+  test("too thin a record withholds the trend but still reports the averages", () => {
+    // Three sampled days: the recent window holds all three, the earlier one
+    // none — and one day per window would be a direction drawn from a single
+    // night either side.
+    const summary = hrvSummary([sample("2026-03-01", 40), sample("2026-03-02", 50), sample("2026-03-03", 60)]);
+    expect(summary.days).toBe(3);
+    expect(summary.avg).toBe(50);
+    expect(summary.trend).toBeNull();
   });
 });
