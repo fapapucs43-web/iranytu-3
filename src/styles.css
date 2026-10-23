@@ -4194,12 +4194,24 @@ button {
   align-content: center;
 }
 
-.app.has-bg .rec-bubble {
+/*
+ * The pill skin is UNCONDITIONAL — not `.app.has-bg`-gated like the ink
+ * re-pins above. `.rec-flow` paints its own solid #0f172a whatever the theme
+ * or the picture behind the app does, so there is no surface these buttons
+ * could be left unstyled ON: without a background image the bubbles and chips
+ * fell back to the UA's own button face (light grey, square corners, white
+ * inherited text on top) and the selected state changed nothing a reader could
+ * see — which is why tapping a word looked dead. The tints are literals for
+ * the same reason `.rec-flow` and `.rec-flow-actions .btn-primary` use them:
+ * this surface never takes the theme's ink, and `var(--on-ink)` was never
+ * defined anywhere.
+ */
+.rec-bubble {
   border: 2px solid transparent;
   border-radius: 999px;
   background: rgba(248, 250, 252, 0.08);
-  --app-ink: var(--on-ink);
-  color: var(--app-ink);
+  color: #f8fafc;
+  cursor: pointer;
   padding: 10px 18px;
   font-size: 1rem;
   transition: transform 0.15s ease, background 0.15s ease;
@@ -4208,10 +4220,9 @@ button {
 .rec-bubble-sm { font-size: 0.85rem; padding: 8px 14px; }
 .rec-bubble-lg { font-size: 1.15rem; padding: 14px 24px; }
 
-.app.has-bg .rec-bubble-on {
+.rec-bubble-on {
   background: rgba(248, 250, 252, 0.92);
-  --app-ink: var(--ink);
-  color: var(--app-ink);
+  color: #0f172a;
   transform: scale(1.06);
 }
 
@@ -4256,21 +4267,22 @@ button {
   scrollbar-width: thin;
 }
 
-.app.has-bg .rec-chip {
+/* Same reason as `.rec-bubble` above: the context words must be pills with a
+   visible ON state on this fixed dark surface, with or without a picture. */
+.rec-chip {
   flex: 0 0 auto;
   border: 2px solid rgba(248, 250, 252, 0.3);
   border-radius: 999px;
   background: rgba(248, 250, 252, 0.06);
-  --app-ink: var(--on-ink);
-  color: var(--app-ink);
+  color: #f8fafc;
+  cursor: pointer;
   padding: 8px 16px;
   font-size: 0.95rem;
 }
 
-.app.has-bg .rec-chip-on {
+.rec-chip-on {
   background: rgba(248, 250, 252, 0.92);
-  --app-ink: var(--ink);
-  color: var(--app-ink);
+  color: #0f172a;
 }
 
 /* Actions */

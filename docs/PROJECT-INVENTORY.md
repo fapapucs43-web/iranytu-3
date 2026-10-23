@@ -23,7 +23,7 @@ claims has two possible anchors and no way to tell which one went stale.
     "srcTsFiles": 187,
     "srcTsLines": 49726,
     "srcCssFiles": 1,
-    "srcCssLines": 5511,
+    "srcCssLines": 5523,
     "libFiles": 96,
     "libLines": 30671,
     "componentFiles": 75,
@@ -658,7 +658,7 @@ entries / 9.42 MB before this rule).
 - The scrim the picture's palette is worst-case for: `src/lib/imageBackground.ts:453` — `export function worstCaseScrimRgb(`
 - The one shared contrast measurement: `src/lib/contrast.ts:85` — `export function contrastRatio(a: Rgb, b: Rgb): number {`
 - The guarantee, computed in every combination: `tests/card-contrast.test.ts:224` — `describe("the whole track holds for body ink, wherever the background itself is readable", () => {`
-- The cards re-pinned for the two accessibility modes: `src/styles.css:5120` — `.app.contrast-high .card {`
+- The cards re-pinned for the two accessibility modes: `src/styles.css:5132` — `.app.contrast-high .card {`
 
 - The rule that selects the tinted scrim: `src/styles.css:1173` — `.app.has-bg.bg-palette-image::after {`
 - High contrast winning over the picture: `src/styles.css:1200` — `.app.has-bg.contrast-high::after,`
@@ -701,10 +701,10 @@ entries / 9.42 MB before this rule).
 - And the raw `--ink`, which the decision deliberately does NOT write: it is the token the solid carriers re-pin FROM, so overwriting it handed them the photograph's ink: `src/App.tsx:308` — `// Overwriting the token broke exactly that promise: those rules`
 - The carriers that pin, and would have been defeated: `src/styles.css:1018` — `  --app-ink: var(--ink);`
 - The four slots, and why the raw tokens stay the theme's, argued where the slots are declared: `src/styles.css:903` — ` * THE RAW TOKENS STAY THE THEME'S, AND THAT IS LOAD-BEARING. The decision used`
-- The two lines that used to ignore the picture while reporting on it, now reading the slot: `src/styles.css:4356` — `  color: var(--app-ink-soft);`
+- The two lines that used to ignore the picture while reporting on it, now reading the slot: `src/styles.css:4368` — `  color: var(--app-ink-soft);`
 - The slot layer the inheriting words read: `src/styles.css:892` — `  color: var(--app-ink);`
 - The slots themselves, theme by default: `src/styles.css:926` — `  --app-dynamic-brand: var(--brand);`
-- The fade itself: `src/styles.css:5077` — `    transition: color 0.2s ease;`
+- The fade itself: `src/styles.css:5089` — `    transition: color 0.2s ease;`
 - The guarantee, measured over 21 veils × 21 fades × 6 themes: `tests/lib/dynamic-ink.test.ts:317` — `  test("the ground the reader is looking at clears AA on the WHOLE track", () => {`
 - The mutation the two grounds remove, rebuilt and measured: `tests/lib/dynamic-ink.test.ts:389` — `  test("the ground under the headings: the ONE-ground decision leaves them invisible", () => {`
 - The scroll path, whole: a slice that decides like a picture, the bands a viewport shows, and the listener's own shape: `tests/lib/dynamic-ink.test.ts:1125` — `describe("the band the reader can see: the iOS scroll path", () => {`
@@ -712,9 +712,9 @@ entries / 9.42 MB before this rule).
 
 ### The nested menus, and why they had a rule
 
-- The two new tints, on the card's own weight: `src/styles.css:5011` — `    --app-soft-surface: color-mix(`
+- The two new tints, on the card's own weight: `src/styles.css:5023` — `    --app-soft-surface: color-mix(`
 - The small menu that prompted it: `src/styles.css:2433` — `.segmented {`
-- The mode re-pinning them: `src/styles.css:5144` — `.app.contrast-high {`
+- The mode re-pinning them: `src/styles.css:5156` — `.app.contrast-high {`
 - The inventory, in both directions: `tests/background-stack.test.ts:549` — `describe("the nested menus fade with the card they sit in", () => {`
 
 ### The stylesheet
