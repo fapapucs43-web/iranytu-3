@@ -122,6 +122,17 @@ export default function WeeklyAiSummaryCard({ entries }: { entries: readonly Ent
               {status === "busy" ? t("insights.ai.busy") : t("insights.ai.generate")}
             </button>
           </div>
+          {/* THE VISIBLE WAIT. The button's own label swaps while the summary
+              runs — but the FIRST on-device press also downloads the model,
+              minutes during which a disabled button is the only feedback the
+              reader would have. One line, announced as a status, covers BOTH
+              calls: it is on screen while the summary runs and while the
+              question does. */}
+          {(status === "busy" || chatBusy) && (
+            <p className="muted-note" role="status">
+              {t("ai.thinking")}
+            </p>
+          )}
           {status === "error" && (
             <p className="muted-note" role="alert">
               {error}
